@@ -84,7 +84,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         print('--->\nRunning kb_Msuite.run_checkM\nparams:')
         print(json.dumps(params, indent=1))
 
-        for key, value in params.iteritems():
+        for key, value in params.items():
             if isinstance(value, basestring):
                 params[key] = value.strip()
 
@@ -175,7 +175,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
            arguments: *   bin_dir - required - Path to the directory where
            your bins are located *   out_dir - required - Path to a directory
            where we will write output files *   log_path - required - Path to
-           a file that will be written to with all log output from *    
+           a file that will be written to with all log output from *
            stdout and stderr while running `checkm lineage_wf`. *   options -
            optional - A mapping of options to pass to lineage_wf. See the
            README.md *     in the kb_Msuite repo for a list of all of these.

@@ -74,36 +74,43 @@ class CheckMUtil:
         created_objects = None
         removed_bins = None
         outputBuilder = OutputBuilder(output_dir, plots_dir, self.scratch, self.callback_url)
-        if dsu.get_data_obj_type (params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
+        if dsu.get_data_obj_type(params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
            and params.get('output_filtered_binnedcontigs_obj_name'):
 
-            filtered_obj_info = self._filter_binned_contigs (params,
-                                                             dsu,
-                                                             outputBuilder,
-                                                             input_dir,
-                                                             output_dir,
-                                                             filtered_bins_dir)
-            if filtered_obj_info == None:
+            filtered_obj_info = self._filter_binned_contigs(params,
+                                                            dsu,
+                                                            outputBuilder,
+                                                            input_dir,
+                                                            output_dir,
+                                                            filtered_bins_dir)
+            if filtered_obj_info is None:
                 log("No Bins passed QC filters.  Not saving filtered BinnedContig object")
             else:
                 binned_contig_obj_ref = filtered_obj_info['filtered_obj_ref']
                 removed_bins = filtered_obj_info['removed_bin_IDs']
-                created_objects = [{'ref': binned_contig_obj_ref,
-                                    'description': 'HQ BinnedContigs '+filtered_obj_info['filtered_obj_name']}]
+                created_objects = [{
+                    'ref': binned_contig_obj_ref,
+                    'description': 'HQ BinnedContigs '+filtered_obj_info['filtered_obj_name']
+                }]
 
         # 4) make the plots:
         self.build_checkM_lineage_wf_plots(input_dir, output_dir, plots_dir,
                                            all_seq_fasta_file, tetra_file)
 
         # 5) Package results
-        output_packages = self._build_output_packages(params, outputBuilder, input_dir, removed_bins=removed_bins)
+        output_packages = self._build_output_packages(params,
+            outputBuilder,
+            input_dir,
+            removed_bins=removed_bins)
 
         # 6) build the HTML report
         os.makedirs(html_dir)
-        html_files = outputBuilder.build_html_output_for_lineage_wf(html_dir, params['input_ref'], removed_bins=removed_bins)
+        html_files = outputBuilder.build_html_output_for_lineage_wf(html_dir,
+            params['input_ref'],
+            removed_bins=removed_bins)
         html_zipped = outputBuilder.package_folder(html_dir,
-                                                   html_files[0],
-                                                   'Summarized report from CheckM')
+            html_files[0],
+            'Summarized report from CheckM')
 
         # 7) save report
         report_params = {'message': '',
@@ -119,8 +126,8 @@ class CheckMUtil:
         kr = KBaseReport(self.callback_url)
         report_output = kr.create_extended_report(report_params)
 
-        returnVal =  {'report_name': report_output['name'],
-                      'report_ref': report_output['ref']}
+        returnVal = {'report_name': report_output['name'],
+                     'report_ref': report_output['ref']}
         if binned_contig_obj_ref:
             returnVal.update({'binned_contig_obj_ref': binned_contig_obj_ref})
 
@@ -268,8 +275,6 @@ class CheckMUtil:
                                input_dir,
                                output_dir,
                                filtered_bins_dir):
-        filtered_binned_contig_obj_name = None
-        filtered_binned_contig_obj_ref  = None
         if not params.get('output_filtered_binnedcontigs_obj_name'):
             return None
 
@@ -277,7 +282,8 @@ class CheckMUtil:
         if not os.path.exists(filtered_bins_dir):
             os.makedirs(filtered_bins_dir)
         bin_stats_ext_file = os.path.join(output_dir, 'storage', 'bin_stats_ext.tsv')
-        bin_fasta_files_by_bin_ID = dataStagingUtils.get_bin_fasta_files(input_dir, self.fasta_extension)
+        bin_fasta_files_by_bin_ID = dataStagingUtils.get_bin_fasta_files(input_dir,
+            self.fasta_extension)
         bin_IDs = []
         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
             bin_IDs.append(bin_ID)
@@ -288,17 +294,17 @@ class CheckMUtil:
         QC_scores = dict()
         retained_bin_IDs = dict()
         removed_bin_IDs = dict()
-        with open (bin_stats_ext_file, 'r') as bin_stats_ext_handle:
+        with open(bin_stats_ext_file, 'r') as bin_stats_ext_handle:
             for bin_stats_line in bin_stats_ext_handle:
                 bin_stats_line.rstrip()
                 [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
-                bin_ID = re.sub('^[^\.]+\.', '', full_bin_ID.replace(self.fasta_extension,''))
+                bin_ID = re.sub('^[^\.]+\.', '', full_bin_ID.replace(self.fasta_extension, ''))
 
                 bin_stats_json_str = json.dumps(ast.literal_eval(bin_stats_json_str))
                 bin_stats_obj[bin_ID] = json.loads(bin_stats_json_str, parse_float=Decimal)
         for bin_ID in bin_IDs:
             if bin_ID not in bin_stats_obj:
-                raise ValueError ("Bin ID "+bin_ID+" not found in bin stats")
+                raise ValueError("Bin ID "+bin_ID+" not found in bin stats")
 
             QC_scores[bin_ID] = dict()
             QC_scores[bin_ID]['completeness'] = float(bin_stats_obj[bin_ID]['Completeness'])
@@ -338,8 +344,9 @@ class CheckMUtil:
                 some_bins_are_HQ = True
                 retained_bin_IDs[bin_ID] = True
                 src_path = bin_fasta_files_by_bin_ID[bin_ID]
-                dst_path = os.path.join(filtered_bins_dir, bin_basename+'.'+str(bin_ID)+'.'+self.binned_contigs_builder_fasta_extension)
-                outputBuilder._copy_file_new_name_ignore_errors (src_path, dst_path)
+                dst_path = os.path.join(filtered_bins_dir,
+                    bin_basename+'.'+str(bin_ID)+'.'+self.binned_contigs_builder_fasta_extension)
+                outputBuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
         for bin_ID in bin_IDs:
             if bin_ID not in retained_bin_IDs:
                 removed_bin_IDs[bin_ID] = True
@@ -348,14 +355,14 @@ class CheckMUtil:
         if not some_bins_are_HQ:
             return None
         assembly_ref = dataStagingUtils.read_assembly_ref_from_binnedcontigs(params['input_ref'])
-        bin_summary_path = dataStagingUtils.build_bin_summary_file_from_binnedcontigs_obj (params['input_ref'], filtered_bins_dir, bin_basename, self.binned_contigs_builder_fasta_extension)
-        new_binned_contigs_info = outputBuilder.save_binned_contigs (params, assembly_ref, filtered_bins_dir)
+        dataStagingUtils.build_bin_summary_file_from_binnedcontigs_obj(params['input_ref'],
+            filtered_bins_dir, bin_basename, self.binned_contigs_builder_fasta_extension)
+        new_binned_contigs_info = outputBuilder.save_binned_contigs(params, assembly_ref, filtered_bins_dir)
 
-        return { 'filtered_obj_name': new_binned_contigs_info['obj_name'],
-                 'filtered_obj_ref': new_binned_contigs_info['obj_ref'],
-                 'retained_bin_IDs': retained_bin_IDs,
-                 'removed_bin_IDs': removed_bin_IDs
-             }
+        return {'filtered_obj_name': new_binned_contigs_info['obj_name'],
+                'filtered_obj_ref': new_binned_contigs_info['obj_ref'],
+                'retained_bin_IDs': retained_bin_IDs,
+                'removed_bin_IDs': removed_bin_IDs}
 
 
     def _build_output_packages(self, params, outputBuilder, input_dir, removed_bins=None):
@@ -366,7 +373,7 @@ class CheckMUtil:
         log('creating TSV summary table text file')
         tab_text_dir = os.path.join(outputBuilder.output_dir, 'tab_text')
         tab_text_file = 'CheckM_summary_table.tsv'
-        tab_text_files = outputBuilder.build_summary_tsv_file(tab_text_dir, tab_text_file, removed_bins=removed_bins)
+        outputBuilder.build_summary_tsv_file(tab_text_dir, tab_text_file, removed_bins=removed_bins)
         tab_text_zipped = outputBuilder.package_folder(tab_text_dir,
                                                        tab_text_file+'.zip',
                                                        'TSV Summary Table from CheckM')
@@ -377,23 +384,24 @@ class CheckMUtil:
         if True:
             log('packaging full output directory')
             zipped_output_file = outputBuilder.package_folder(outputBuilder.output_dir,
-                                                              'full_output.zip',
-                                                              'Full output of CheckM')
+                'full_output.zip',
+                'Full output of CheckM')
             output_packages.append(zipped_output_file)
         else:  # ADD LATER?
             log('not packaging full output directory, selecting specific files')
-            crit_out_dir = os.path.join(self.scratch, 'critical_output_' + os.path.basename(
-                                                                                    input_dir))
+            crit_out_dir = os.path.join(self.scratch,
+                'critical_output_' + os.path.basename(input_dir))
             os.makedirs(crit_out_dir)
             zipped_output_file = outputBuilder.package_folder(outputBuilder.output_dir,
-                                                              'selected_output.zip',
-                                                              'Selected output from the CheckM analysis')
+                'selected_output.zip',
+                'Selected output from the CheckM analysis')
             output_packages.append(zipped_output_file)
 
         if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
             log('packaging output plots directory')
-            zipped_output_file = outputBuilder.package_folder(outputBuilder.plots_dir, 'plots.zip',
-                                                              'Output plots from CheckM')
+            zipped_output_file = outputBuilder.package_folder(outputBuilder.plots_dir,
+                'plots.zip',
+                'Output plots from CheckM')
             output_packages.append(zipped_output_file)
         else:
             log('not packaging output plots directory')

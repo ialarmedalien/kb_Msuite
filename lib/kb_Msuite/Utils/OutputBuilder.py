@@ -249,9 +249,9 @@ class OutputBuilder(object):
                   {'id': 'Contamination', 'display': 'Contamination', 'round': 2}]
 
         tab_text_files = []
-        tab_text_path = os.path.join (tab_text_dir, tab_text_file)
+        tab_text_path = os.path.join(tab_text_dir, tab_text_file)
         tab_text_files.append(tab_text_path)
-        with open (tab_text_path, 'w') as out_handle:
+        with open(tab_text_path, 'w') as out_handle:
 
             out_header = ['Bin Name']
             for f in fields:
@@ -422,7 +422,7 @@ class OutputBuilder(object):
         try:
             mgu = MetagenomeUtils(self.callback_url)
         except:
-            raise ValueError ("unable to connect with MetagenomeUtils")
+            raise ValueError("unable to connect with MetagenomeUtils")
 
         filtered_binned_contig_obj_name = params.get('output_filtered_binnedcontigs_obj_name')
         generate_binned_contig_param = {

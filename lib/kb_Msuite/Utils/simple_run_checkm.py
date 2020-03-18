@@ -14,7 +14,7 @@ def run_checkm(input_dir, output_dir, log_path, options={}):
       options - optional - dictionary of lineage_wf options
     """
     args = ['checkm', 'lineage_wf', input_dir, output_dir]
-    for opt, val in (options or {}).iteritems():
+    for opt, val in (options or {}).items():
         args.append(opt)
         if val:
             args.append(str(val))

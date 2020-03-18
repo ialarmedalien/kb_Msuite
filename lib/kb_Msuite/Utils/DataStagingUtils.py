@@ -53,27 +53,27 @@ class DataStagingUtils(object):
 
 
         # 2) based on type, download the files
-        obj_name = self.get_data_obj_name (input_ref)
-        type_name = self.get_data_obj_type (input_ref)
+        obj_name = self.get_data_obj_name(input_ref)
+        type_name = self.get_data_obj_type(input_ref)
 
         # auClient
         try:
             auClient = AssemblyUtil(self.callbackURL, token=self.ctx['token'], service_ver=SERVICE_VER)
         except Exception as e:
-            raise ValueError('Unable to instantiate auClient with callbackURL: '+ self.callbackURL +' ERROR: ' + str(e))
+            raise ValueError('Unable to instantiate auClient with callbackURL: ' + self.callbackURL + ' ERROR: ' + str(e))
 
         # setAPI_Client
         try:
             #setAPI_Client = SetAPI (url=self.callbackURL, token=self.ctx['token'])  # for SDK local.  local doesn't work for SetAPI
-            setAPI_Client = SetAPI (url=self.serviceWizardURL, token=self.ctx['token'])  # for dynamic service
+            setAPI_Client = SetAPI(url=self.serviceWizardURL, token=self.ctx['token'])  # for dynamic service
         except Exception as e:
-            raise ValueError('Unable to instantiate setAPI_Client with serviceWizardURL: '+ self.serviceWizardURL +' ERROR: ' + str(e))
+            raise ValueError('Unable to instantiate setAPI_Client with serviceWizardURL: ' + self.serviceWizardURL + ' ERROR: ' + str(e))
 
         # mguClient
         try:
             mguClient = MetagenomeUtils(self.callbackURL, token=self.ctx['token'], service_ver=SERVICE_VER)
         except Exception as e:
-            raise ValueError('Unable to instantiate mguClient with callbackURL: '+ self.callbackURL +' ERROR: ' + str(e))
+            raise ValueError('Unable to instantiate mguClient with callbackURL: ' + self.callbackURL + ' ERROR: ' + str(e))
 
 
         # Standard Single Assembly
@@ -95,24 +95,24 @@ class DataStagingUtils(object):
 
             # read assemblySet
             try:
-                assemblySet_obj = setAPI_Client.get_assembly_set_v1 ({'ref':input_ref, 'include_item_info':1})
+                assemblySet_obj = setAPI_Client.get_assembly_set_v1({'ref': input_ref, 'include_item_info': 1})
             except Exception as e:
-                raise ValueError('Unable to get object from workspace: (' + input_ref +')' + str(e))
+                raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
             assembly_refs = []
             assembly_names = []
             for assembly_item in assemblySet_obj['data']['items']:
                 this_assembly_ref = assembly_item['ref']
                 # assembly obj info
                 try:
-                    this_assembly_info = ws.get_object_info_new ({'objects':[{'ref':this_assembly_ref}]})[0]
+                    this_assembly_info = ws.get_object_info_new({'objects': [{'ref': this_assembly_ref}]})[0]
                     this_assembly_name = this_assembly_info[NAME_I]
                 except Exception as e:
-                    raise ValueError('Unable to get object from workspace: (' + this_assembly_ref +'): ' + str(e))
+                    raise ValueError('Unable to get object from workspace: (' + this_assembly_ref + '): ' + str(e))
                 assembly_refs.append(this_assembly_ref)
                 assembly_names.append(this_assembly_name)
 
             # create file data (name for file is what's reported in results)
-            for ass_i,assembly_ref in enumerate(assembly_refs):
+            for ass_i, assembly_ref in enumerate(assembly_refs):
                 this_name = assembly_names[ass_i]
                 filename = os.path.join(input_dir, this_name + '.' + fasta_file_extension)
                 auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
@@ -134,7 +134,7 @@ class DataStagingUtils(object):
             self.set_fasta_file_extensions(input_dir, fasta_file_extension)
             for (dirpath, dirnames, filenames) in os.walk(input_dir):
                 for fasta_file in filenames:
-                    fasta_path = os.path.join (input_dir,fasta_file)
+                    fasta_path = os.path.join(input_dir, fasta_file)
                     min_fasta_len = 1
                     if not self.fasta_seq_len_at_least(fasta_path, min_fasta_len):
                         raise ValueError('Binned Assembly is empty for fasta_path: '+str(fasta_path))
@@ -152,48 +152,48 @@ class DataStagingUtils(object):
             else:  # get genomeSet_refs from GenomeSet object
                 genomeSet_refs = []
                 try:
-                    genomeSet_object = ws.get_objects2({'objects':[{'ref':input_ref}]})['data'][0]['data']
+                    genomeSet_object = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
                 except Exception as e:
-                    raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
+                    raise ValueError('Unable to fetch ' + str(input_ref) + ' object from workspace: ' + str(e))
                     #to get the full stack trace: traceback.format_exc()
 
                 # iterate through genomeSet members
                 for genome_id in genomeSet_object['elements'].keys():
                     if 'ref' not in genomeSet_object['elements'][genome_id] or \
-                       genomeSet_object['elements'][genome_id]['ref'] == None or \
+                       genomeSet_object['elements'][genome_id]['ref'] is None or \
                        genomeSet_object['elements'][genome_id]['ref'] == '':
-                        raise ValueError('genome_ref not found for genome_id: '+str(genome_id)+' in genomeSet: '+str(input_ref))
+                        raise ValueError('genome_ref not found for genome_id: ' + str(genome_id) + ' in genomeSet: ' + str(input_ref))
                     else:
                         genomeSet_refs.append(genomeSet_object['elements'][genome_id]['ref'])
 
             # genome obj data
-            for i,this_input_ref in enumerate(genomeSet_refs):
+            for i, this_input_ref in enumerate(genomeSet_refs):
                 try:
-                    objects = ws.get_objects2({'objects':[{'ref':this_input_ref}]})['data']
+                    objects = ws.get_objects2({'objects': [{'ref': this_input_ref}]})['data']
                     genome_obj = objects[0]['data']
                     genome_obj_info = objects[0]['info']
                     genome_obj_names.append(genome_obj_info[NAME_I])
                     genome_sci_names.append(genome_obj['scientific_name'])
                 except:
-                    raise ValueError ("unable to fetch genome: "+this_input_ref)
+                    raise ValueError("unable to fetch genome: " + this_input_ref)
 
                 # Get genome_assembly_ref
-                if ('contigset_ref' not in genome_obj or genome_obj['contigset_ref'] == None) \
-                   and ('assembly_ref' not in genome_obj or genome_obj['assembly_ref'] == None):
+                if ('contigset_ref' not in genome_obj or genome_obj['contigset_ref'] is None) \
+                   and ('assembly_ref' not in genome_obj or genome_obj['assembly_ref'] is None):
                     msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" MISSING BOTH contigset_ref AND assembly_ref.  Cannot process.  Exiting."
-                    raise ValueError (msg)
+                    raise ValueError(msg)
                     continue
-                elif 'assembly_ref' in genome_obj and genome_obj['assembly_ref'] != None:
+                elif 'assembly_ref' in genome_obj and genome_obj['assembly_ref'] is not None:
                     msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" USING assembly_ref: "+str(genome_obj['assembly_ref'])
                     print (msg)
                     genome_assembly_refs.append(genome_obj['assembly_ref'])
-                elif 'contigset_ref' in genome_obj and genome_obj['contigset_ref'] != None:
+                elif 'contigset_ref' in genome_obj and genome_obj['contigset_ref'] is not None:
                     msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" USING contigset_ref: "+str(genome_obj['contigset_ref'])
                     print (msg)
                     genome_assembly_refs.append(genome_obj['contigset_ref'])
 
             # create file data (name for file is what's reported in results)
-            for ass_i,assembly_ref in enumerate(genome_assembly_refs):
+            for ass_i, assembly_ref in enumerate(genome_assembly_refs):
                 this_name = genome_obj_names[ass_i]
                 filename = os.path.join(input_dir, this_name + '.' + fasta_file_extension)
                 auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
@@ -221,12 +221,12 @@ class DataStagingUtils(object):
         counts the number of non-header, non-whitespace characters in a FASTA file
         '''
         seq_len = 0
-        with open (fasta_path, 'r') as fasta_handle:
+        with open(fasta_path, 'r') as fasta_handle:
             for line in fasta_handle:
                 line = line.strip()
                 if line.startswith('>'):
                     continue
-                line = line.replace(' ','')
+                line = line.replace(' ', '')
                 seq_len += len(line)
                 if seq_len >= min_fasta_len:
                     return True
@@ -281,8 +281,8 @@ class DataStagingUtils(object):
                     continue
                 if filename.endswith('.'+fasta_extension):
                     fasta_file = filename
-                    bin_ID = re.sub('^[^\.]+\.', '', fasta_file.replace('.'+fasta_extension,''))
-                    fasta_path = os.path.join (input_dir,fasta_file)
+                    bin_ID = re.sub('^[^\.]+\.', '', fasta_file.replace('.'+fasta_extension, ''))
+                    fasta_path = os.path.join(input_dir, fasta_file)
                     bin_fasta_files[bin_ID] = fasta_path
                     #bin_fasta_files[bin_ID] = fasta_file
                     #print ("ACCEPTED: "+bin_ID+" FILE:"+fasta_file)  # DEBUG
@@ -309,7 +309,7 @@ class DataStagingUtils(object):
         type_name = input_info[TYPE_I].split('-')[0]
         if remove_module:
             type_name = type_name.split('.')[1]
-        return { obj_name: type_name }
+        return {obj_name: type_name}
 
     def get_data_obj_name(self, input_ref):
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
@@ -332,7 +332,7 @@ class DataStagingUtils(object):
     def read_assembly_ref_from_binnedcontigs(self, input_ref):
         ws = Workspace(self.ws_url)
         try:
-            binned_contig_obj = ws.get_objects2({'objects':[{'ref':input_ref}]})['data'][0]['data']
+            binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
         except Exception as e:
             raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
             #to get the full stack trace: traceback.format_exc()
@@ -344,7 +344,7 @@ class DataStagingUtils(object):
         # read bin info from obj
         ws = Workspace(self.ws_url)
         try:
-            binned_contig_obj = ws.get_objects2({'objects':[{'ref':input_ref}]})['data'][0]['data']
+            binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
         except Exception as e:
             raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
             #to get the full stack trace: traceback.format_exc()
@@ -353,34 +353,34 @@ class DataStagingUtils(object):
         # bid in object is full name of contig fasta file.  want just the number
         for bin_item in binned_contig_obj['bins']:
             #print ("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
-            bin_ID = re.sub ('^[^\.]+\.', '', bin_item['bid'].replace('.'+fasta_extension,''))
+            bin_ID = re.sub('^[^\.]+\.', '', bin_item['bid'].replace('.'+fasta_extension, ''))
 
             #print ("BIN_ID: "+bin_ID)  # DEBUG
-            bin_summary_info[bin_ID] = { 'n_contigs': bin_item['n_contigs'],
-                                         'gc': round (100.0 * float(bin_item['gc']), 1),
-                                         'sum_contig_len': bin_item['sum_contig_len'],
-                                         'cov': round (100.0 * float(bin_item['cov']), 1)
-                                     }
+            bin_summary_info[bin_ID] = {'n_contigs': bin_item['n_contigs'],
+                                        'gc': round(100.0 * float(bin_item['gc']), 1),
+                                        'sum_contig_len': bin_item['sum_contig_len'],
+                                        'cov': round(100.0 * float(bin_item['cov']), 1)
+                                       }
         # write summary file for just those bins present in bin_dir
         header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
         bin_fasta_files_by_bin_ID = self.get_bin_fasta_files(bin_dir, fasta_extension)
         bin_IDs = []
         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
-            bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.'+fasta_extension,''))
+            bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.'+fasta_extension, ''))
             bin_IDs.append(bin_ID)
-        summary_file_path = os.path.join (bin_dir, bin_basename+'.'+'summary')
+        summary_file_path = os.path.join(bin_dir, bin_basename+'.'+'summary')
 
         print ("writing filtered binned contigs summary file "+summary_file_path)
-        with open (summary_file_path, 'w') as summary_file_handle:
+        with open(summary_file_path, 'w') as summary_file_handle:
             print ("\t".join(header_line))
             summary_file_handle.write("\t".join(header_line)+"\n")
             for bin_ID in bin_IDs:
                 #print ("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
-                bin_summary_info_line = [ bin_basename+'.'+str(bin_ID)+'.'+fasta_extension,
-                                          str(bin_summary_info[bin_ID]['cov'])+'%',
-                                          str(bin_summary_info[bin_ID]['sum_contig_len']),
-                                          str(bin_summary_info[bin_ID]['gc'])
-                                      ]
+                bin_summary_info_line = [bin_basename+'.'+str(bin_ID)+'.'+fasta_extension,
+                                         str(bin_summary_info[bin_ID]['cov'])+'%',
+                                         str(bin_summary_info[bin_ID]['sum_contig_len']),
+                                         str(bin_summary_info[bin_ID]['gc'])
+                                        ]
                 print ("\t".join(bin_summary_info_line))
                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
 
