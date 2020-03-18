@@ -1,0 +1,28 @@
+name: Docker CI
+
+on:
+  push:
+    branches: [ add_actions ]
+
+jobs:
+  install_kbsdk_and_test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout git repo
+      uses: actions/checkout@v2
+
+    - name: Add bin to $PATH
+      run: |
+        env
+        echo "::add-path::$GITHUB_WORKSPACE/bin"
+
+    - name: pull and run docker image
+      shell: bash
+      env:
+        KBASE_TEST_TOKEN: ${{ secrets.KBASE_TEST_TOKEN }}
+      run: |
+        docker pull ialarmedalien/kb-sdk
+        mkdir bin
+        docker run ialarmedalien/kb-sdk genscript > bin/kb-sdk
+        chmod 755 bin/kb-sdk
+        kb-sdk test
