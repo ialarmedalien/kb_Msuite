@@ -2,8 +2,12 @@ import sys
 import os
 import os.path
 from jinja2 import Template
-from ConfigParser import ConfigParser
-import StringIO
+try:
+    from ConfigParser import ConfigParser  # py2
+    from StringIO import StringIO ## for Python 2
+except ImportError:
+    from configparser import ConfigParser  # py3
+    from io import StringIO ## for Python 3
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

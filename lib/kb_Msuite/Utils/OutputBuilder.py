@@ -104,7 +104,6 @@ class OutputBuilder(object):
             )
 
         # close the CheckM plot
-        #self._write_script(html)  # don't need for tabs anymore
         html.write('</body>\n</html>\n')
         html.close()
 
@@ -123,7 +122,6 @@ class OutputBuilder(object):
         self._write_tabs(html, report_type)
         html.write('<br><br><br>\n')
         self.build_summary_table(html, html_dir, removed_bins=removed_bins)
-        #self._write_script(html)  # don't need for tabs anymore
 
         html.write('</body>\n</html>\n')
         html.close()
@@ -132,15 +130,6 @@ class OutputBuilder(object):
 
 
     def _write_tabs(self, html, report_type):
-        #tabs = '''
-        #<div class="tab">
-        #    <button class="tablinks" onclick="openTab(event, 'Summary')" id="defaultOpen">Summary</button>
-        #    <button class="tablinks" onclick="openTab(event, 'Plot')">Bin QA Plot</button>
-        #</div>
-        #<div>
-        #'''
-
-        # buttons are hidden if popups blocked
         if report_type == 'Plot':
             tabs = '<div><b>CheckM PLOT</b> | <a href="CheckM_Table.html">CheckM Table</a></div>'
         else:
@@ -148,29 +137,6 @@ class OutputBuilder(object):
 
         html.write(tabs)
 
-
-    def _write_script(self, html):
-        script = '''
-        <script>
-            function openTab(evt, tabName) {
-                var i, tabcontent, tablinks;
-                tabcontent = document.getElementsByClassName("tabcontent");
-                for (i = 0; i < tabcontent.length; i++) {
-                    tabcontent[i].style.display = "none";
-                }
-                tablinks = document.getElementsByClassName("tablinks");
-                for (i = 0; i < tablinks.length; i++) {
-                    tablinks[i].className = tablinks[i].className.replace(" active", "");
-                }
-                document.getElementById(tabName).style.display = "block";
-                evt.currentTarget.className += " active";
-            }
-
-            // Get the element with id="defaultOpen" and click on it
-            document.getElementById("defaultOpen").click();
-        </script>
-        '''
-        html.write(script)
 
     def build_summary_table(self, html, html_dir, removed_bins=None):
 
@@ -214,10 +180,10 @@ class OutputBuilder(object):
 
 
         # DEBUG
-        #for bid in sorted(bin_stats.keys()):
-        #    print ("BIN STATS BID: "+bid)
-        #for bid in removed_bins:
-        #    print ("REMOVED BID: "+bid)
+        for bid in sorted(bin_stats.keys()):
+            print ("BIN STATS BID: "+bid)
+        for bid in removed_bins:
+            print ("REMOVED BID: "+bid)
 
         for bid in sorted(bin_stats.keys()):
             row_opening = '<tr>'
@@ -247,7 +213,7 @@ class OutputBuilder(object):
         html.write('</div>\n')
 
 
-    def build_summary_tsv_file(self, tab_text_dir, tab_text_file):
+    def build_summary_tsv_file(self, tab_text_dir, tab_text_file, removed_bins=None):
 
         if not os.path.exists(tab_text_dir):
             os.makedirs(tab_text_dir)
@@ -305,6 +271,17 @@ class OutputBuilder(object):
                         if f.get('round'):
                             value = str(round(bin_stats[bid][f['id']], f['round']))
                         row.append(str(value))
+
+                # add a column to indicate whether the bin should be removed
+                if removed_bins:
+                    bin_id = re.sub('^[^\.]+\.', '', bid)
+                    if bin_id in removed_bins:
+                        row.append('true')
+                    else:
+                        row.append('false')
+                else:
+                    row.append('false')
+
                 out_handle.write("\t".join(row)+"\n")
 
         return tab_text_files
@@ -461,4 +438,4 @@ class OutputBuilder(object):
             'obj_name': filtered_binned_contig_obj_name,
             'obj_ref': filtered_binned_contig_obj_ref
         }
-        
+
