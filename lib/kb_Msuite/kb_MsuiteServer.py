@@ -20,7 +20,7 @@ from biokbase import log
 from kb_Msuite.authclient import KBaseAuth as _KBaseAuth
 
 try:
-    from ConfigParser import ConfigParser
+    from configparser import ConfigParser
 except ImportError:
     from configparser import ConfigParser
 
@@ -546,7 +546,7 @@ def start_server(host='localhost', port=0, newprocess=False):
         raise RuntimeError('server is already running')
     httpd = make_server(host, port, application)
     port = httpd.server_address[1]
-    print("Listening on port %s" % port)
+    print(("Listening on port %s" % port))
     if newprocess:
         _proc = Process(target=httpd.serve_forever)
         _proc.daemon = True
@@ -625,7 +625,7 @@ if __name__ == "__main__":
         opts, args = getopt(sys.argv[1:], "", ["port=", "host="])
     except GetoptError as err:
         # print help information and exit:
-        print(str(err))  # will print something like "option -a not recognized"
+        print((str(err)))  # will print something like "option -a not recognized"
         sys.exit(2)
     port = 9999
     host = 'localhost'
@@ -634,7 +634,7 @@ if __name__ == "__main__":
             port = int(a)
         elif o == '--host':
             host = a
-            print("Host set to %s" % host)
+            print(("Host set to %s" % host))
         else:
             assert False, "unhandled option"
 

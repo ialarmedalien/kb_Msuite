@@ -41,7 +41,7 @@ class DataStagingUtils(object):
         # config
         #SERVICE_VER = 'dev'
         SERVICE_VER = 'release'
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
+        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
         ws = Workspace(self.ws_url)
 
         # 1) generate a folder in scratch to hold the input
@@ -158,7 +158,7 @@ class DataStagingUtils(object):
                     #to get the full stack trace: traceback.format_exc()
 
                 # iterate through genomeSet members
-                for genome_id in genomeSet_object['elements'].keys():
+                for genome_id in list(genomeSet_object['elements'].keys()):
                     if 'ref' not in genomeSet_object['elements'][genome_id] or \
                        genomeSet_object['elements'][genome_id]['ref'] is None or \
                        genomeSet_object['elements'][genome_id]['ref'] == '':
@@ -302,7 +302,7 @@ class DataStagingUtils(object):
         # 9 int size - the size of the object in bytes.
         # 10 usermeta meta - arbitrary user-supplied metadata about
         #     the object.
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
+        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
         ws = Workspace(self.ws_url)
         input_info = ws.get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
         obj_name = input_info[NAME_I]
@@ -312,7 +312,7 @@ class DataStagingUtils(object):
         return {obj_name: type_name}
 
     def get_data_obj_name(self, input_ref):
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
+        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
         ws = Workspace(self.ws_url)
         input_info = ws.get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
         obj_name = input_info[NAME_I]
@@ -320,7 +320,7 @@ class DataStagingUtils(object):
         return obj_name
 
     def get_data_obj_type(self, input_ref, remove_module=False):
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
+        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
         ws = Workspace(self.ws_url)
         input_info = ws.get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
         #obj_name = input_info[NAME_I]
@@ -370,9 +370,9 @@ class DataStagingUtils(object):
             bin_IDs.append(bin_ID)
         summary_file_path = os.path.join(bin_dir, bin_basename+'.'+'summary')
 
-        print ("writing filtered binned contigs summary file "+summary_file_path)
+        print(("writing filtered binned contigs summary file "+summary_file_path))
         with open(summary_file_path, 'w') as summary_file_handle:
-            print ("\t".join(header_line))
+            print(("\t".join(header_line)))
             summary_file_handle.write("\t".join(header_line)+"\n")
             for bin_ID in bin_IDs:
                 #print ("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
@@ -381,7 +381,7 @@ class DataStagingUtils(object):
                                          str(bin_summary_info[bin_ID]['sum_contig_len']),
                                          str(bin_summary_info[bin_ID]['gc'])
                                         ]
-                print ("\t".join(bin_summary_info_line))
+                print(("\t".join(bin_summary_info_line)))
                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
 
         return summary_file_path

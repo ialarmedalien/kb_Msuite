@@ -4,13 +4,12 @@
 
 python ./scripts/prepare_deploy_cfg.py ./deploy.cfg ./work/config.properties
 
-if [ ! -f ./work/token && ! -z ${KBASE_TEST_TOKEN} ] ; then
-    # put the test token into work/token
-    cat <<< ${KBASE_TEST_TOKEN} > work/token
-fi
-
 if [ -f ./work/token ] ; then
   export KB_AUTH_TOKEN=$(<./work/token)
+elif [ ! -z ${KBASE_TEST_TOKEN} ] ; then
+  # put the test token into work/token
+  cat <<< ${KBASE_TEST_TOKEN} > work/token
+  export KB_AUTH_TOKEN=${KBASE_TEST_TOKEN}
 fi
 
 

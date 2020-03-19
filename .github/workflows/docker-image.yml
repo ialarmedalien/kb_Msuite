@@ -22,7 +22,7 @@ jobs:
         KBASE_TEST_TOKEN: ${{ secrets.KBASE_TEST_TOKEN }}
       run: |
         docker pull ialarmedalien/kb-sdk
-        mkdir bin
+        mkdir -p bin
         docker run ialarmedalien/kb-sdk genscript > bin/kb-sdk
         chmod 755 bin/kb-sdk
         kb-sdk test

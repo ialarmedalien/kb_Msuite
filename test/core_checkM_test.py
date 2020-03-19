@@ -7,7 +7,7 @@ import shutil
 
 from os import environ
 try:
-    from ConfigParser import ConfigParser  # py2
+    from configparser import ConfigParser  # py2
 except:
     from configparser import ConfigParser  # py3
 
@@ -91,7 +91,7 @@ class CoreCheckMTest(unittest.TestCase):
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
-            print('Test workspace ' + cls.wsName + ' was deleted')
+            print(('Test workspace ' + cls.wsName + ' was deleted'))
         pass
         #if os.path.exists(cls.scratch):
         #    os.rmdir(cls.scratch)
@@ -112,7 +112,7 @@ class CoreCheckMTest(unittest.TestCase):
         os.makedirs(cls.test_directory_path)
 
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
-         WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
+         WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
 
         # build the example Assembly
         assembly_filename = 'assembly.fasta'
@@ -224,7 +224,7 @@ class CoreCheckMTest(unittest.TestCase):
     def test_checkM_lineage_wf_full_app_single_assembly(self):
         method_name = 'test_checkM_lineage_wf_full_app_single_assembly'
         print ("\n=================================================================")
-        print ("RUNNING "+method_name+"()")
+        print(("RUNNING "+method_name+"()"))
         print ("=================================================================\n")
 
         # run checkM lineage_wf app on a single assembly
@@ -250,10 +250,10 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
-        self.assertEquals(rep['direct_html_link_index'], 0)
-        self.assertEquals(len(rep['file_links']), 3)
-        self.assertEquals(len(rep['html_links']), 1)
-        self.assertEquals(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['direct_html_link_index'], 0)
+        self.assertEqual(len(rep['file_links']), 3)
+        self.assertEqual(len(rep['html_links']), 1)
+        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
 
     # Test 2: Regression test (CheckM <= v1.0.7) for single problem assembly
     #
@@ -262,7 +262,7 @@ class CoreCheckMTest(unittest.TestCase):
     def test_checkM_lineage_wf_full_app_single_problem_assembly(self):
         method_name = 'test_checkM_lineage_wf_full_app_single_problem_assembly'
         print ("\n=================================================================")
-        print ("RUNNING "+method_name+"()")
+        print(("RUNNING "+method_name+"()"))
         print ("=================================================================\n")
 
         # run checkM lineage_wf app on a single assembly
@@ -288,10 +288,10 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
-        self.assertEquals(rep['direct_html_link_index'], 0)
-        self.assertEquals(len(rep['file_links']), 3)
-        self.assertEquals(len(rep['html_links']), 1)
-        self.assertEquals(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['direct_html_link_index'], 0)
+        self.assertEqual(len(rep['file_links']), 3)
+        self.assertEqual(len(rep['html_links']), 1)
+        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
 
     # Test 3: binned contigs
     #
@@ -300,7 +300,7 @@ class CoreCheckMTest(unittest.TestCase):
     def test_checkM_lineage_wf_full_app_binned_contigs(self):
         method_name = 'test_checkM_lineage_wf_full_app_binned_contigs'
         print ("\n=================================================================")
-        print ("RUNNING "+method_name+"()")
+        print(("RUNNING "+method_name+"()"))
         print ("=================================================================\n")
 
         # Even with the reduced_tree option, this will take a long time and crash if your
@@ -327,10 +327,10 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
-        self.assertEquals(rep['direct_html_link_index'], 0)
-        self.assertEquals(len(rep['file_links']), 3)
-        self.assertEquals(len(rep['html_links']), 1)
-        self.assertEquals(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['direct_html_link_index'], 0)
+        self.assertEqual(len(rep['file_links']), 3)
+        self.assertEqual(len(rep['html_links']), 1)
+        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
 
     # Test 4: Regression test for empty binned contigs object
     #
@@ -339,7 +339,7 @@ class CoreCheckMTest(unittest.TestCase):
     def test_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
         method_name = 'test_checkM_lineage_wf_full_app_binned_contigs_EMPTY'
         print ("\n=================================================================")
-        print ("RUNNING "+method_name+"()")
+        print(("RUNNING "+method_name+"()"))
         print ("=================================================================\n")
 
         # run checkM lineage_wf app on EMPTY BinnedContigs
@@ -360,7 +360,7 @@ class CoreCheckMTest(unittest.TestCase):
     def test_checkM_lineage_wf_full_app_assemblySet(self):
         method_name = 'test_checkM_lineage_wf_full_app_assemblySet'
         print ("\n=================================================================")
-        print ("RUNNING "+method_name+"()")
+        print(("RUNNING "+method_name+"()"))
         print ("=================================================================\n")
 
         # run checkM lineage_wf app on an assembly set
@@ -385,10 +385,10 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
-        self.assertEquals(rep['direct_html_link_index'], 0)
-        self.assertEquals(len(rep['file_links']), 3)
-        self.assertEquals(len(rep['html_links']), 1)
-        self.assertEquals(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['direct_html_link_index'], 0)
+        self.assertEqual(len(rep['file_links']), 3)
+        self.assertEqual(len(rep['html_links']), 1)
+        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
 
     # Test 6: Single Genome
     #
@@ -397,7 +397,7 @@ class CoreCheckMTest(unittest.TestCase):
     def test_checkM_lineage_wf_full_app_single_genome(self):
         method_name = 'test_checkM_lineage_wf_full_app_single_genome'
         print ("\n=================================================================")
-        print ("RUNNING "+method_name+"()")
+        print(("RUNNING "+method_name+"()"))
         print ("=================================================================\n")
 
         # run checkM lineage_wf app on a single genome
@@ -422,10 +422,10 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
-        self.assertEquals(rep['direct_html_link_index'], 0)
-        self.assertEquals(len(rep['file_links']), 3)
-        self.assertEquals(len(rep['html_links']), 1)
-        self.assertEquals(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['direct_html_link_index'], 0)
+        self.assertEqual(len(rep['file_links']), 3)
+        self.assertEqual(len(rep['html_links']), 1)
+        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
 
     # Test 7: Genome Set
     #
@@ -434,7 +434,7 @@ class CoreCheckMTest(unittest.TestCase):
     def test_checkM_lineage_wf_full_app_genomeSet(self):
         method_name = 'test_checkM_lineage_wf_full_app_genomeSet'
         print ("\n=================================================================")
-        print ("RUNNING "+method_name+"()")
+        print(("RUNNING "+method_name+"()"))
         print ("=================================================================\n")
 
         # run checkM lineage_wf app on a genome set
@@ -459,10 +459,10 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
-        self.assertEquals(rep['direct_html_link_index'], 0)
-        self.assertEquals(len(rep['file_links']), 3)
-        self.assertEquals(len(rep['html_links']), 1)
-        self.assertEquals(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['direct_html_link_index'], 0)
+        self.assertEqual(len(rep['file_links']), 3)
+        self.assertEqual(len(rep['html_links']), 1)
+        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
 
     # Test 8: Data staging (intended data not checked into git repo: SKIP)
     #
@@ -550,7 +550,7 @@ class CoreCheckMTest(unittest.TestCase):
     def test_checkM_lineage_wf_withFilter_binned_contigs(self):
         method_name = 'test_checkM_lineage_wf_withFilter_binned_contigs'
         print ("\n=================================================================")
-        print ("RUNNING "+method_name+"()")
+        print(("RUNNING "+method_name+"()"))
         print ("=================================================================\n")
 
         # Even with the reduced_tree option, this will take a long time and crash if your
@@ -580,10 +580,10 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
-        self.assertEquals(rep['direct_html_link_index'], 0)
-        self.assertEquals(len(rep['file_links']), 3)
-        self.assertEquals(len(rep['html_links']), 1)
-        self.assertEquals(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['direct_html_link_index'], 0)
+        self.assertEqual(len(rep['file_links']), 3)
+        self.assertEqual(len(rep['html_links']), 1)
+        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
 
 
     def setup_local_method_data(self):

@@ -82,10 +82,10 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         # ctx is the context object
         #BEGIN run_checkM
         print('--->\nRunning kb_Msuite.run_checkM\nparams:')
-        print(json.dumps(params, indent=1))
+        print((json.dumps(params, indent=1)))
 
-        for key, value in params.items():
-            if isinstance(value, basestring):
+        for key, value in list(params.items()):
+            if isinstance(value, str):
                 params[key] = value.strip()
 
         if 'subcommand' not in params:
@@ -116,7 +116,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         # return variables are: result
         #BEGIN run_checkM_lineage_wf
         print('--->\nRunning kb_Msuite.run_checkM_lineage_wf\nparams:')
-        print(json.dumps(params, indent=1))
+        print((json.dumps(params, indent=1)))
 
         cmu = CheckMUtil(self.config, ctx)
         result = cmu.run_checkM_lineage_wf(params)
@@ -153,7 +153,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         # return variables are: result
         #BEGIN run_checkM_lineage_wf_withFilter
         print('--->\nRunning kb_Msuite.run_checkM_lineage_wf_withFilter\nparams:')
-        print(json.dumps(params, indent=1))
+        print((json.dumps(params, indent=1)))
 
         cmu = CheckMUtil(self.config, ctx)
         result = cmu.run_checkM_lineage_wf(params)
