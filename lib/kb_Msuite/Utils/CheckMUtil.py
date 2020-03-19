@@ -138,12 +138,12 @@ class CheckMUtil:
                                       all_seq_fasta_file, tetra_file):
 
         # first build generic plot for entire dataset
-        log('Creating basic QA plot (checkm bin_qa_plot) ...')
-        bin_qa_plot_options = {'bin_folder': bin_folder,
-                               'out_folder': out_folder,
-                               'plots_folder': plots_folder
-                               }
-        self.run_checkM('bin_qa_plot', bin_qa_plot_options, dropOutput=True)
+#         log('Creating basic QA plot (checkm bin_qa_plot) ...')
+#         bin_qa_plot_options = {'bin_folder': bin_folder,
+#                                'out_folder': out_folder,
+#                                'plots_folder': plots_folder
+#                                }
+#         self.run_checkM('bin_qa_plot', bin_qa_plot_options, dropOutput=True)
 
         # compute tetranucleotide frequencies based on the concatenated fasta file
         log('Computing tetranucleotide distributions...')
@@ -167,7 +167,7 @@ class CheckMUtil:
 
     def run_checkM(self, subcommand, options, dropOutput=False):
         '''
-            subcommand is the checkm subcommand (eg lineage_wf, tetra, bin_qa_plot)
+            subcommand is the checkm subcommand (eg lineage_wf, tetra, etc)
             options indicate, depending on the subcommand:
                 bin_folder
                 out_folder
@@ -238,12 +238,12 @@ class CheckMUtil:
             command.append(options['bin_folder'])
             command.append(options['out_folder'])
 
-        elif subcommand == 'bin_qa_plot':
-            self._validate_options(options, checkBin=True, checkOut=True, checkPlots=True,
-                                   subcommand='bin_qa_plot')
-            command.append(options['out_folder'])
-            command.append(options['bin_folder'])
-            command.append(options['plots_folder'])
+#         elif subcommand == 'bin_qa_plot':
+#             self._validate_options(options, checkBin=True, checkOut=True, checkPlots=True,
+#                                    subcommand='bin_qa_plot')
+#             command.append(options['out_folder'])
+#             command.append(options['bin_folder'])
+#             command.append(options['plots_folder'])
 
         elif subcommand == 'tetra':
             self._validate_options(options, checkTetraFile=True, subcommand='tetra')
