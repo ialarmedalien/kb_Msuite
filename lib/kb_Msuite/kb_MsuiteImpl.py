@@ -2,12 +2,8 @@
 #BEGIN_HEADER
 import os
 import json
-
-# from pprint import pprint
-
 from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 from kb_Msuite.Utils.simple_run_checkm import run_checkm
-# from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 #END_HEADER
 
 
@@ -82,7 +78,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         # ctx is the context object
         #BEGIN run_checkM
         print('--->\nRunning kb_Msuite.run_checkM\nparams:')
-        print((json.dumps(params, indent=1)))
+        print(json.dumps(params, indent=1))
 
         for key, value in list(params.items()):
             if isinstance(value, str):
@@ -116,7 +112,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         # return variables are: result
         #BEGIN run_checkM_lineage_wf
         print('--->\nRunning kb_Msuite.run_checkM_lineage_wf\nparams:')
-        print((json.dumps(params, indent=1)))
+        print(json.dumps(params, indent=1))
 
         cmu = CheckMUtil(self.config, ctx)
         result = cmu.run_checkM_lineage_wf(params)
@@ -153,7 +149,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         # return variables are: result
         #BEGIN run_checkM_lineage_wf_withFilter
         print('--->\nRunning kb_Msuite.run_checkM_lineage_wf_withFilter\nparams:')
-        print((json.dumps(params, indent=1)))
+        print(json.dumps(params, indent=1))
 
         cmu = CheckMUtil(self.config, ctx)
         result = cmu.run_checkM_lineage_wf(params)

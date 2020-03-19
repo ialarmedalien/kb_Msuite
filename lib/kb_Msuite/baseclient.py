@@ -5,8 +5,6 @@
 #
 ############################################################
 
-
-
 import json as _json
 import requests as _requests
 import random as _random
@@ -14,16 +12,8 @@ import os as _os
 import traceback as _traceback
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import ProtocolError
-
-try:
-    from configparser import ConfigParser as _ConfigParser  # py 3
-except ImportError:
-    from configparser import ConfigParser as _ConfigParser  # py 2
-
-try:
-    from urllib.parse import urlparse as _urlparse  # py3
-except ImportError:
-    from urllib.parse import urlparse as _urlparse  # py2
+from configparser import ConfigParser as _ConfigParser  # py 3
+from urllib.parse import urlparse as _urlparse  # py3
 import time
 
 _CT = 'content-type'

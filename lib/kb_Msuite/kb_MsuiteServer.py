@@ -30,7 +30,6 @@ AUTH = 'auth-service-url'
 
 # Note that the error fields do not match the 2.0 JSONRPC spec
 
-
 def get_config_file():
     return environ.get(DEPLOY, None)
 
