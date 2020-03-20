@@ -165,7 +165,7 @@ class CheckMUtil:
                              }
         self.run_checkM('dist_plot', dist_plot_options, dropOutput=True)
 
-    def run_checkM(self, subcommand, options, dropOutput=False):
+    def run_checkM(self, subcommand, options, dropOutput=True):
         '''
             subcommand is the checkm subcommand (eg lineage_wf, tetra, etc)
             options indicate, depending on the subcommand:
@@ -199,6 +199,10 @@ class CheckMUtil:
             log('Executed command: ' + ' '.join(command) + '\n' +
                 'Exit Code: ' + str(exitCode))
         else:
+            log('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
+            with open(os.path.join(self.scratch, subcommand + '.out') as f:
+                for line in f:
+                    log(line, end='')
             raise ValueError('Error running command: ' + ' '.join(command) + '\n' +
                              'Exit Code: ' + str(exitCode))
 

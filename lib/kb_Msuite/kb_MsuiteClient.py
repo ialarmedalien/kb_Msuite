@@ -6,7 +6,7 @@
 #
 ############################################################
 
-
+from __future__ import print_function
 # the following is a hack to get the baseclient to import whether we're in a
 # package or not. This makes pep8 unhappy hence the annotations.
 try:
@@ -14,7 +14,7 @@ try:
     from .baseclient import BaseClient as _BaseClient  # @UnusedImport
 except ImportError:
     # no they aren't
-    from .baseclient import BaseClient as _BaseClient  # @Reimport
+    from baseclient import BaseClient as _BaseClient  # @Reimport
 
 
 class kb_Msuite(object):
@@ -96,7 +96,7 @@ class kb_Msuite(object):
         :returns: instance of type "CheckMLineageWf_withFilter_Result" ->
            structure: parameter "report_name" of String, parameter
            "report_ref" of String, parameter "binned_contig_obj_ref" of type
-           "obj_ref" ("WS_ID/OBJ_ID/VER")
+           "obj_ref" (An X/Y/Z style reference e.g. "WS_ID/OBJ_ID/VER")
         """
         return self._client.call_method('kb_Msuite.run_checkM_lineage_wf_withFilter',
                                         [params], self._service_ver, context)

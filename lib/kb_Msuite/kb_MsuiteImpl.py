@@ -22,7 +22,7 @@ References:
 CheckM in github: http://ecogenomics.github.io/CheckM/
 CheckM docs: https://github.com/Ecogenomics/CheckM/wiki
 
-Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: assessing the quality of microbial genomes recovered from isolates, single cells, and metagenomes. Genome Research, 25: 1043???1055.
+Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: assessing the quality of microbial genomes recovered from isolates, single cells, and metagenomes. Genome Research, 25: 1043–1055.
     '''
 
     ######## WARNING FOR GEVENT USERS ####### noqa
@@ -32,8 +32,8 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
     # the latter method is running.
     ######################################### noqa
     VERSION = "1.4.0"
-    GIT_URL = "https://github.com/kbaseapps/kb_Msuite"
-    GIT_COMMIT_HASH = "d0b7da86da423aa43bb33139d35cff996de19e4f"
+    GIT_URL = "https://github.com/kbaseapps/kb_Msuite.git"
+    GIT_COMMIT_HASH = "5739ed8f506b26c36816e2b3e89fb148cad41a19"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -143,7 +143,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         :returns: instance of type "CheckMLineageWf_withFilter_Result" ->
            structure: parameter "report_name" of String, parameter
            "report_ref" of String, parameter "binned_contig_obj_ref" of type
-           "obj_ref" ("WS_ID/OBJ_ID/VER")
+           "obj_ref" (An X/Y/Z style reference e.g. "WS_ID/OBJ_ID/VER")
         """
         # ctx is the context object
         # return variables are: result
@@ -171,7 +171,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
            arguments: *   bin_dir - required - Path to the directory where
            your bins are located *   out_dir - required - Path to a directory
            where we will write output files *   log_path - required - Path to
-           a file that will be written to with all log output from *
+           a file that will be written to with all log output from *    
            stdout and stderr while running `checkm lineage_wf`. *   options -
            optional - A mapping of options to pass to lineage_wf. See the
            README.md *     in the kb_Msuite repo for a list of all of these.
