@@ -200,9 +200,9 @@ class CheckMUtil:
                 'Exit Code: ' + str(exitCode))
         else:
             log('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
-            with open(os.path.join(self.scratch, subcommand + '.out') as f:
-                for line in f:
-                    log(line, end='')
+            log_output_file.open()
+            for line in log_output_file:
+                log(line)
             raise ValueError('Error running command: ' + ' '.join(command) + '\n' +
                              'Exit Code: ' + str(exitCode))
 
