@@ -138,12 +138,12 @@ class CheckMUtil:
                                       all_seq_fasta_file, tetra_file):
 
         # first build generic plot for entire dataset
-#         log('Creating basic QA plot (checkm bin_qa_plot) ...')
-#         bin_qa_plot_options = {'bin_folder': bin_folder,
-#                                'out_folder': out_folder,
-#                                'plots_folder': plots_folder
-#                                }
-#         self.run_checkM('bin_qa_plot', bin_qa_plot_options, dropOutput=True)
+        log('Creating basic QA plot (checkm bin_qa_plot) ...')
+        bin_qa_plot_options = {'bin_folder': bin_folder,
+                               'out_folder': out_folder,
+                               'plots_folder': plots_folder
+                               }
+        self.run_checkM('bin_qa_plot', bin_qa_plot_options, dropOutput=True)
 
         # compute tetranucleotide frequencies based on the concatenated fasta file
         log('Computing tetranucleotide distributions...')
@@ -165,9 +165,9 @@ class CheckMUtil:
                              }
         self.run_checkM('dist_plot', dist_plot_options, dropOutput=True)
 
-    def run_checkM(self, subcommand, options, dropOutput=True):
+    def run_checkM(self, subcommand, options, dropOutput=False):
         '''
-            subcommand is the checkm subcommand (eg lineage_wf, tetra, etc)
+            subcommand is the checkm subcommand (eg lineage_wf, tetra, bin_qa_plot)
             options indicate, depending on the subcommand:
                 bin_folder
                 out_folder
@@ -182,12 +182,10 @@ class CheckMUtil:
         log('Running: ' + ' '.join(command))
 
         log_output_file = None
-        log_output_filename = None
         if dropOutput:
             # necessary because the checkM --quiet flag doesn't work on the tetra subcommand,
             # and that produces a line per contig
-            log_output_filename = os.path.join(self.scratch, subcommand + '.out')
-            log_output_file = open(log_output_filename, 'w')
+            log_output_file = open(os.path.join(self.scratch, subcommand + '.out'), 'w')
             p = subprocess.Popen(command, cwd=self.scratch, shell=False,
                                  stdout=log_output_file, stderr=subprocess.STDOUT)
         else:
@@ -201,10 +199,6 @@ class CheckMUtil:
             log('Executed command: ' + ' '.join(command) + '\n' +
                 'Exit Code: ' + str(exitCode))
         else:
-            log('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
-            log_output_file = open(log_output_filename, 'r')
-            for line in log_output_file:
-                log(line)
             raise ValueError('Error running command: ' + ' '.join(command) + '\n' +
                              'Exit Code: ' + str(exitCode))
 
@@ -244,12 +238,12 @@ class CheckMUtil:
             command.append(options['bin_folder'])
             command.append(options['out_folder'])
 
-#         elif subcommand == 'bin_qa_plot':
-#             self._validate_options(options, checkBin=True, checkOut=True, checkPlots=True,
-#                                    subcommand='bin_qa_plot')
-#             command.append(options['out_folder'])
-#             command.append(options['bin_folder'])
-#             command.append(options['plots_folder'])
+        elif subcommand == 'bin_qa_plot':
+            self._validate_options(options, checkBin=True, checkOut=True, checkPlots=True,
+                                   subcommand='bin_qa_plot')
+            command.append(options['out_folder'])
+            command.append(options['bin_folder'])
+            command.append(options['plots_folder'])
 
         elif subcommand == 'tetra':
             self._validate_options(options, checkTetraFile=True, subcommand='tetra')

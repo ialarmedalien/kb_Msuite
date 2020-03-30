@@ -78,8 +78,8 @@ RUN \
 
 # -----------------------------------------
 COPY ./ /kb/module
-RUN mkdir -p /kb/module/work
-RUN chmod -R a+rw /kb/module
+RUN mkdir -p /kb/module/work \
+    && chmod -R a+rw /kb/module
 
 WORKDIR /kb/module
 

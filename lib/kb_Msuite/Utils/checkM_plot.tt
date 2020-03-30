@@ -1,0 +1,14 @@
+[% INCLUDE html_header.tt object_name, report_type %]
+<body>
+[% INCLUDE _write_tabs.tt report_type %]
+<br><br><br>
+[% IF plot;
+    # include the single main summary figure %]
+    <div id="Plot" class="tabcontent">
+    <img src="[% plot_name %]" width="90%" />
+    </div>
+[% ELSE %]
+    <p>Sorry, the Bin QA Plot was not generated. This is likely to be due to having too many bins and too large of an image size to render properly.</p>
+[% END %]
+</body>
+</html>
