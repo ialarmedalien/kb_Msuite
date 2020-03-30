@@ -74,7 +74,8 @@ RUN \
     && mv /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG.orig \
     && touch /data/DATA_CONFIG \
     && cp /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG.orig /data/DATA_CONFIG \
-    && ln -sf /data/DATA_CONFIG /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG
+    && ln -sf /data/DATA_CONFIG /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG \
+    && chmod +rwx /data/DATA_CONFIG /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG
 
 # -----------------------------------------
 COPY ./ /kb/module
