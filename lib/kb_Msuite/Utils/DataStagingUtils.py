@@ -370,9 +370,9 @@ class DataStagingUtils(object):
             bin_IDs.append(bin_ID)
         summary_file_path = os.path.join(bin_dir, bin_basename+'.'+'summary')
 
-        print(("writing filtered binned contigs summary file "+summary_file_path))
+        print("writing filtered binned contigs summary file "+summary_file_path)
         with open(summary_file_path, 'w') as summary_file_handle:
-            print(("\t".join(header_line)))
+            print("\t".join(header_line))
             summary_file_handle.write("\t".join(header_line)+"\n")
             for bin_ID in bin_IDs:
                 #print ("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
@@ -381,7 +381,7 @@ class DataStagingUtils(object):
                                          str(bin_summary_info[bin_ID]['sum_contig_len']),
                                          str(bin_summary_info[bin_ID]['gc'])
                                         ]
-                print(("\t".join(bin_summary_info_line)))
+                print("\t".join(bin_summary_info_line))
                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
 
         return summary_file_path

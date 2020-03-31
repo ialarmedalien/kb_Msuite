@@ -61,7 +61,7 @@ ENV PATH "$PATH:/kb/deployment/bin/pplacer"
 # This will install CheckM and all other required Python libraries.
 RUN \
     pip3 install numpy \
-    && pip3 install matplotlib \
+    && pip3 install matplotlib==3.1.0 \
     && pip3 install pysam \
     && pip3 install scipy \
     && pip3 install dendropy

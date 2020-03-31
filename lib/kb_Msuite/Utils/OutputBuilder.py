@@ -11,7 +11,7 @@ from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
-    print((('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message)))
+    print(('\n' if prefix_newline else '')  + '{0:.2f}'.format(time.time()) + ': ' + str(message))
     sys.stdout.flush()
 
 
@@ -181,9 +181,10 @@ class OutputBuilder(object):
 
         # DEBUG
         for bid in sorted(bin_stats.keys()):
-            print(("BIN STATS BID: "+bid))
-        for bid in removed_bins:
-            print(("REMOVED BID: "+bid))
+            print("BIN STATS BID: "+bid)
+        if removed_bins:
+            for bid in removed_bins:
+                print("REMOVED BID: "+bid)
 
         for bid in sorted(bin_stats.keys()):
             row_opening = '<tr>'
