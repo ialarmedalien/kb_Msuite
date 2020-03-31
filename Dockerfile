@@ -87,7 +87,7 @@ WORKDIR /kb/module
 RUN make all
 
 RUN mkdir -p checkm_data \
-    && mv checkm_data_2015_01_16.tar.gz checkm_data \
+    && cp checkm_data_2015_01_16.tar.gz checkm_data/checkm_data_2015_01_16.tar.gz \
     && cd checkm_data \
     && tar -xzf checkm_data_2015_01_16.tar.gz \
     && rm -r checkm_data_2015_01_16.tar.gz \

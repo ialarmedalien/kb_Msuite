@@ -9,7 +9,7 @@ if [ -f ./work/token ] ; then
   export KB_AUTH_TOKEN=$(<./work/token)
 elif [ ! -z ${KBASE_TEST_TOKEN} ] ; then
   # put the test token into work/token
-  cat <<< ${KBASE_TEST_TOKEN} > work/token
+  cat <<< ${KBASE_TEST_TOKEN} > ./work/token
   export KB_AUTH_TOKEN=${KBASE_TEST_TOKEN}
 fi
 
@@ -27,7 +27,8 @@ elif [ "${1}" = "init" ] ; then
   mkdir -p /data/checkm_data
   cd /data/checkm_data
   echo "downloading: https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz"
-  wget -q https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz
+#  wget -q https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz
+  cp /kb/module/checkm_data_2015_01_16.tar.gz .
   tar -xzf checkm_data_2015_01_16.tar.gz
   rm -r checkm_data_2015_01_16.tar.gz
   echo /data/checkm_data | checkm data setRoot /data/checkm_data
