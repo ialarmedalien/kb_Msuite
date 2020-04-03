@@ -75,6 +75,11 @@ class DataStagingUtils(object):
         except Exception as e:
             raise ValueError('Unable to instantiate mguClient with callbackURL: ' + self.callbackURL + ' ERROR: ' + str(e))
 
+#         auClient
+#         fasta_file_extension
+#         input_dir
+#         input_ref
+#         obj_name
 
         # Standard Single Assembly
         #
@@ -92,6 +97,13 @@ class DataStagingUtils(object):
         # AssemblySet
         #
         elif type_name == 'KBaseSets.AssemblySet':
+
+#             auClient
+#             fasta_file_extension
+#             input_dir
+#             input_ref
+#             setAPI_Client
+#             ws
 
             # read assemblySet
             try:
@@ -127,6 +139,11 @@ class DataStagingUtils(object):
         #
         elif type_name == 'KBaseMetagenomes.BinnedContigs':
 
+#             fasta_file_extension
+#             input_dir
+#             input_ref
+#             mguClient
+
             # download the bins as fasta and set the input folder name
             bin_file_dir = mguClient.binned_contigs_to_file({'input_ref': input_ref, 'save_to_shock': 0})['bin_file_directory']
             os.rename(bin_file_dir, input_dir)
@@ -143,6 +160,13 @@ class DataStagingUtils(object):
         # Genome and GenomeSet
         #
         elif type_name == 'KBaseGenomes.Genome' or type_name == 'KBaseSearch.GenomeSet':
+
+#             auClient
+#             fasta_file_extension
+#             input_dir
+#             input_ref
+#             ws
+
             genome_obj_names = []
             genome_sci_names = []
             genome_assembly_refs = []
@@ -269,6 +293,7 @@ class DataStagingUtils(object):
             raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
                              'Exit Code: ' + str(exitCode))
 
+
     def get_bin_fasta_files(self, input_dir, fasta_extension):
         bin_fasta_files = dict()
         for (dirpath, dirnames, filenames) in os.walk(input_dir):
@@ -288,6 +313,7 @@ class DataStagingUtils(object):
                     #print ("ACCEPTED: "+bin_ID+" FILE:"+fasta_file)  # DEBUG
 
         return bin_fasta_files
+
 
     def get_data_obj_type_by_name(self, input_ref, remove_module=False):
         # 0 obj_id objid - the numerical id of the object.
@@ -311,6 +337,7 @@ class DataStagingUtils(object):
             type_name = type_name.split('.')[1]
         return {obj_name: type_name}
 
+
     def get_data_obj_name(self, input_ref):
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
         ws = Workspace(self.ws_url)
@@ -318,6 +345,7 @@ class DataStagingUtils(object):
         obj_name = input_info[NAME_I]
         #type_name = input_info[TYPE_I].split('-')[0]
         return obj_name
+
 
     def get_data_obj_type(self, input_ref, remove_module=False):
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
@@ -329,6 +357,7 @@ class DataStagingUtils(object):
             type_name = type_name.split('.')[1]
         return type_name
 
+
     def read_assembly_ref_from_binnedcontigs(self, input_ref):
         ws = Workspace(self.ws_url)
         try:
@@ -338,6 +367,7 @@ class DataStagingUtils(object):
             #to get the full stack trace: traceback.format_exc()
 
         return binned_contig_obj['assembly_ref']
+
 
     def build_bin_summary_file_from_binnedcontigs_obj(self, input_ref, bin_dir, bin_basename, fasta_extension):
 

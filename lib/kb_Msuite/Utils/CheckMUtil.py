@@ -30,6 +30,7 @@ class CheckMUtil:
         self.scratch = config['scratch']
         self.threads = config['threads']
 
+
     def run_checkM_lineage_wf(self, params):
         '''
         Main entry point for running the lineage_wf as a KBase App
@@ -152,7 +153,7 @@ class CheckMUtil:
                          'threads': self.threads,
                          'quiet': 1
                          }
-        self.run_checkM('tetra', tetra_options, dropOutput=True)
+        self.run_checkM('tetra', tetra_options) #, dropOutput=True)
 
         # plot distributions for each bin
         log('Creating distribution plots per bin...')
@@ -163,9 +164,10 @@ class CheckMUtil:
                              'dist_value': 95,
                              'quiet': 1
                              }
-        self.run_checkM('dist_plot', dist_plot_options, dropOutput=True)
+        self.run_checkM('dist_plot', dist_plot_options) #, dropOutput=True)
 
-    def run_checkM(self, subcommand, options, dropOutput=True):
+
+    def run_checkM(self, subcommand, options): #, dropOutput=True):
         '''
             subcommand is the checkm subcommand (eg lineage_wf, tetra, etc)
             options indicate, depending on the subcommand:
@@ -179,19 +181,21 @@ class CheckMUtil:
                 dist_value
         '''
         command = self._build_command(subcommand, options)
-        log('Running: ' + ' '.join(command))
+        log('\n\ncheckMUtil.run_checkM: Running: ' + ' '.join(command) + '\n\n')
 
-        log_output_file = None
-        log_output_filename = None
-        if dropOutput:
+#         log_output_file = None
+#         log_output_filename = None
+#         if dropOutput:
             # necessary because the checkM --quiet flag doesn't work on the tetra subcommand,
             # and that produces a line per contig
-            log_output_filename = os.path.join(self.scratch, subcommand + '.out')
-            log_output_file = open(log_output_filename, 'w')
-            p = subprocess.Popen(command, cwd=self.scratch, shell=False,
-                                 stdout=log_output_file, stderr=subprocess.STDOUT)
-        else:
-            p = subprocess.Popen(command, cwd=self.scratch, shell=False)
+        log_output_filename = os.path.join(self.scratch, subcommand + '.out')
+        log('sending log output to ' + log_output_filename)
+        log_output_file = open(log_output_filename, 'w')
+        p = subprocess.Popen(command, cwd=self.scratch, shell=False,
+                             stdout=log_output_file, stderr=subprocess.STDOUT)
+#         else:
+#             p = subprocess.Popen(command, cwd=self.scratch, shell=False)
+
         exitCode = p.wait()
 
         if log_output_file:
@@ -208,6 +212,7 @@ class CheckMUtil:
             raise ValueError('Error running command: ' + ' '.join(command) + '\n' +
                              'Exit Code: ' + str(exitCode))
 
+
     def _process_universal_options(self, command_list, options):
         if options.get('threads'):
             command_list.append('-t')
@@ -215,6 +220,7 @@ class CheckMUtil:
 
         if options.get('quiet') and str(options.get('quiet')) == '1':
             command_list.append('--quiet')
+
 
     def _validate_options(self, options,
                           checkBin=False,
@@ -231,6 +237,7 @@ class CheckMUtil:
             raise ValueError('cannot run checkm ' + subcommand + ' without plots_folder option set')
         if checkTetraFile and 'tetra_file' not in options:
             raise ValueError('cannot run checkm ' + subcommand + ' without tetra_file option set')
+
 
     def _build_command(self, subcommand, options):
 
@@ -273,6 +280,7 @@ class CheckMUtil:
             raise ValueError('Invalid or unsupported checkM subcommand: ' + str(subcommand))
 
         return command
+
 
     def _filter_binned_contigs(self,
                                params,
@@ -373,7 +381,6 @@ class CheckMUtil:
 
     def _build_output_packages(self, params, outputBuilder, input_dir, removed_bins=None):
         output_packages = []
-
 
         # create bin report summary TSV table text file
         log('creating TSV summary table text file')

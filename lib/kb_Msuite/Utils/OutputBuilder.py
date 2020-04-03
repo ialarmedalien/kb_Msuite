@@ -28,6 +28,7 @@ class OutputBuilder(object):
         self.callback_url = callback_url
         self.DIST_PLOT_EXT = '.ref_dist_plots.png'
 
+
     def package_folder(self, folder_path, zip_file_name, zip_file_description):
         ''' Simple utility for packaging a folder and saving to shock '''
         if folder_path == self.scratch:
@@ -41,6 +42,7 @@ class OutputBuilder(object):
         return {'shock_id': output['shock_id'],
                 'name': zip_file_name,
                 'description': zip_file_description}
+
 
     def build_critical_output(self, critical_out_dir):
         src = self.output_dir
@@ -57,6 +59,7 @@ class OutputBuilder(object):
         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats_ext.tsv'), src, dest)
         self._copy_file_ignore_errors(os.path.join('storage', 'marker_gene_stats.tsv'), src, dest)
         self._copy_file_ignore_errors(os.path.join('storage', 'tree', 'concatenated.tre'), src, dest)
+
 
     def build_html_output_for_lineage_wf(self, html_dir, object_name, removed_bins=None):
         '''
@@ -370,6 +373,7 @@ class OutputBuilder(object):
         html.write(style)
         html.write('</head>\n')
 
+
     def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
         src = os.path.join(src_folder, filename)
         dest = os.path.join(dest_folder, filename)
@@ -380,6 +384,7 @@ class OutputBuilder(object):
             # TODO: add error message reporting
             log('copy failed')
 
+
     def _copy_file_new_name_ignore_errors(self, src_path, dst_path):
         src = src_path
         dest = dst_path
@@ -389,6 +394,7 @@ class OutputBuilder(object):
         except:
             # TODO: add error message reporting
             log('copy failed')
+
 
     def _write_dist_html_page(self, html_dir, bin_id):
 
@@ -406,6 +412,7 @@ class OutputBuilder(object):
         html.write('<br><br><br>\n')
         html.write('</body>\n</html>\n')
         html.close()
+
 
     def _copy_ref_dist_plots(self, plots_dir, dest_folder):
         for plotfile in os.listdir(plots_dir):
