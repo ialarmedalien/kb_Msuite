@@ -37,7 +37,7 @@ class CoreCheckMTest(unittest.TestCase):
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         test_time_stamp = int(time.time() * 1000)
-        environ.set('KB_TEST_ID', str(current_test) + '__' + str(test_time_stamp))
+        environ['KB_TEST_ID'] = str(current_test) + '__' + str(test_time_stamp))
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
