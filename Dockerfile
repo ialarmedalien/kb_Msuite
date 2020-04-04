@@ -79,23 +79,25 @@ RUN \
 
 # -----------------------------------------
 COPY ./ /kb/module
-RUN mkdir -p /kb/module/work \
-    && chmod -R a+rw /kb/module
 
 WORKDIR /kb/module
 
-RUN make all
+RUN mkdir -p /kb/module/work \
+    && chmod -R a+rw /kb/module \
+    && make all \
+    && rm /data/__READY__
 
-RUN mkdir -p checkm_data \
-    && cp checkm_data_2015_01_16.tar.gz checkm_data/checkm_data_2015_01_16.tar.gz \
-    && cd checkm_data \
-    && tar -xzf checkm_data_2015_01_16.tar.gz \
-    && rm -r checkm_data_2015_01_16.tar.gz \
-    && cd /kb/module \
-    && mv checkm_data/* /data/checkm_data/ \
-    && echo /data/checkm_data | checkm data setRoot /data/checkm_data \
-    && ls -al /data/checkm_data \
-    && ls -al /data
+# RUN mkdir -p checkm_data \
+#     && cp checkm_data_2015_01_16.tar.gz checkm_data/checkm_data_2015_01_16.tar.gz \
+#     && cd checkm_data \
+#     && tar -xzf checkm_data_2015_01_16.tar.gz \
+#     && rm -r checkm_data_2015_01_16.tar.gz \
+#     && cd /kb/module \
+#     && mv checkm_data/* /data/checkm_data/ \
+#     && echo /data/checkm_data | checkm data setRoot /data/checkm_data \
+#     && rm /data/__READY \
+#     && ls -al /data/checkm_data \
+#     && ls -al /data
 
 # echo "Initialize module"
 # cp /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG.orig /data/DATA_CONFIG
