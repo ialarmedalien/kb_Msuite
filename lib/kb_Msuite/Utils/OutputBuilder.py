@@ -396,6 +396,49 @@ class OutputBuilder(object):
             log('copy failed')
 
 
+    def _build_output_packages(self, params, input_dir, removed_bins=None):
+        output_packages = []
+
+        # create bin report summary TSV table text file
+        log('creating TSV summary table text file')
+        tab_text_dir = os.path.join(outputBuilder.output_dir, 'tab_text')
+        tab_text_file = 'CheckM_summary_table.tsv'
+        outputBuilder.build_summary_tsv_file(tab_text_dir, tab_text_file, removed_bins=removed_bins)
+        tab_text_zipped = outputBuilder.package_folder(tab_text_dir,
+                                                       tab_text_file+'.zip',
+                                                       'TSV Summary Table from CheckM')
+        output_packages.append(tab_text_zipped)
+
+
+        # if 'save_output_dir' in params and str(params['save_output_dir']) == '1':
+        if True:
+            log('packaging full output directory')
+            zipped_output_file = outputBuilder.package_folder(outputBuilder.output_dir,
+                'full_output.zip',
+                'Full output of CheckM')
+            output_packages.append(zipped_output_file)
+        else:  # ADD LATER?
+            log('not packaging full output directory, selecting specific files')
+            crit_out_dir = os.path.join(self.scratch,
+                'critical_output_' + os.path.basename(input_dir))
+            os.makedirs(crit_out_dir)
+            zipped_output_file = outputBuilder.package_folder(outputBuilder.output_dir,
+                'selected_output.zip',
+                'Selected output from the CheckM analysis')
+            output_packages.append(zipped_output_file)
+
+        if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
+            log('packaging output plots directory')
+            zipped_output_file = outputBuilder.package_folder(outputBuilder.plots_dir,
+                'plots.zip',
+                'Output plots from CheckM')
+            output_packages.append(zipped_output_file)
+        else:
+            log('not packaging output plots directory')
+
+        return output_packages
+
+
     def _write_dist_html_page(self, html_dir, bin_id):
 
         # write the html report to file

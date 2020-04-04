@@ -28,6 +28,7 @@ from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 
+current_test = 1
 
 class CoreCheckMTest(unittest.TestCase):
 
@@ -35,6 +36,8 @@ class CoreCheckMTest(unittest.TestCase):
     def setUpClass(cls):
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
+        test_time_stamp = int(time.time() * 1000)
+        environ.set('KB_TEST_ID', str(current_test) + '__' + str(test_time_stamp))
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
@@ -60,11 +63,11 @@ class CoreCheckMTest(unittest.TestCase):
         cls.serviceImpl = kb_Msuite(cls.cfg)
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.scratch = cls.cfg['scratch']
-        cls.suffix = int(time.time() * 1000)
-        #cls.scratch = cls.cfg['scratch']+'_'+str(suffix)
-        #cls.cfg['scratch'] = cls.scratch
-        #if not os.path.exists(cls.scratch):
-        #    os.mkdir(cls.scratch)
+        cls.suffix = test_time_stamp
+        cls.scratch = cls.cfg['scratch']+'--'+str(current_test)+'__'+str(suffix)
+        cls.cfg['scratch'] = cls.scratch
+        if not os.path.exists(cls.scratch):
+           os.mkdir(cls.scratch)
         cls.checkm_runner = CheckMUtil(cls.cfg, cls.ctx)
 
         cls.wsName = "test_kb_Msuite_" + str(cls.suffix)
@@ -86,6 +89,8 @@ class CoreCheckMTest(unittest.TestCase):
 
         # prepare WS data
         cls.prepare_data()
+
+        current_test = current_test + 1
 
     @classmethod
     def tearDownClass(cls):
