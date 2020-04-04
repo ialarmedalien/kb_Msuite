@@ -85,7 +85,7 @@ WORKDIR /kb/module
 RUN mkdir -p /kb/module/work \
     && chmod -R a+rw /kb/module \
     && make all \
-    && rm /data/__READY__
+    && rm -f /data/__READY__
 
 # RUN mkdir -p checkm_data \
 #     && cp checkm_data_2015_01_16.tar.gz checkm_data/checkm_data_2015_01_16.tar.gz \
@@ -113,7 +113,7 @@ RUN mkdir -p /kb/module/work \
 #   echo "Init failed"
 # fi
 
-WORKDIR /kb/module
+# WORKDIR /kb/module
 
 ENTRYPOINT [ "./scripts/entrypoint.sh" ]
 
