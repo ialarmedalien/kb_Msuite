@@ -401,10 +401,10 @@ class OutputBuilder(object):
 
         # create bin report summary TSV table text file
         log('creating TSV summary table text file')
-        tab_text_dir = os.path.join(outputBuilder.output_dir, 'tab_text')
+        tab_text_dir = os.path.join(self.output_dir, 'tab_text')
         tab_text_file = 'CheckM_summary_table.tsv'
-        outputBuilder.build_summary_tsv_file(tab_text_dir, tab_text_file, removed_bins=removed_bins)
-        tab_text_zipped = outputBuilder.package_folder(tab_text_dir,
+        self.build_summary_tsv_file(tab_text_dir, tab_text_file, removed_bins=removed_bins)
+        tab_text_zipped = self.package_folder(tab_text_dir,
                                                        tab_text_file+'.zip',
                                                        'TSV Summary Table from CheckM')
         output_packages.append(tab_text_zipped)
@@ -413,7 +413,7 @@ class OutputBuilder(object):
         # if 'save_output_dir' in params and str(params['save_output_dir']) == '1':
         if True:
             log('packaging full output directory')
-            zipped_output_file = outputBuilder.package_folder(outputBuilder.output_dir,
+            zipped_output_file = self.package_folder(self.output_dir,
                 'full_output.zip',
                 'Full output of CheckM')
             output_packages.append(zipped_output_file)
@@ -422,14 +422,14 @@ class OutputBuilder(object):
             crit_out_dir = os.path.join(self.scratch,
                 'critical_output_' + os.path.basename(input_dir))
             os.makedirs(crit_out_dir)
-            zipped_output_file = outputBuilder.package_folder(outputBuilder.output_dir,
+            zipped_output_file = self.package_folder(self.output_dir,
                 'selected_output.zip',
                 'Selected output from the CheckM analysis')
             output_packages.append(zipped_output_file)
 
         if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
             log('packaging output plots directory')
-            zipped_output_file = outputBuilder.package_folder(outputBuilder.plots_dir,
+            zipped_output_file = self.package_folder(self.plots_dir,
                 'plots.zip',
                 'Output plots from CheckM')
             output_packages.append(zipped_output_file)
@@ -489,4 +489,3 @@ class OutputBuilder(object):
             'obj_name': filtered_binned_contig_obj_name,
             'obj_ref': filtered_binned_contig_obj_ref
         }
-
