@@ -32,10 +32,12 @@ class CoreCheckMTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        init_time_stamp = time.time()
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         test_time_stamp = str(int(time.time() * 1000))
         environ['KB_TEST_ID'] = test_time_stamp
+
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
@@ -61,19 +63,20 @@ class CoreCheckMTest(unittest.TestCase):
         cls.serviceImpl = kb_Msuite(cls.cfg)
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.scratch = cls.cfg['scratch']
-        cls.suffix = test_time_stamp
-        cls.scratch = cls.cfg['scratch']+'--'+test_time_stamp
-        cls.cfg['scratch'] = cls.scratch
-        if not os.path.exists(cls.scratch):
-           os.mkdir(cls.scratch)
+
+#         cls.suffix = test_time_stamp
+#         cls.scratch = cls.cfg['scratch']+'--'+test_time_stamp
+#         cls.cfg['scratch'] = cls.scratch
+#         if not os.path.exists(cls.scratch):
+#            os.mkdir(cls.scratch)
         cls.checkm_runner = CheckMUtil(cls.cfg, cls.ctx)
 
         cls.wsName = "test_kb_Msuite_" + str(cls.suffix)
         cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
         cls.au = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
-        cls.setAPI = SetAPI(url=cls.cfg['srv-wiz-url'], token=cls.ctx['token'])
         cls.gfu = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
         cls.mu = MetagenomeUtils(os.environ['SDK_CALLBACK_URL'])
+        cls.setAPI = SetAPI(url=cls.cfg['srv-wiz-url'], token=cls.ctx['token'])
 
         # stage an input and output directory
         """
@@ -87,8 +90,8 @@ class CoreCheckMTest(unittest.TestCase):
 
         # prepare WS data
         cls.prepare_data()
-
-        current_test = current_test + 1
+        end_time_stamp = time.time()
+        print("set up time: " + str( end_time_stamp - init_time_stamp ) )
 
     @classmethod
     def tearDownClass(cls):
