@@ -35,8 +35,8 @@ class CoreCheckMTest(unittest.TestCase):
         init_time_stamp = time.time()
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
-        test_time_stamp = str(int(time.time() * 1000))
-        environ['KB_TEST_ID'] = test_time_stamp
+        test_time_stamp = int(time.time() * 1000)
+        environ['KB_TEST_ID'] = str(test_time_stamp)
 
         cls.cfg = {}
         config = ConfigParser()
@@ -63,7 +63,7 @@ class CoreCheckMTest(unittest.TestCase):
         cls.serviceImpl = kb_Msuite(cls.cfg)
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.scratch = cls.cfg['scratch']
-
+        cls.suffix = test_time_stamp
 #         cls.suffix = test_time_stamp
 #         cls.scratch = cls.cfg['scratch']+'--'+test_time_stamp
 #         cls.cfg['scratch'] = cls.scratch
