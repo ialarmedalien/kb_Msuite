@@ -140,6 +140,7 @@ class CheckMUtil:
           and params.get('output_filtered_binnedcontigs_obj_name'):
             filter_results = True
             run_config['results_filtered'] = True
+            self.run_config = run_config
             filtered_obj_info = self._filter_binned_contigs(run_config, dsu, outputBuilder)
 #                                                             input_dir,
 #                                                             output_dir,
@@ -258,6 +259,7 @@ class CheckMUtil:
         '''
         command = self._build_command(subcommand, options)
         log('\n\ncheckMUtil.run_checkM: Running: ' + ' '.join(command) + '\n\n')
+        run_config = self.run_config
 
 #         log_output_file = None
 #         log_output_filename = None
