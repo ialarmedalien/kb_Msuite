@@ -380,7 +380,7 @@ class CheckMUtil:
         if not os.path.exists(filtered_bins_dir):
             os.makedirs(filtered_bins_dir)
 
-        bin_fasta_files_by_bin_ID = dataStagingUtils.get_bin_fasta_files(input_dir, run_config['fasta_extension'])
+        bin_fasta_files_by_bin_ID = dataStagingUtils.get_bin_fasta_files(input_dir, run_config['fasta_ext'])
 #            input_dir, self.fasta_extension)
 
         log("DEBUG: bin_fasta_files_by_bin_ID: ")
@@ -419,7 +419,7 @@ class CheckMUtil:
             for bin_stats_line in bin_stats_ext_handle:
                 bin_stats_line.rstrip()
                 [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
-                bin_ID = re.sub('^[^\.]+\.', '', full_bin_ID.replace(run_config['fasta_extension'], ''))
+                bin_ID = re.sub('^[^\.]+\.', '', full_bin_ID.replace(run_config['fasta_ext'], ''))
 
                 bin_stats_json_str = json.dumps(ast.literal_eval(bin_stats_json_str))
                 bin_stats_obj[bin_ID] = json.loads(bin_stats_json_str, parse_float=Decimal)
