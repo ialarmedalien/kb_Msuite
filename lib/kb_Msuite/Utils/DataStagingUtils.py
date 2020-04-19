@@ -42,6 +42,7 @@ class DataStagingUtils(object):
         '''
         # config
         #SERVICE_VER = 'dev'
+        run_config = self.run_config
         SERVICE_VER = 'release'
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
         ws = Workspace(self.ws_url)
