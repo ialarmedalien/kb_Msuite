@@ -23,7 +23,7 @@ class OutputBuilder(object):
     '''
 
     # (self, run_config)
-    def __init__(self, cmu, run_config)
+    def __init__(self, cmu, run_config):
     #output_dir, plots_dir, scratch_dir, callback_url):
         self.run_config     = run_config
         self.output_dir     = run_config['output_dir']
