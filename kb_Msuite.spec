@@ -103,10 +103,11 @@ module kb_Msuite {
         boolean reduced_tree;
         boolean save_output_dir;
         boolean save_plots_dir;
+        int threads;
+
         float completeness_perc;   /* 0-100, default 95% */
         float contamination_perc;  /* 0-100, default: 2% */
         string output_filtered_binnedcontigs_obj_name;
-        int threads;
     } CheckMLineageWf_withFilter_Params;
 
     typedef structure {

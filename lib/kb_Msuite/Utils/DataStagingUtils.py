@@ -12,17 +12,19 @@ from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 
 class DataStagingUtils(object):
 
-    def __init__(self, config, ctx):
+    def __init__(self, config, ctx, run_config):
         self.ctx = ctx
         self.scratch = os.path.abspath(config['scratch'])
         self.ws_url = config['workspace-url']
         self.serviceWizardURL = config['srv-wiz-url']
         self.callbackURL = config['SDK_CALLBACK_URL']
+        self.run_config = run_config
+
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
 
 
-    def stage_input(self, input_ref, fasta_file_extension):
+    def stage_input(self, input_ref):
         '''
         Stage input based on an input data reference for CheckM
 
@@ -45,12 +47,12 @@ class DataStagingUtils(object):
         ws = Workspace(self.ws_url)
 
         # 1) generate a folder in scratch to hold the input
-        suffix = str(int(time.time() * 1000))
-        input_dir = os.path.join(self.scratch, 'bins_' + suffix)
-        all_seq_fasta = os.path.join(self.scratch, 'all_sequences_' + suffix + '.' + fasta_file_extension)
+        suffix = run_config['suffix']
+        input_dir = run_config['input_dir']
+        all_seq_fasta = run_config['all_seq_fasta']
+        fasta_file_extension = run_config['fasta_ext']
         if not os.path.exists(input_dir):
             os.makedirs(input_dir)
-
 
         # 2) based on type, download the files
         obj_name = self.get_data_obj_name(input_ref)
@@ -233,11 +235,14 @@ class DataStagingUtils(object):
         else:
             raise ValueError('Cannot stage fasta file input directory from type: ' + type_name)
 
-
         # create summary fasta file with all bins
-        self.cat_fasta_files(input_dir, fasta_file_extension, all_seq_fasta)
+        self.cat_fasta_files(run_config['input_dir'], run_config['fasta_ext'], run_config['all_seq_fasta'])
 
-        return {'input_dir': input_dir, 'folder_suffix': suffix, 'all_seq_fasta': all_seq_fasta}
+        return {
+            'input_dir': input_dir,
+            'folder_suffix': suffix,
+            'all_seq_fasta': all_seq_fasta
+        }
 
 
     def fasta_seq_len_at_least(self, fasta_path, min_fasta_len=1):
@@ -294,21 +299,22 @@ class DataStagingUtils(object):
                              'Exit Code: ' + str(exitCode))
 
 
-    def get_bin_fasta_files(self, input_dir, fasta_extension):
+#    def get_bin_fasta_files(self, input_dir, fasta_extension):
+    def get_bin_fasta_files(self, search_dir, fasta_ext):
+
         bin_fasta_files = dict()
-        for (dirpath, dirnames, filenames) in os.walk(input_dir):
+        for (dirpath, dirnames, filenames) in os.walk(search_dir):
             # DEBUG
             #print ("DIRPATH: "+dirpath)
             #print ("DIRNAMES: "+", ".join(dirnames))
             #print ("FILENAMES: "+", ".join(filenames))
             for filename in filenames:
-                if not os.path.isfile(os.path.join(input_dir, filename)):
+                if not os.path.isfile(os.path.join(search_dir, filename)):
                     continue
-                if filename.endswith('.'+fasta_extension):
+                if filename.endswith('.' + fasta_ext):
                     fasta_file = filename
-                    bin_ID = re.sub('^[^\.]+\.', '', fasta_file.replace('.'+fasta_extension, ''))
-                    fasta_path = os.path.join(input_dir, fasta_file)
-                    bin_fasta_files[bin_ID] = fasta_path
+                    bin_ID = re.sub('^[^\.]+\.', '', fasta_file.replace('.' + fasta_ext, ''))
+                    bin_fasta_files[bin_ID] = os.path.join(search_dir, fasta_file)
                     #bin_fasta_files[bin_ID] = fasta_file
                     #print ("ACCEPTED: "+bin_ID+" FILE:"+fasta_file)  # DEBUG
 
@@ -358,60 +364,71 @@ class DataStagingUtils(object):
         return type_name
 
 
-    def read_assembly_ref_from_binnedcontigs(self, input_ref):
+    def get_obj_from_workspace(self, object_ref):
+
         ws = Workspace(self.ws_url)
         try:
-            binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
+            workspace_object = ws.get_objects2({'objects': [{'ref': object_ref}]})['data'][0]['data']
         except Exception as e:
-            raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
+            raise ValueError('Unable to fetch '+str(object_ref)+' object from workspace: ' + str(e))
             #to get the full stack trace: traceback.format_exc()
+        return workspace_object
 
-        return binned_contig_obj['assembly_ref']
+#     def read_assembly_ref_from_binnedcontigs(self, input_ref):
+#         ws = Workspace(self.ws_url)
+#         try:
+#             binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
+#         except Exception as e:
+#             raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
+#             #to get the full stack trace: traceback.format_exc()
+#
+#         return binned_contig_obj['assembly_ref']
 
 
-    def build_bin_summary_file_from_binnedcontigs_obj(self, input_ref, bin_dir, bin_basename, fasta_extension):
-
-        # read bin info from obj
-        ws = Workspace(self.ws_url)
-        try:
-            binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
-        except Exception as e:
-            raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
-            #to get the full stack trace: traceback.format_exc()
-        bin_summary_info = dict()
-
-        # bid in object is full name of contig fasta file.  want just the number
-        for bin_item in binned_contig_obj['bins']:
-            #print ("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
-            bin_ID = re.sub('^[^\.]+\.', '', bin_item['bid'].replace('.'+fasta_extension, ''))
-
-            #print ("BIN_ID: "+bin_ID)  # DEBUG
-            bin_summary_info[bin_ID] = {'n_contigs': bin_item['n_contigs'],
-                                        'gc': round(100.0 * float(bin_item['gc']), 1),
-                                        'sum_contig_len': bin_item['sum_contig_len'],
-                                        'cov': round(100.0 * float(bin_item['cov']), 1)
-                                       }
-        # write summary file for just those bins present in bin_dir
-        header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
-        bin_fasta_files_by_bin_ID = self.get_bin_fasta_files(bin_dir, fasta_extension)
-        bin_IDs = []
-        for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
-            bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.'+fasta_extension, ''))
-            bin_IDs.append(bin_ID)
-        summary_file_path = os.path.join(bin_dir, bin_basename+'.'+'summary')
-
-        print("writing filtered binned contigs summary file "+summary_file_path)
-        with open(summary_file_path, 'w') as summary_file_handle:
-            print("\t".join(header_line))
-            summary_file_handle.write("\t".join(header_line)+"\n")
-            for bin_ID in bin_IDs:
-                #print ("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
-                bin_summary_info_line = [bin_basename+'.'+str(bin_ID)+'.'+fasta_extension,
-                                         str(bin_summary_info[bin_ID]['cov'])+'%',
-                                         str(bin_summary_info[bin_ID]['sum_contig_len']),
-                                         str(bin_summary_info[bin_ID]['gc'])
-                                        ]
-                print("\t".join(bin_summary_info_line))
-                summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
-
-        return summary_file_path
+#     def build_bin_summary_file_from_binnedcontigs_obj(self, input_ref, bin_dir, bin_basename, fasta_extension):
+#
+#         # read bin info from obj
+#         ws = Workspace(self.ws_url)
+#         try:
+#             binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
+#         except Exception as e:
+#             raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
+#             #to get the full stack trace: traceback.format_exc()
+#         bin_summary_info = dict()
+#
+#         # bid in object is full name of contig fasta file.  want just the number
+#         for bin_item in binned_contig_obj['bins']:
+#             #print ("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
+#             bin_ID = re.sub('^[^\.]+\.', '', bin_item['bid'].replace('.' + fasta_extension, ''))
+#
+#             #print ("BIN_ID: "+bin_ID)  # DEBUG
+#             bin_summary_info[bin_ID] = {
+#                 'n_contigs': bin_item['n_contigs'],
+#                 'gc': round(100.0 * float(bin_item['gc']), 1),
+#                 'sum_contig_len': bin_item['sum_contig_len'],
+#                 'cov': round(100.0 * float(bin_item['cov']), 1)
+#             }
+#         # write summary file for just those bins present in bin_dir
+#         header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
+#         bin_fasta_files_by_bin_ID = self.get_bin_fasta_files(bin_dir, fasta_extension)
+#         bin_IDs = []
+#         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
+#             bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.'+fasta_extension, ''))
+#             bin_IDs.append(bin_ID)
+#         summary_file_path = os.path.join(bin_dir, bin_basename+'.'+'summary')
+#
+#         print("writing filtered binned contigs summary file "+summary_file_path)
+#         with open(summary_file_path, 'w') as summary_file_handle:
+#             print("\t".join(header_line))
+#             summary_file_handle.write("\t".join(header_line)+"\n")
+#             for bin_ID in bin_IDs:
+#                 #print ("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
+#                 bin_summary_info_line = [bin_basename+'.'+str(bin_ID)+'.'+fasta_extension,
+#                                          str(bin_summary_info[bin_ID]['cov'])+'%',
+#                                          str(bin_summary_info[bin_ID]['sum_contig_len']),
+#                                          str(bin_summary_info[bin_ID]['gc'])
+#                                         ]
+#                 print("\t".join(bin_summary_info_line))
+#                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
+#
+#         return summary_file_path

@@ -51,9 +51,11 @@ build-test-script:
 	echo 'export KB_DEPLOYMENT_CONFIG=$$script_dir/../deploy.cfg' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'export KB_AUTH_TOKEN=`cat /kb/module/work/token`' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'export PYTHONPATH=$$script_dir/../$(LIB_DIR):$$PATH:$$PYTHONPATH' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
+	echo 'cd $$script_dir/..' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
+	echo 'python -m compileall lib/ test/' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'cd $$script_dir/../$(TEST_DIR)' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'mkdir -p tmp' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
-	echo 'checkm test tmp' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
+	echo '# checkm test tmp' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'python -m nose --with-coverage --cover-package=$(SERVICE_CAPS) --cover-html --cover-html-dir=/kb/module/work/test_coverage --nocapture  --nologcapture .' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	chmod +x $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 

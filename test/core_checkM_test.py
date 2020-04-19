@@ -14,7 +14,6 @@ except:
 from pprint import pprint  # noqa: F401
 
 from installed_clients.WorkspaceClient import Workspace as workspaceService
-
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
@@ -68,7 +67,7 @@ class CoreCheckMTest(unittest.TestCase):
 #         cls.scratch = cls.cfg['scratch']+'--'+test_time_stamp
 #         cls.cfg['scratch'] = cls.scratch
 #         if not os.path.exists(cls.scratch):
-#            os.mkdir(cls.scratch)
+#             os.mkdir(cls.scratch)
         cls.checkm_runner = CheckMUtil(cls.cfg, cls.ctx)
 
         cls.wsName = "test_kb_Msuite_" + str(cls.suffix)
@@ -239,8 +238,7 @@ class CoreCheckMTest(unittest.TestCase):
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 0,
-            # 'save_output_dir': 0,  # DEBUG
-            'save_output_dir': 1,  # DEBUG
+            'save_output_dir': 1,
             'save_plots_dir': 1,
             'threads': 4
         }
@@ -277,8 +275,7 @@ class CoreCheckMTest(unittest.TestCase):
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,  # this must be 1 to regression test with --reduced_tree
-            # 'save_output_dir': 0,  # DEBUG
-            'save_output_dir': 1,  # DEBUG
+            'save_output_dir': 1,
             'save_plots_dir': 1,
             'threads': 4
         }

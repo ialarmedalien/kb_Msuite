@@ -29,7 +29,59 @@ class CheckMUtil:
         self.callback_url = config['SDK_CALLBACK_URL']
         self.scratch = config['scratch']
         self.threads = config['threads']
+        self.fasta_extension = 'fna'
+        self.binned_contigs_builder_fasta_extension = 'fasta'
 
+
+    def set_run_configuration(self, params):
+
+        suffix = str(int(time.time() * 1000))
+        base_dir = self.scratch + 'run_' + suffix
+
+        run_config = {
+            'params': params,
+            'suffix': suffix,
+            'base_dir': base_dir,
+            'input_dir': os.path.join(base_dir, 'bins'),
+            'fasta_ext': self.fasta_extension,
+            'fasta_ext_binned_contigs': self.binned_contigs_builder_fasta_extension,
+        }
+
+        # directories
+        for type in ['filtered_bins', 'output', 'plots', 'html']:
+            run_config[type + '_dir'] = os.path.join(base_dir, type)
+#         run_config['filtered_bins_dir'] = os.path.join(self.scratch, 'filtered_bins_' + suffix)
+#         run_config['output_dir']        = os.path.join(self.scratch, 'output_' + suffix)
+#         run_config['plots_dir']         = os.path.join(self.scratch, 'plot_' + suffix)
+#         run_config['html_dir']          = os.path.join(self.scratch, 'html_' + suffix)
+
+
+
+        # files
+        run_config['all_seq_fasta'] = os.path.join(base_dir,
+            'all_sequences.' + run_config['fasta_ext']
+        )
+        run_config['tetra_file'] = os.path.join(base_dir, 'tetra.tsv')
+
+        run_config['bin_stats_ext_file'] = os.path.join(
+            run_config['output_dir'], 'storage', 'bin_stats_ext.tsv'
+        )
+
+        tab_text_dir = os.path.join(run_config['output_dir'], 'tab_text')
+        run_config['tab_text_dir'] = tab_text_dir
+        run_config['tab_text_file_name'] = 'CheckM_summary_table.tsv'
+        run_config['tab_text_file'] = os.path.join(tab_text_dir, run_config['tab_text_file_name'])
+
+        run_config['bin_basename'] = 'Bin'
+
+        run_config['html_file'] = 'checkm_results.html'
+
+        summary_file_path = os.path.join(
+            run_config['filtered_bins_dir'], run_config['bin_basename'] + '.' + 'summary'
+        )
+        self.run_config = run_config
+
+        return run_config
 
     def run_checkM_lineage_wf(self, params):
         '''
@@ -42,94 +94,111 @@ class CheckMUtil:
         if 'workspace_name' not in params:
             raise ValueError('workspace_name field was not set in params for run_checkM_lineage_wf')
 
+        run_config = self.set_run_configuration(params)
+
         # 1) stage input data
-        self.fasta_extension = 'fna'
-        self.binned_contigs_builder_fasta_extension = 'fasta'
-        dsu = DataStagingUtils(self.config, self.ctx)
-        staged_input = dsu.stage_input(params['input_ref'], self.fasta_extension)
-        input_dir = staged_input['input_dir']
-        suffix = staged_input['folder_suffix']
-        all_seq_fasta_file = staged_input['all_seq_fasta']
+        dsu = DataStagingUtils(self.config, self.ctx, run_config)
+        dsu.stage_input(params['input_ref'])
+        log('Staged input directory: ' + run_config['input_dir'])
 
-        filtered_bins_dir = os.path.join(self.scratch, 'filtered_bins_' + suffix)
-        output_dir = os.path.join(self.scratch, 'output_' + suffix)
-        plots_dir = os.path.join(self.scratch, 'plot_' + suffix)
-        html_dir = os.path.join(self.scratch, 'html_' + suffix)
-        tetra_file = os.path.join(self.scratch, 'tetra_' + suffix + '.tsv')
-
-        log('Staged input directory: ' + input_dir)
+# html_dir
+# results_filtered
+# critical_out_dir
+# tab_text_dir
+# tab_text_file
+# params
+# input_dir
+# plots_dir
+# dest_folder
+# params
+# assembly_ref
+# filtered_bins_dir
 
         # 2) run the lineage workflow
-        lineage_wf_options = {'bin_folder': input_dir,
-                              'out_folder': output_dir,
-                              'threads': self.threads
-                              }
+        lineage_wf_options = {
+            'bin_folder': run_config['input_dir'],
+            'out_folder': run_config['output_dir'],
+            'threads':    self.threads
+        }
+
         if ('reduced_tree' in params and params['reduced_tree'] is not None and
-           int(params['reduced_tree'])) == 1:
+          int(params['reduced_tree'])) == 1:
             lineage_wf_options['reduced_tree'] = params['reduced_tree']
 
         self.run_checkM('lineage_wf', lineage_wf_options)
 
+
         # 3) optionally filter bins by quality scores and save object
+        outputBuilder = OutputBuilder(self, run_config)
+        #output_dir, plots_dir, self.scratch, self.callback_url)
         binned_contig_obj_ref = None
         created_objects = None
         removed_bins = None
-        outputBuilder = OutputBuilder(output_dir, plots_dir, self.scratch, self.callback_url)
+        filter_results = False
 
         if dsu.get_data_obj_type(params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
           and params.get('output_filtered_binnedcontigs_obj_name'):
-
-            filtered_obj_info = self._filter_binned_contigs(params,
-                                                            dsu,
-                                                            outputBuilder,
-                                                            input_dir,
-                                                            output_dir,
-                                                            filtered_bins_dir)
+            filter_results = True
+            run_config['results_filtered'] = True
+            filtered_obj_info = self._filter_binned_contigs(run_config, dsu, outputBuilder)
+#                                                             input_dir,
+#                                                             output_dir,
+#                                                             filtered_bins_dir)
             if filtered_obj_info is None:
                 log("No Bins passed QC filters.  Not saving filtered BinnedContig object")
             else:
-                binned_contig_obj_ref = filtered_obj_info['filtered_obj_ref']
-                removed_bins = filtered_obj_info['removed_bin_IDs']
+                binned_contig_obj_ref   = filtered_obj_info['filtered_obj_ref']
+                removed_bins            = filtered_obj_info['removed_bin_IDs']
                 created_objects = [{
-                    'ref': binned_contig_obj_ref,
-                    'description': 'HQ BinnedContigs '+filtered_obj_info['filtered_obj_name']
+                    'ref':          binned_contig_obj_ref,
+                    'description':  'HQ BinnedContigs ' + filtered_obj_info['filtered_obj_name']
                 }]
 
         # 4) make the plots:
-        self.build_checkM_lineage_wf_plots(input_dir, output_dir, plots_dir,
-                                           all_seq_fasta_file, tetra_file)
+        self.build_checkM_lineage_wf_plots(run_config)
+#            input_dir, output_dir, plots_dir, all_seq_fasta_file, tetra_file)
+
 
         # 5) Package results
-        output_packages = outputBuilder._build_output_packages(
-            params,
-            input_dir,
-            removed_bins=removed_bins)
+        #   includes building the .tsv file that the HTML report is built from
+        output_packages = outputBuilder.build_output_packages(run_config, removed_bins)
+#             params,
+#             input_dir,
+#             filter_results,
+#             removed_bins=removed_bins)
 
         # 6) build the HTML report
-        os.makedirs(html_dir)
-        html_files = outputBuilder.build_html_output_for_lineage_wf(html_dir,
-            params['input_ref'],
-            removed_bins=removed_bins)
-        html_zipped = outputBuilder.package_folder(html_dir,
+        html_files = outputBuilder.build_html_output_for_lineage_wf(run_config, removed_bins)
+#             params['input_ref'],
+#             html_dir,
+#             filter_results,
+#             removed_bins=removed_bins)
+
+        html_zipped = outputBuilder.package_folder(
+            html_dir,
             html_files[0],
             'Summarized report from CheckM')
 
         # 7) save report
-        report_params = {'message': '',
-                         'direct_html_link_index': 0,
-                         'html_links': [html_zipped],
-                         'file_links': output_packages,
-                         'report_object_name': 'kb_checkM_report_' + str(uuid.uuid4()),
-                         'workspace_name': params['workspace_name']
-                         }
+        report_params = {
+            'message': '',
+             'direct_html_link_index': 0,
+             'html_links': [html_zipped],
+             'file_links': output_packages,
+             'report_object_name': 'kb_checkM_report_' + str(uuid.uuid4()),
+             'workspace_name': params['workspace_name']
+        }
+
         if created_objects:
             report_params['objects_created'] = created_objects
 
         kr = KBaseReport(self.callback_url)
         report_output = kr.create_extended_report(report_params)
 
-        returnVal = {'report_name': report_output['name'],
-                     'report_ref': report_output['ref']}
+        returnVal = {
+            'report_name': report_output['name'],
+            'report_ref':  report_output['ref'],
+        }
 
         if binned_contig_obj_ref:
             returnVal.update({'binned_contig_obj_ref': binned_contig_obj_ref})
@@ -137,8 +206,11 @@ class CheckMUtil:
         return returnVal
 
 
-    def build_checkM_lineage_wf_plots(self, bin_folder, out_folder, plots_folder,
-                                      all_seq_fasta_file, tetra_file):
+    def build_checkM_lineage_wf_plots(self, run_config):
+#            input_dir, output_dir, plots_dir, all_seq_fasta_file, tetra_file)
+
+#     bin_folder, out_folder, plots_folder,
+#                                       all_seq_fasta_file, tetra_file):
 
         # first build generic plot for entire dataset
 #         log('Creating basic QA plot (checkm bin_qa_plot) ...')
@@ -150,22 +222,24 @@ class CheckMUtil:
 
         # compute tetranucleotide frequencies based on the concatenated fasta file
         log('Computing tetranucleotide distributions...')
-        tetra_options = {'seq_file': all_seq_fasta_file,
-                         'tetra_file': tetra_file,
-                         'threads': self.threads,
-                         'quiet': 1
-                         }
+        tetra_options = {
+            'seq_file':    run_config['all_seq_fasta'],
+            'tetra_file':  run_config['tetra_file'],
+            'threads':     self.threads,
+            'quiet':       1
+        }
         self.run_checkM('tetra', tetra_options) #, dropOutput=True)
 
         # plot distributions for each bin
         log('Creating distribution plots per bin...')
-        dist_plot_options = {'bin_folder': bin_folder,
-                             'out_folder': out_folder,
-                             'plots_folder': plots_folder,
-                             'tetra_file': tetra_file,
-                             'dist_value': 95,
-                             'quiet': 1
-                             }
+        dist_plot_options = {
+            'bin_folder':   run_config['input_dir'],
+            'out_folder':   run_config['output_dir'],
+            'plots_folder': run_config['plots_dir'],
+            'tetra_file':   run_config['tetra_file'],
+            'dist_value':   95,
+            'quiet':        1
+        }
         self.run_checkM('dist_plot', dist_plot_options) #, dropOutput=True)
 
 
@@ -188,11 +262,9 @@ class CheckMUtil:
 #         log_output_file = None
 #         log_output_filename = None
 #         if dropOutput:
-            # necessary because the checkM --quiet flag doesn't work on the tetra subcommand,
-            # and that produces a line per contig
 
         log_file_extra = os.environ.get( 'KB_TEST_ID', str(int(time.time() * 1000)) )
-        log_output_filename = os.path.join(self.scratch, subcommand + '--' + log_file_extra + '.log')
+        log_output_filename = os.path.join(run_config['base_dir'], subcommand + '--' + log_file_extra + '.log')
 
 
         log('sending log output to ' + log_output_filename)
@@ -288,52 +360,36 @@ class CheckMUtil:
         return command
 
 
-    def _filter_binned_contigs(self,
-                               params,
+    def _filter_binned_contigs(self, run_config,
                                dataStagingUtils,
-                               outputBuilder,
-                               input_dir,
-                               output_dir,
-                               filtered_bins_dir):
+                               outputBuilder):
+#                                input_dir,
+#                                output_dir,
+#                                filtered_bins_dir):
+        params      = run_config['params']
+        input_dir   = run_config['input_dir']
+        output_dir  = run_config['output_dir']
+        filtered_bins_dir = run_config['filtered_bins_dir']
+
         if not params.get('output_filtered_binnedcontigs_obj_name'):
             return None
 
         # prep fs stuff and get bin IDs
         if not os.path.exists(filtered_bins_dir):
             os.makedirs(filtered_bins_dir)
-        bin_stats_ext_file = os.path.join(output_dir, 'storage', 'bin_stats_ext.tsv')
-        bin_fasta_files_by_bin_ID = dataStagingUtils.get_bin_fasta_files(input_dir,
-            self.fasta_extension)
+
+        bin_fasta_files_by_bin_ID = dataStagingUtils.get_bin_fasta_files(input_dir, run_config['fasta_extension'])
+#            input_dir, self.fasta_extension)
+
+        log("DEBUG: bin_fasta_files_by_bin_ID: ")
+        log(bin_fasta_files_by_bin_ID)
+
         bin_IDs = []
         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
             bin_IDs.append(bin_ID)
-            log("Contigs Fasta file found for Bin ID: "+bin_ID)
+            log("Contigs Fasta file found for Bin ID: " + bin_ID)
 
         # read CheckM stats to get completeness and contamination scores
-        bin_stats_obj = dict()
-        QC_scores = dict()
-        retained_bin_IDs = dict()
-        removed_bin_IDs = dict()
-        with open(bin_stats_ext_file, 'r') as bin_stats_ext_handle:
-            for bin_stats_line in bin_stats_ext_handle:
-                bin_stats_line.rstrip()
-                [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
-                bin_ID = re.sub('^[^\.]+\.', '', full_bin_ID.replace(self.fasta_extension, ''))
-
-                bin_stats_json_str = json.dumps(ast.literal_eval(bin_stats_json_str))
-                bin_stats_obj[bin_ID] = json.loads(bin_stats_json_str, parse_float=Decimal)
-        for bin_ID in bin_IDs:
-            if bin_ID not in bin_stats_obj:
-                raise ValueError("Bin ID "+bin_ID+" not found in bin stats")
-
-            QC_scores[bin_ID] = dict()
-            QC_scores[bin_ID]['completeness'] = float(bin_stats_obj[bin_ID]['Completeness'])
-            QC_scores[bin_ID]['contamination'] = float(bin_stats_obj[bin_ID]['Contamination'])
-            log("Bin "+bin_ID+" CheckM COMPLETENESS:  "+str(QC_scores[bin_ID]['completeness']))
-            log("Bin "+bin_ID+" CheckM CONTAMINATION: "+str(QC_scores[bin_ID]['contamination']))
-
-        # copy filtered bin scaffold files to filtered dir
-        some_bins_are_HQ = False
         test_completeness = False
         test_contamination = False
         if params.get('completeness_perc') \
@@ -345,85 +401,104 @@ class CheckMUtil:
             test_contamination = True
             contamination_thresh = float(params.get('contamination_perc'))
 
-        bin_basename = 'Bin'
-        for bin_ID in bin_IDs:
-            bin_is_HQ = True
-            this_comp = QC_scores[bin_ID]['completeness']
-            this_cont = QC_scores[bin_ID]['contamination']
-            if test_completeness and this_comp < completeness_thresh:
-                bin_is_HQ = False
-                log("Bin "+bin_ID+" Completeness of "+str(this_comp)+" below thresh "+str(completeness_thresh))
-            if test_contamination and this_cont > contamination_thresh:
-                bin_is_HQ = False
-                log("Bin "+bin_ID+" Contamination of "+str(this_cont)+" above thresh "+str(contamination_thresh))
+        bin_stats_obj = dict()
+#        QC_scores = dict()
+        retained_bin_IDs = dict()
+        removed_bin_IDs = dict()
 
-            if not bin_is_HQ:
-                log("Bin "+bin_ID+" didn't pass QC filters.  Skipping.")
-            else:
-                log("Bin "+bin_ID+" passed QC filters.  Adding to new BinnedContigs")
-                some_bins_are_HQ = True
-                retained_bin_IDs[bin_ID] = True
-                src_path = bin_fasta_files_by_bin_ID[bin_ID]
-                dst_path = os.path.join(filtered_bins_dir,
-                    bin_basename+'.'+str(bin_ID)+'.'+self.binned_contigs_builder_fasta_extension)
-                outputBuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
-        for bin_ID in bin_IDs:
-            if bin_ID not in retained_bin_IDs:
-                removed_bin_IDs[bin_ID] = True
+        bin_stats_ext_file = run_config['bin_stats_ext_file']
+        bin_basename = run_config['bin_basename']
 
-        # create BinnedContig object from filtered bins
+        file_ext = run_config['fasta_ext_binned_contigs']
+        # run_config['fasta_ext_binned_contigs']
+        some_bins_are_HQ = False
+
+        with open(bin_stats_ext_file, 'r') as bin_stats_ext_handle:
+            for bin_stats_line in bin_stats_ext_handle:
+                bin_stats_line.rstrip()
+                [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
+                bin_ID = re.sub('^[^\.]+\.', '', full_bin_ID.replace(run_config['fasta_extension'], ''))
+
+                bin_stats_json_str = json.dumps(ast.literal_eval(bin_stats_json_str))
+                bin_stats_obj[bin_ID] = json.loads(bin_stats_json_str, parse_float=Decimal)
+
+                comp = float(bin_stats_obj[bin_ID]['Completeness'])
+                cont = float(bin_stats_obj[bin_ID]['Contamination'])
+
+                log("Bin " + bin_ID + " CheckM COMPLETENESS:  " + str(comp))
+                log("Bin " + bin_ID + " CheckM CONTAMINATION: " + str(cont))
+
+                bin_is_HQ = True
+                if test_completeness and comp < completeness_thresh:
+                    bin_is_HQ = False
+                    log("Bin " + bin_ID + " Completeness of " + str(comp) + " below thresh " + str(completeness_thresh))
+                if test_contamination and cont > contamination_thresh:
+                    bin_is_HQ = False
+                    log("Bin " + bin_ID + " Contamination of " + str(cont) + " above thresh " + str(contamination_thresh))
+
+                if not bin_is_HQ:
+                    log("Bin " + bin_ID + " didn't pass QC filters.  Skipping.")
+                    removed_bin_IDs[bin_ID] = True
+                else:
+                    log("Bin " + bin_ID + " passed QC filters.  Adding to new BinnedContigs")
+                    some_bins_are_HQ = True
+                    retained_bin_IDs[bin_ID] = True
+
+                    # copy filtered bin scaffold files to filtered dir
+                    src_path = bin_fasta_files_by_bin_ID[bin_ID]
+                    dst_path = os.path.join(filtered_bins_dir,
+                        bin_basename + '.' + str(bin_ID) + '.' + file_ext)
+                    outputBuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
+
+        for bin_ID in bin_IDs:
+            if bin_ID not in bin_stats_obj:
+                raise ValueError("Bin ID " + bin_ID + " not found in bin stats")
+
+#             QC_scores[bin_ID] = dict()
+#             QC_scores[bin_ID]['completeness'] = float(bin_stats_obj[bin_ID]['Completeness'])
+#             QC_scores[bin_ID]['contamination'] = float(bin_stats_obj[bin_ID]['Contamination'])
+
+#        for bin_ID in bin_IDs:
+
+#         for bin_ID in bin_IDs:
+#             if bin_ID not in retained_bin_IDs:
+#                 removed_bin_IDs[bin_ID] = True
+
         if not some_bins_are_HQ:
             return None
-        assembly_ref = dataStagingUtils.read_assembly_ref_from_binnedcontigs(params['input_ref'])
-        dataStagingUtils.build_bin_summary_file_from_binnedcontigs_obj(params['input_ref'],
-            filtered_bins_dir, bin_basename, self.binned_contigs_builder_fasta_extension)
-        new_binned_contigs_info = outputBuilder.save_binned_contigs(params, assembly_ref, filtered_bins_dir)
 
-        return {'filtered_obj_name': new_binned_contigs_info['obj_name'],
-                'filtered_obj_ref': new_binned_contigs_info['obj_ref'],
-                'retained_bin_IDs': retained_bin_IDs,
-                'removed_bin_IDs': removed_bin_IDs}
+        # create BinnedContig object from filtered bins
+        binned_contig_obj = dataStagingUtils.fetch_workspace_obj(params['input_ref'])
 
+#         read bin info from obj
+#         ws = Workspace(self.ws_url)
+#         try:
+#             binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
+#         except Exception as e:
+#             raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
+#             to get the full stack trace: traceback.format_exc()
+#         bin_summary_info = dict()
 
-#     def _build_output_packages(self, params, outputBuilder, input_dir, removed_bins=None):
-#         return outputBuilder._build_output_packages(params, input_dir, removed_bins=None)
-#         output_packages = []
-#
-#         # create bin report summary TSV table text file
-#         log('creating TSV summary table text file')
-#         tab_text_dir = os.path.join(outputBuilder.output_dir, 'tab_text')
-#         tab_text_file = 'CheckM_summary_table.tsv'
-#         outputBuilder.build_summary_tsv_file(tab_text_dir, tab_text_file, removed_bins=removed_bins)
-#         tab_text_zipped = outputBuilder.package_folder(tab_text_dir,
-#                                                        tab_text_file+'.zip',
-#                                                        'TSV Summary Table from CheckM')
-#         output_packages.append(tab_text_zipped)
-#
-#
-#         # if 'save_output_dir' in params and str(params['save_output_dir']) == '1':
-#         if True:
-#             log('packaging full output directory')
-#             zipped_output_file = outputBuilder.package_folder(outputBuilder.output_dir,
-#                 'full_output.zip',
-#                 'Full output of CheckM')
-#             output_packages.append(zipped_output_file)
-#         else:  # ADD LATER?
-#             log('not packaging full output directory, selecting specific files')
-#             crit_out_dir = os.path.join(self.scratch,
-#                 'critical_output_' + os.path.basename(input_dir))
-#             os.makedirs(crit_out_dir)
-#             zipped_output_file = outputBuilder.package_folder(outputBuilder.output_dir,
-#                 'selected_output.zip',
-#                 'Selected output from the CheckM analysis')
-#             output_packages.append(zipped_output_file)
-#
-#         if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
-#             log('packaging output plots directory')
-#             zipped_output_file = outputBuilder.package_folder(outputBuilder.plots_dir,
-#                 'plots.zip',
-#                 'Output plots from CheckM')
-#             output_packages.append(zipped_output_file)
-#         else:
-#             log('not packaging output plots directory')
-#
-#         return output_packages
+        # os.path.join(bin_dir, run_config['bin_basename'] + '.' + 'summary')
+        summary_file = outputBuilder.build_bin_summary_file_from_binnedcontigs_obj(run_config, binned_contig_obj)
+
+#         dataStagingUtils.build_bin_summary_file_from_binnedcontigs_obj(
+#             params['input_ref'],
+#             filtered_bins_dir,
+#             bin_basename,
+#             file_ext
+#         )
+
+        assembly_ref = binned_contig_obj['assembly_ref']
+        new_binned_contigs_info = outputBuilder.save_binned_contigs(run_config, assembly_ref)
+#             params,
+#             assembly_ref,
+#             filtered_bins_dir
+#         )
+
+        return {
+            'filtered_obj_name': new_binned_contigs_info['obj_name'],
+            'filtered_obj_ref':  new_binned_contigs_info['obj_ref'],
+            'retained_bin_IDs':  retained_bin_IDs,
+            'removed_bin_IDs':   removed_bin_IDs,
+        }
