@@ -28,7 +28,7 @@ class OutputBuilder(object):
         self.run_config     = run_config
         self.output_dir     = run_config['output_dir']
         self.plots_dir      = run_config['plots_dir']
-        self.scratch        = cmu.scratch_dir
+        self.scratch        = cmu.scratch
         self.callback_url   = cmu.callback_url
         self.DIST_PLOT_EXT  = '.ref_dist_plots.png'
 
