@@ -178,7 +178,7 @@ class CheckMUtil:
 #             removed_bins=removed_bins)
 
         html_zipped = outputBuilder.package_folder(
-            html_dir,
+            run_config['html_dir'],
             html_files[0],
             'Summarized report from CheckM')
 
