@@ -12,8 +12,10 @@ from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 
 class DataStagingUtils(object):
 
-    def __init__(self, config, ctx, run_config):
-        self.ctx = ctx
+    def __init__(self, cmu, run_config):
+        self.checkMUtils = cmu
+        config = cmu.config
+        self.ctx = cmu.ctx
         self.scratch = os.path.abspath(config['scratch'])
         self.ws_url = config['workspace-url']
         self.serviceWizardURL = config['srv-wiz-url']
@@ -222,7 +224,7 @@ class DataStagingUtils(object):
             print("\n\nGENOME ASSEMBLY REFS:")
             # create file data (name for file is what's reported in results)
             for ass_i, assembly_ref in enumerate(genome_assembly_refs):
-                print("assembly: " + ass_i + "; assembly_ref: ")
+                print("assembly: " + str(ass_i) + "; assembly_ref: ")
                 print(assembly_ref)
                 this_name = genome_obj_names[ass_i]
                 filename = os.path.join(input_dir, this_name + '.' + fasta_file_extension)

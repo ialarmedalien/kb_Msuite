@@ -31,7 +31,8 @@ class CheckMUtil:
         self.threads = config['threads']
         self.fasta_extension = 'fna'
         self.binned_contigs_builder_fasta_extension = 'fasta'
-
+        self.datastagingutils   = DataStagingUtils(self, run_config)
+        self.outputbuilder      = OutputBuilder(self, run_config)
 
     def set_run_configuration(self, params):
 
@@ -97,7 +98,7 @@ class CheckMUtil:
         run_config = self.set_run_configuration(params)
 
         # 1) stage input data
-        dsu = DataStagingUtils(self.config, self.ctx, run_config)
+        dsu = self.datastagingutils
         dsu.stage_input(params['input_ref'])
         log('Staged input directory: ' + run_config['input_dir'])
 
@@ -129,7 +130,7 @@ class CheckMUtil:
 
 
         # 3) optionally filter bins by quality scores and save object
-        outputBuilder = OutputBuilder(self, run_config)
+        outputBuilder = self.outputbuilder
         #output_dir, plots_dir, self.scratch, self.callback_url)
         binned_contig_obj_ref = None
         created_objects = None

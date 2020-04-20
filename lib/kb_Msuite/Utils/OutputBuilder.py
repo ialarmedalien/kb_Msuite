@@ -7,7 +7,6 @@ import time
 
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
-from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 
 
 def log(message, prefix_newline=False):
@@ -25,6 +24,7 @@ class OutputBuilder(object):
     # (self, run_config)
     def __init__(self, cmu, run_config):
     #output_dir, plots_dir, scratch_dir, callback_url):
+        self.checkMUtils    = cmu
         self.run_config     = run_config
         self.output_dir     = run_config['output_dir']
         self.plots_dir      = run_config['plots_dir']
@@ -296,7 +296,7 @@ class OutputBuilder(object):
             out_header = ['Bin Name']
             for f in fields:
                 out_header.append(f['display'])
-            if run_config['results_filtered']:
+            if 'results_filtered' in run_config:
                 out_header.append('QC Pass')
 
             out_handle.write("\t".join(out_header)+"\n")
@@ -316,7 +316,7 @@ class OutputBuilder(object):
                         row.append(str(value))
 
                 # add a column to indicate whether the bin should be removed
-                if run_config['results_filtered']:
+                if 'results_filtered' in run_config:
                     if removed_bins:
                         bin_id = re.sub('^[^\.]+\.', '', bid)
                         if bin_id in removed_bins:
@@ -460,7 +460,9 @@ class OutputBuilder(object):
 
         # write summary file for just those bins present in bin_dir
         header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
-        bin_fasta_files_by_bin_ID = DataStagingUtils.get_bin_fasta_files(bin_dir, fasta_ext)
+
+        dsu = self.checkMUtils.datastagingutils
+        bin_fasta_files_by_bin_ID = dsu.get_bin_fasta_files(bin_dir, fasta_ext)
         bin_IDs = []
         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
             bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.' + fasta_ext, ''))
