@@ -36,7 +36,7 @@ class CheckMUtil:
     def set_run_configuration(self, params):
 
         suffix = str(int(time.time() * 1000))
-        base_dir = self.scratch + 'run_' + suffix
+        base_dir = os.path.join(self.scratch,'run_' + suffix)
 
         run_config = {
             'params': params,

@@ -296,7 +296,7 @@ class OutputBuilder(object):
             out_header = ['Bin Name']
             for f in fields:
                 out_header.append(f['display'])
-            if results_filtered:
+            if run_config['results_filtered']:
                 out_header.append('QC Pass')
 
             out_handle.write("\t".join(out_header)+"\n")
