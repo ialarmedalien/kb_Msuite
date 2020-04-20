@@ -357,7 +357,7 @@ class OutputBuilder(object):
 #    def build_output_packages(self, params, input_dir, removed_bins=None):
     def build_output_packages(self, run_config, removed_bins=None):
         output_packages = []
-
+        params = run_config['params']
         # create bin report summary TSV table text file
         log('creating TSV summary table text file')
 
