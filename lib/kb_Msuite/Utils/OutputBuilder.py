@@ -194,11 +194,11 @@ class OutputBuilder(object):
         with open(html_file_path, 'w') as html:
 
             # header
-            self._write_html_header(html, run_config['input_ref'], report_type)
+#            self._write_html_header(html, run_config['input_ref'], report_type)
             html.write('<body>\n')
 
             # tabs
-            self._write_tabs(html, report_type)
+#            self._write_tabs(html, report_type)
             html.write('<br><br><br>\n')
             html.write('<div id="Summary" class="tabcontent">\n')
             html.write('<table>\n')
