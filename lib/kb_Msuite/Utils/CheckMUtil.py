@@ -31,8 +31,6 @@ class CheckMUtil:
         self.threads = config['threads']
         self.fasta_extension = 'fna'
         self.binned_contigs_builder_fasta_extension = 'fasta'
-        self.datastagingutils   = DataStagingUtils(self, run_config)
-        self.outputbuilder      = OutputBuilder(self, run_config)
 
     def set_run_configuration(self, params):
 
@@ -81,6 +79,9 @@ class CheckMUtil:
             run_config['filtered_bins_dir'], run_config['bin_basename'] + '.' + 'summary'
         )
         self.run_config = run_config
+
+        self.datastagingutils   = DataStagingUtils(self, run_config)
+        self.outputbuilder      = OutputBuilder(self, run_config)
 
         return run_config
 
