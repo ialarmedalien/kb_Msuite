@@ -470,7 +470,7 @@ class CheckMUtil:
             return None
 
         # create BinnedContig object from filtered bins
-        binned_contig_obj = dataStagingUtils.fetch_workspace_obj(params['input_ref'])
+        binned_contig_obj = dataStagingUtils.get_obj_from_workspace(params['input_ref'])
 
 #         read bin info from obj
 #         ws = Workspace(self.ws_url)
