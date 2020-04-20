@@ -48,10 +48,10 @@ class DataStagingUtils(object):
         ws = Workspace(self.ws_url)
 
         # 1) generate a folder in scratch to hold the input
-        suffix = run_config['suffix']
-        input_dir = run_config['input_dir']
-        all_seq_fasta = run_config['all_seq_fasta']
-        fasta_file_extension = run_config['fasta_ext']
+        suffix                  = run_config['suffix']
+        input_dir               = run_config['input_dir']
+        all_seq_fasta           = run_config['all_seq_fasta']
+        fasta_file_extension    = run_config['fasta_ext']
         if not os.path.exists(input_dir):
             os.makedirs(input_dir)
 
@@ -219,11 +219,16 @@ class DataStagingUtils(object):
                     print (msg)
                     genome_assembly_refs.append(genome_obj['contigset_ref'])
 
+            print("\n\nGENOME ASSEMBLY REFS:")
             # create file data (name for file is what's reported in results)
             for ass_i, assembly_ref in enumerate(genome_assembly_refs):
+                print("assembly: " + ass_i + "; assembly_ref: ")
+                print(assembly_ref)
                 this_name = genome_obj_names[ass_i]
                 filename = os.path.join(input_dir, this_name + '.' + fasta_file_extension)
-                auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
+                result = auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
+                print("expecting file at " + filename)
+                print(result)
                 if not os.path.isfile(filename):
                     raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
                 # make sure fasta file isn't empty
