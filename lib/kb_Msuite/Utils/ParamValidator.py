@@ -25,7 +25,43 @@ def validate_params(params):
         else:
             del params['reduced_tree']
 
+    validator = {
+        'input_ref': {
+            'required': True,
+            'type': 'string',
+        },
+        'workspace_name': {
+            'required': True,
+            'type': 'string',
+        },
+        'reduced_tree': {
+            'type': 'boolean',
+        },
+        'save_output_dir': {
+            'type': 'boolean',
+        },
+        'save_plots_dir': {
+            'type': 'boolean',
+        },
+        'threads': {
+            'type': 'int',
+        },
 
+#         float completeness_perc;   /* 0-100, default 95% */
+#         float contamination_perc;  /* 0-100, default: 2% */
+#         string output_filtered_binnedcontigs_obj_name;
+
+        # with filters:
+        'completeness_perc': {
+            'type': 'float',
+        },
+        'contamination_perc': {
+            'type': 'float',
+        },
+        'output_filtered_binnedcontigs_obj_name': {
+            'type': 'string',
+        },
+    }
 
     /*
         input_ref - reference to the input Assembly, AssemblySet, Genome, GenomeSet, or BinnedContigs data

@@ -89,6 +89,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
                              '(to one of lineage_wf, tetra, bin_qa_plot, dist_plot, etc)')
 
         checkM_runner = CheckMUtil(self.config, ctx)
+        checkM_runner.set_run_configuration(params)
         checkM_runner.run_checkM(params['subcommand'], params)
 
         #END run_checkM
@@ -171,7 +172,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
            arguments: *   bin_dir - required - Path to the directory where
            your bins are located *   out_dir - required - Path to a directory
            where we will write output files *   log_path - required - Path to
-           a file that will be written to with all log output from *    
+           a file that will be written to with all log output from *
            stdout and stderr while running `checkm lineage_wf`. *   options -
            optional - A mapping of options to pass to lineage_wf. See the
            README.md *     in the kb_Msuite repo for a list of all of these.

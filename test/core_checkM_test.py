@@ -49,20 +49,22 @@ class CoreCheckMTest(unittest.TestCase):
         # WARNING: don't call any logging methods on the context object,
         # it'll result in a NoneType error
         cls.ctx = MethodContext(None)
-        cls.ctx.update({'token': token,
-                        'user_id': user_id,
-                        'provenance': [
-                            {'service': 'kb_Msuite',
-                             'method': 'please_never_use_it_in_production',
-                             'method_params': []
-                             }],
-                        'authenticated': 1})
-        cls.wsURL = cls.cfg['workspace-url']
-        cls.wsClient = workspaceService(cls.wsURL)
+        cls.ctx.update({
+            'token': token,
+            'user_id': user_id,
+            'provenance': [{
+                'service': 'kb_Msuite',
+                'method': 'please_never_use_it_in_production',
+                'method_params': []
+            }],
+            'authenticated': 1
+        })
+        cls.wsURL       = cls.cfg['workspace-url']
+        cls.wsClient    = workspaceService(cls.wsURL)
         cls.serviceImpl = kb_Msuite(cls.cfg)
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
-        cls.scratch = cls.cfg['scratch']
-        cls.suffix = test_time_stamp
+        cls.scratch     = cls.cfg['scratch']
+        cls.suffix      = test_time_stamp
 #         cls.suffix = test_time_stamp
 #         cls.scratch = cls.cfg['scratch']+'--'+test_time_stamp
 #         cls.cfg['scratch'] = cls.scratch
@@ -70,12 +72,12 @@ class CoreCheckMTest(unittest.TestCase):
 #             os.mkdir(cls.scratch)
         cls.checkm_runner = CheckMUtil(cls.cfg, cls.ctx)
 
-        cls.wsName = "test_kb_Msuite_" + str(cls.suffix)
+        cls.wsName  = "test_kb_Msuite_" + str(cls.suffix)
         cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
-        cls.au = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
-        cls.gfu = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
-        cls.mu = MetagenomeUtils(os.environ['SDK_CALLBACK_URL'])
-        cls.setAPI = SetAPI(url=cls.cfg['srv-wiz-url'], token=cls.ctx['token'])
+        cls.au      = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
+        cls.gfu     = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
+        cls.mu      = MetagenomeUtils(os.environ['SDK_CALLBACK_URL'])
+        cls.setAPI  = SetAPI(url=cls.cfg['srv-wiz-url'], token=cls.ctx['token'])
 
         # stage an input and output directory
         """
@@ -254,10 +256,12 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
+        print(rep)
+
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 2: Regression test (CheckM <= v1.0.7) for single problem assembly
     #
@@ -291,10 +295,11 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
+        print(rep)
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 3: binned contigs
     #
@@ -330,10 +335,11 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
+        print(rep)
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 4: Regression test for empty binned contigs object
     #
@@ -387,11 +393,12 @@ class CoreCheckMTest(unittest.TestCase):
         # make sure the report was created and includes the HTML report and download links
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
+        print(rep)
 
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 6: Single Genome
     #
@@ -425,10 +432,11 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
+        print(rep)
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 7: Genome Set
     #
@@ -462,10 +470,11 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
+        print(rep)
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 8: Data staging (intended data not checked into git repo: SKIP)
     #
@@ -586,6 +595,7 @@ class CoreCheckMTest(unittest.TestCase):
         rep = self.getWsClient().get_objects2({'objects':
                                               [{'ref': result['report_ref']}]})['data'][0]['data']
 
+        print(rep)
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
