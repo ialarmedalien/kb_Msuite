@@ -165,16 +165,17 @@ class CheckMUtil:
 #             filter_results,
 #             removed_bins=removed_bins)
 
-        html_zipped     = self.outputbuilder.package_folder(
-            run_config['html_dir'],
-            html_files[0],
-            'Summarized report from CheckM')
+#         html_zipped     = self.outputbuilder.package_folder(
+#             run_config['html_dir'],
+#             html_files[0],
+#             'Summarized report from CheckM')
 
         # 7) save report
         report_params   = {
             'message': '',
              'direct_html_link_index': 0,
-             'html_links': [html_zipped],
+#              'html_links': [html_zipped],
+              'html_links': html_files,
              'file_links': output_packages,
              'report_object_name': 'kb_checkM_report_' + str(uuid.uuid4()),
              'workspace_name': params['workspace_name']

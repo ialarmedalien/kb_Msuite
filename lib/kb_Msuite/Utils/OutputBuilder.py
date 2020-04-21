@@ -246,7 +246,17 @@ class OutputBuilder(object):
 
         html_files.append(html_file)
 
-        return html_files
+#         html_zipped     = self.outputbuilder.package_folder(
+#             run_config['html_dir'],
+#             html_files[0],
+#             'Summarized report from CheckM')
+
+        html_zipped = self.package_folder(
+            html_dir,
+            html_files[0],
+            'Summarized report from CheckM')
+
+        return [html_zipped]
 
 
     def _write_dist_html_page(self, html_dir, bin_id):
