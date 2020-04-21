@@ -355,13 +355,15 @@ class CheckMUtil:
 
     def _filter_binned_contigs(self):
 
-        if self.datastagingutils.get_data_obj_type(self.run_config.params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
-          and self.run_config.params.get('output_filtered_binnedcontigs_obj_name'):
-            self.run_config['results_filtered'] = True
+        run_config          = self.run_config
+        params              = self.run_config['params']
+
+        if self.datastagingutils.get_data_obj_type(params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
+          and params.get('output_filtered_binnedcontigs_obj_name'):
+            run_config['results_filtered'] = True
         else:
             return
 
-        run_config          = self.run_config
         input_dir           = run_config['input_dir']
         output_dir          = run_config['output_dir']
         filtered_bins_dir   = run_config['filtered_bins_dir']

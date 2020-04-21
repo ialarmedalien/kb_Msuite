@@ -430,7 +430,7 @@ class OutputBuilder(object):
 
 
     def save_binned_contigs(self, assembly_ref):
-        run_config = self.run_config
+        run_config  = self.run_config
         try:
             mgu = MetagenomeUtils(self.callback_url)
         except:
