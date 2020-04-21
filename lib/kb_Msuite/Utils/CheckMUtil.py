@@ -98,9 +98,7 @@ class CheckMUtil:
             raise ValueError('workspace_name field was not set in params for run_checkM_lineage_wf')
 
         if 'reduced_tree' in params:
-            if params['reduced_tree'] is not None and int(params['reduced_tree']) == 1:
-                # fine
-            else:
+            if params['reduced_tree'] is None or not int(params['reduced_tree']) == 1:
                 del params['reduced_tree']
 
         run_config = self.set_run_configuration(params)
