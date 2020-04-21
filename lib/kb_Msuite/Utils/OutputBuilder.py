@@ -25,10 +25,10 @@ class OutputBuilder(object):
     def __init__(self, checkMUtils_obj):
         self.checkMUtils    = checkMUtils_obj
         self.run_config     = checkMUtils_obj.run_config
-        self.output_dir     = run_config['output_dir']
-        self.plots_dir      = run_config['plots_dir']
-        self.scratch        = cmu.scratch
-        self.callback_url   = cmu.callback_url
+        self.output_dir     = self.run_config['output_dir']
+        self.plots_dir      = self.run_config['plots_dir']
+        self.scratch        = checkMUtils_obj.scratch
+        self.callback_url   = checkMUtils_obj.callback_url
         self.DIST_PLOT_EXT  = '.ref_dist_plots.png'
 
 # html_dir
