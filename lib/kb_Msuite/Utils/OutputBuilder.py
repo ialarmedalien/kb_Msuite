@@ -165,9 +165,8 @@ class OutputBuilder(object):
         # move plots we need into the html directory
         self._copy_ref_dist_plots(html_dir)
 
-        html_file = self.run_config['html_file'])
-
-        stats_file = self.run_config['bin_stats_ext_file']
+        html_file   = self.run_config['html_file']
+        stats_file  = self.run_config['bin_stats_ext_file']
         if not os.path.isfile(stats_file):
             log('Warning! no stats file found (looking at: ' + stats_file + ')')
             return
