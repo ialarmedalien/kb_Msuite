@@ -98,7 +98,7 @@ class CheckMUtil:
             raise ValueError('workspace_name field was not set in params for run_checkM_lineage_wf')
 
         if 'reduced_tree' in params:
-            if params['reduced_tree'] is not None and int(params['reduced_tree'])) == 1:
+            if params['reduced_tree'] is not None and int(params['reduced_tree']) == 1:
                 # fine
             else:
                 del params['reduced_tree']
@@ -161,19 +161,19 @@ class CheckMUtil:
 #             removed_bins=removed_bins)
 
         # 6) build the HTML report
-        html_files = self.outputbuilder.build_html_output_for_lineage_wf(removed_bins)
+        html_files      = self.outputbuilder.build_html_output_for_lineage_wf(removed_bins)
 #             params['input_ref'],
 #             html_dir,
 #             filter_results,
 #             removed_bins=removed_bins)
 
-        html_zipped = self.outputbuilder.package_folder(
+        html_zipped     = self.outputbuilder.package_folder(
             run_config['html_dir'],
             html_files[0],
             'Summarized report from CheckM')
 
         # 7) save report
-        report_params = {
+        report_params   = {
             'message': '',
              'direct_html_link_index': 0,
              'html_links': [html_zipped],
