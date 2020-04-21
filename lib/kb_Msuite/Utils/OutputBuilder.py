@@ -22,10 +22,9 @@ class OutputBuilder(object):
     '''
 
     # (self, run_config)
-    def __init__(self, cmu, run_config):
-    #output_dir, plots_dir, scratch_dir, callback_url):
-        self.checkMUtils    = cmu
-        self.run_config     = run_config
+    def __init__(self, checkMUtils_obj):
+        self.checkMUtils    = checkMUtils_obj
+        self.run_config     = checkMUtils_obj.run_config
         self.output_dir     = run_config['output_dir']
         self.plots_dir      = run_config['plots_dir']
         self.scratch        = cmu.scratch
@@ -151,22 +150,24 @@ class OutputBuilder(object):
 
     # requires the stats file - self.output_dir, 'storage', 'bin_stats_ext.tsv'
 #    def build_html_output_for_lineage_wf(self, object_name, html_dir, results_filtered, removed_bins=None):
-    def build_html_output_for_lineage_wf(self, run_config, removed_bins=None):
+    def build_html_output_for_lineage_wf(self, removed_bins=None):
 
         '''
         Based on the output of CheckM lineage_wf, build an HTML report
         '''
-        html_files = []
-        os.makedirs(run_config['html_dir'])
+        html_files  = []
+        html_dir    = self.run_config['html_dir']
+
+        os.makedirs(html_dir)
 
         # params['input_ref']
 
         # move plots we need into the html directory
-        self._copy_ref_dist_plots(run_config['html_dir'])
+        self._copy_ref_dist_plots(html_dir)
 
-        html_file_path = os.path.join(run_config['html_dir'], run_config['html_file'])
+        html_file = self.run_config['html_file'])
 
-        stats_file = run_config['bin_stats_ext_file']
+        stats_file = self.run_config['bin_stats_ext_file']
         if not os.path.isfile(stats_file):
             log('Warning! no stats file found (looking at: ' + stats_file + ')')
             return
@@ -191,7 +192,7 @@ class OutputBuilder(object):
 
         report_type = 'Table'
 
-        with open(html_file_path, 'w') as html:
+        with open(html_file, 'w') as html:
 
             # header
 #            self._write_html_header(html, run_config['input_ref'], report_type)
@@ -220,9 +221,9 @@ class OutputBuilder(object):
                         row_opening = '<tr style="background-color:'+row_bgcolor+'">'
                 html.write('  '+row_opening+'\n')
 
-                dist_plot_file = os.path.join(run_config['html_dir'], str(bid) + self.DIST_PLOT_EXT)
+                dist_plot_file = os.path.join(html_dir, str(bid) + self.DIST_PLOT_EXT)
                 if os.path.isfile(dist_plot_file):
-                    self._write_dist_html_page(run_config['html_dir'], bid)
+                    self._write_dist_html_page(html_dir, bid)
                     html.write('    <td><a href="' + bid + '.html">' + bid + '</td>\n')
                 else:
                     html.write('    <td>' + bid + '</td>\n')
@@ -243,9 +244,10 @@ class OutputBuilder(object):
             html.write('</body>\n</html>\n')
             html.close()
 
-        html_files.append(html_file_path)
+        html_files.append(html_file)
 
         return html_files
+
 
     def _write_dist_html_page(self, html_dir, bin_id):
 
@@ -265,8 +267,9 @@ class OutputBuilder(object):
 
     # 'tab_text/CheckM_summary_table.tsv'
 #    def build_summary_tsv_file(self, run_config, tab_text_dir, tab_text_file, results_filtered, removed_bins=None):
-    def build_summary_tsv_file(self, run_config, removed_bins=None):
+    def build_summary_tsv_file(self, removed_bins=None):
 
+        run_config = self.run_config
         stats_file = run_config['bin_stats_ext_file']
         if not os.path.isfile(stats_file):
             log('Warning! no stats file found (looking at: ' + stats_file + ')')
@@ -355,13 +358,14 @@ class OutputBuilder(object):
 
 
 #    def build_output_packages(self, params, input_dir, removed_bins=None):
-    def build_output_packages(self, run_config, removed_bins=None):
+    def build_output_packages(self, removed_bins=None):
         output_packages = []
-        params = run_config['params']
+        run_config = self.run_config
+        params = self.run_config['params']
         # create bin report summary TSV table text file
         log('creating TSV summary table text file')
 
-        self.build_summary_tsv_file(run_config, removed_bins)
+        self.build_summary_tsv_file(removed_bins)
 
         tab_text_zipped = self.package_folder(
             run_config['tab_text_dir'],
@@ -416,39 +420,39 @@ class OutputBuilder(object):
                     log('copy of ' + plot_file_path + ' to html directory failed')
 
 
-    def save_binned_contigs(self, run_config, assembly_ref):
+    def save_binned_contigs(self, assembly_ref):
+        run_config = self.run_config
         try:
             mgu = MetagenomeUtils(self.callback_url)
         except:
             raise ValueError("unable to connect with MetagenomeUtils")
 
-        filtered_binned_contig_obj_name = run_config['params'].get('output_filtered_binnedcontigs_obj_name')
-        generate_binned_contig_param = {
-            'file_directory': run_config['filtered_bins_dir'],
-            'assembly_ref': assembly_ref,
-            'binned_contig_name': filtered_binned_contig_obj_name,
-            'workspace_name': run_config['params'].get('workspace_name')
+        object_name = run_config['params'].get('output_filtered_binnedcontigs_obj_name')
+        params = {
+            'file_directory':       run_config['filtered_bins_dir'],
+            'assembly_ref':         assembly_ref,
+            'binned_contig_name':   object_name,
+            'workspace_name':       run_config['params'].get('workspace_name'),
         }
-        filtered_binned_contig_obj_ref = mgu.file_to_binned_contigs(
-            generate_binned_contig_param).get('binned_contig_obj_ref')
+        object_ref = mgu.file_to_binned_contigs(params).get('binned_contig_obj_ref')
 
         return {
-            'obj_name': filtered_binned_contig_obj_name,
-            'obj_ref':  filtered_binned_contig_obj_ref
+            'obj_name': object_name,
+            'obj_ref':  object_ref,
         }
 
 
 #    def build_bin_summary_file_from_binnedcontigs_obj(self, input_ref, bin_dir, bin_basename, fasta_extension):
 
-    def build_bin_summary_file_from_binnedcontigs_obj(self, run_config, binned_contig_obj):
+    def build_bin_summary_file_from_binnedcontigs_obj(self, binned_contig_obj):
 
-        fasta_ext   = run_config['fasta_ext']
-        bin_dir     = run_config['filtered_bins_dir']
+        fasta_ext   = self.run_config['fasta_ext']
+        bin_dir     = self.run_config['filtered_bins_dir']
         bin_summary_info = dict()
         # bid in object is full name of contig fasta file.  want just the number
         for bin_item in binned_contig_obj['bins']:
             #print ("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
-            bin_ID = re.sub('^[^\.]+\.', '', bin_item['bid'].replace('.' + run_config['fasta_ext'], ''))
+            bin_ID = re.sub('^[^\.]+\.', '', bin_item['bid'].replace('.' + fasta_ext, ''))
 
             #print ("BIN_ID: "+bin_ID)  # DEBUG
             bin_summary_info[bin_ID] = {
@@ -468,7 +472,7 @@ class OutputBuilder(object):
             bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.' + fasta_ext, ''))
             bin_IDs.append(bin_ID)
 
-        summary_file_path = os.path.join(bin_dir, run_config['bin_basename'] + '.' + 'summary')
+        summary_file_path = os.path.join(bin_dir, self.run_config['bin_basename'] + '.' + 'summary')
 
         print("writing filtered binned contigs summary file " + summary_file_path)
         with open(summary_file_path, 'w') as summary_file_handle:

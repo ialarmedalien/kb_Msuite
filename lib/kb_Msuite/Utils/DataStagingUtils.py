@@ -12,15 +12,15 @@ from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 
 class DataStagingUtils(object):
 
-    def __init__(self, cmu, run_config):
-        self.checkMUtils = cmu
-        config = cmu.config
-        self.ctx = cmu.ctx
+    def __init__(self, checkMUtils_obj):
+        self.checkMUtils = checkMUtils_obj
+        self.run_config = self.checkMUtils.run_config
+        config = checkMUtils_obj.config
+        self.ctx = checkMUtils_obj.ctx
         self.scratch = os.path.abspath(config['scratch'])
         self.ws_url = config['workspace-url']
         self.serviceWizardURL = config['srv-wiz-url']
         self.callbackURL = config['SDK_CALLBACK_URL']
-        self.run_config = run_config
 
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
@@ -307,7 +307,6 @@ class DataStagingUtils(object):
                              'Exit Code: ' + str(exitCode))
 
 
-#    def get_bin_fasta_files(self, input_dir, fasta_extension):
     def get_bin_fasta_files(self, search_dir, fasta_ext):
 
         bin_fasta_files = dict()
@@ -329,6 +328,12 @@ class DataStagingUtils(object):
         return bin_fasta_files
 
 
+    def _get_workspace_object_info(self, input_ref):
+        ws = Workspace(self.ws_url)
+        input_info = ws.get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
+        return input_info
+
+
     def get_data_obj_type_by_name(self, input_ref, remove_module=False):
         # 0 obj_id objid - the numerical id of the object.
         # 1 obj_name name - the name of the object.
@@ -343,8 +348,8 @@ class DataStagingUtils(object):
         # 10 usermeta meta - arbitrary user-supplied metadata about
         #     the object.
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
-        ws = Workspace(self.ws_url)
-        input_info = ws.get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
+
+        input_info = self._get_workspace_object_info(input_ref)
         obj_name = input_info[NAME_I]
         type_name = input_info[TYPE_I].split('-')[0]
         if remove_module:
@@ -354,18 +359,16 @@ class DataStagingUtils(object):
 
     def get_data_obj_name(self, input_ref):
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
-        ws = Workspace(self.ws_url)
-        input_info = ws.get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
+
+        input_info = self._get_workspace_object_info(input_ref)
         obj_name = input_info[NAME_I]
-        #type_name = input_info[TYPE_I].split('-')[0]
         return obj_name
 
 
     def get_data_obj_type(self, input_ref, remove_module=False):
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
-        ws = Workspace(self.ws_url)
-        input_info = ws.get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
-        #obj_name = input_info[NAME_I]
+
+        input_info = self._get_workspace_object_info(input_ref)
         type_name = input_info[TYPE_I].split('-')[0]
         if remove_module:
             type_name = type_name.split('.')[1]
@@ -382,61 +385,3 @@ class DataStagingUtils(object):
             #to get the full stack trace: traceback.format_exc()
         return workspace_object
 
-#     def read_assembly_ref_from_binnedcontigs(self, input_ref):
-#         ws = Workspace(self.ws_url)
-#         try:
-#             binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
-#         except Exception as e:
-#             raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
-#             #to get the full stack trace: traceback.format_exc()
-#
-#         return binned_contig_obj['assembly_ref']
-
-
-#     def build_bin_summary_file_from_binnedcontigs_obj(self, input_ref, bin_dir, bin_basename, fasta_extension):
-#
-#         # read bin info from obj
-#         ws = Workspace(self.ws_url)
-#         try:
-#             binned_contig_obj = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
-#         except Exception as e:
-#             raise ValueError('Unable to fetch '+str(input_ref)+' object from workspace: ' + str(e))
-#             #to get the full stack trace: traceback.format_exc()
-#         bin_summary_info = dict()
-#
-#         # bid in object is full name of contig fasta file.  want just the number
-#         for bin_item in binned_contig_obj['bins']:
-#             #print ("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
-#             bin_ID = re.sub('^[^\.]+\.', '', bin_item['bid'].replace('.' + fasta_extension, ''))
-#
-#             #print ("BIN_ID: "+bin_ID)  # DEBUG
-#             bin_summary_info[bin_ID] = {
-#                 'n_contigs': bin_item['n_contigs'],
-#                 'gc': round(100.0 * float(bin_item['gc']), 1),
-#                 'sum_contig_len': bin_item['sum_contig_len'],
-#                 'cov': round(100.0 * float(bin_item['cov']), 1)
-#             }
-#         # write summary file for just those bins present in bin_dir
-#         header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
-#         bin_fasta_files_by_bin_ID = self.get_bin_fasta_files(bin_dir, fasta_extension)
-#         bin_IDs = []
-#         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
-#             bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.'+fasta_extension, ''))
-#             bin_IDs.append(bin_ID)
-#         summary_file_path = os.path.join(bin_dir, bin_basename+'.'+'summary')
-#
-#         print("writing filtered binned contigs summary file "+summary_file_path)
-#         with open(summary_file_path, 'w') as summary_file_handle:
-#             print("\t".join(header_line))
-#             summary_file_handle.write("\t".join(header_line)+"\n")
-#             for bin_ID in bin_IDs:
-#                 #print ("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
-#                 bin_summary_info_line = [bin_basename+'.'+str(bin_ID)+'.'+fasta_extension,
-#                                          str(bin_summary_info[bin_ID]['cov'])+'%',
-#                                          str(bin_summary_info[bin_ID]['sum_contig_len']),
-#                                          str(bin_summary_info[bin_ID]['gc'])
-#                                         ]
-#                 print("\t".join(bin_summary_info_line))
-#                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
-#
-#         return summary_file_path

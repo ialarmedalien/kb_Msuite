@@ -257,7 +257,7 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 2: Regression test (CheckM <= v1.0.7) for single problem assembly
     #
@@ -294,7 +294,7 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 3: binned contigs
     #
@@ -333,7 +333,7 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 4: Regression test for empty binned contigs object
     #
@@ -391,7 +391,7 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 6: Single Genome
     #
@@ -428,7 +428,7 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 7: Genome Set
     #
@@ -465,13 +465,14 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
+        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 8: Data staging (intended data not checked into git repo: SKIP)
     #
     # Uncomment to skip this test
     @unittest.skip("skipped test_data_staging")
     # missing test data for this custom test
+    # note that the DataStagingUtils interface has not been updated below since the test is skipped
     def test_data_staging(self):
 
         # test stage assembly
@@ -506,9 +507,11 @@ class CoreCheckMTest(unittest.TestCase):
     # Uncomment to skip this test
     @unittest.skip("skipped test_output_plotting")
     # missing test data for this custom test
-    def test_output_plotting(self):
+    # note that the OutputBuilder interface has not been updated below since the test is skipped
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
+    def test_output_plotting(self):
+        impl = self.getImpl()
+        cmu = CheckMUtil(impl)
         plots_dir = os.path.join(self.scratch, 'plots_1')
         html_dir = os.path.join(self.scratch, 'html_1')
         tetra_file = os.path.join(self.scratch, 'tetra_1.tsv')
@@ -527,7 +530,8 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertIn('shock_id', res)
         self.assertIn('name', res)
         self.assertIn('description', res)
-        self.assertEqual(res['name'], 'CheckM_Plot.html')
+
+        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 10: tetra wiring (intended data not checked into git repo: SKIP)
     #
@@ -541,7 +545,7 @@ class CoreCheckMTest(unittest.TestCase):
         params = {
             'subcommand': 'tetra',
             'seq_file': self.all_seq_fasta,
-            'tetra_file': tetra_file
+            'tetra_file': tetra_file,
         }
         self.getImpl().run_checkM(self.getContext(), params)
         os.path.isfile(tetra_file)
@@ -558,7 +562,6 @@ class CoreCheckMTest(unittest.TestCase):
 
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
-
         # run checkM lineage_wf app on BinnedContigs
         input_ref = self.binned_contigs_ref1
         params = {
@@ -586,8 +589,7 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(rep['direct_html_link_index'], 0)
         self.assertEqual(len(rep['file_links']), 3)
         self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'CheckM_Plot.html')
-
+        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     def setup_local_method_data(self):
         base_dir = os.path.dirname(__file__)
