@@ -379,6 +379,10 @@ class OutputBuilder(object):
             log('copy failed')
 
 
+    def build_report(self, removed_bins=None):
+
+        return self.build_output_packages(removed_bins)
+
 #    def build_output_packages(self, params, input_dir, removed_bins=None):
     def build_output_packages(self, removed_bins=None):
 

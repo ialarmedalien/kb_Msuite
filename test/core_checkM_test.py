@@ -6,11 +6,7 @@ import time
 import shutil
 
 from os import environ
-try:
-    from configparser import ConfigParser  # py2
-except:
-    from configparser import ConfigParser  # py3
-
+from configparser import ConfigParser  # py3
 from pprint import pprint  # noqa: F401
 
 from installed_clients.WorkspaceClient import Workspace as workspaceService
@@ -224,6 +220,106 @@ class CoreCheckMTest(unittest.TestCase):
                                                   }]})[0]
         cls.genomeSet_ref1 = str(obj_info[WSID_I]) + '/' + str(obj_info[OBJID_I]) + '/' + str(obj_info[VERSION_I])
 
+
+#     def check_extended_result(self, result, link_name, file_names):
+#         """
+#         Test utility: check the file upload results for an extended report
+#         Args:
+#           result - result dictionary from running .create_extended_report
+#           link_name - one of "html_links" or "file_links"
+#           file_names - names of the files for us to check against
+#         Returns:
+#             obj - report object created
+#         """
+#         obj = self.check_created_report(result)
+#         file_links = obj[link_name]
+#         self.assertEqual(len(file_links), len(file_names))
+#         # Test that all the filenames listed in the report object map correctly
+#         saved_names = set([str(f['name']) for f in file_links])
+#         self.assertEqual(saved_names, set(file_names))
+#         return obj
+
+    def check_validation_errors(self, params, error_list):
+        """
+        Check that the appropriate errors are thrown when validating extended report params
+        Args:
+          params - parameters to create_extended_report
+          error_list - set of text regexes to check against the error string
+        Returns True
+        """
+        err_str = 'KBaseReport parameter validation errors'
+        with self.assertRaisesRegex(TypeError, err_str) as cm:
+            self.getImpl().create_extended_report(self.getContext(), params)
+
+        error_message = str(cm.exception)
+        for e in error_list:
+            self.assertRegex(error_message, e)
+
+
+
+
+    def test_data_staging_utils_init_client(self):
+        ''' check client initialisation '''
+
+
+
+    def test_data_staging_utils_stage_input(self):
+
+
+
+
+    def run_and_check_report(params, expected=None, with_filters=False):
+        """
+        Test utility: check the file upload results for an extended report
+        Args:
+          result - result dictionary from running .create_extended_report
+          link_name - one of "html_links" or "file_links"
+          file_names - names of the files for us to check against
+        Returns:
+            obj - report object created
+        """
+#         obj = self.check_created_report(result)
+#         file_links = obj[link_name]
+#
+#         self.assertEqual(len(file_links), len(file_names))
+#         # Test that all the filenames listed in the report object map correctly
+#         saved_names = set([str(f['name']) for f in file_links])
+#         self.assertEqual(saved_names, set(file_names))
+#         return obj
+
+        if not expected:
+            expected = {
+                'direct_html_link_index': 0,
+                'n_file_links': 3,
+                'n_html_links': 1,
+                'html_links_0_name': 'checkm_results.html',
+            }
+
+
+        if (with_filters):
+            result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
+        else:
+            result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+
+        pprint('End to end test result:')
+        pprint(result)
+
+        self.assertIn('report_name', result)
+        self.assertIn('report_ref', result)
+
+        # make sure the report was created and includes the HTML report and download links
+        rep = self.getWsClient().get_objects2({
+            'objects': [{'ref': result['report_ref']}]
+        })['data'][0]['data']
+
+        print(rep)
+
+        self.assertEqual(rep['direct_html_link_index'], 0)
+        self.assertEqual(len(rep['file_links']), 3)
+        self.assertEqual(len(rep['html_links']), 1)
+        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
+
+
     # Test 1: single assembly
     #
     # Uncomment to skip this test
@@ -244,24 +340,34 @@ class CoreCheckMTest(unittest.TestCase):
             'save_plots_dir': 1,
             'threads': 4
         }
-        result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
 
-        pprint('End to end test result:')
-        pprint(result)
+        expected_results = {
+            'direct_html_link_index': 0,
+            'n_file_links': 3,
+            'n_html_links': 1,
+            'html_links_0_name': 'checkm_results.html',
+        }
 
-        self.assertIn('report_name', result)
-        self.assertIn('report_ref', result)
+        self.run_and_check_report(params, expected_results)
 
-        # make sure the report was created and includes the HTML report and download links
-        rep = self.getWsClient().get_objects2({'objects':
-                                              [{'ref': result['report_ref']}]})['data'][0]['data']
-
-        print(rep)
-
-        self.assertEqual(rep['direct_html_link_index'], 0)
-        self.assertEqual(len(rep['file_links']), 3)
-        self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
+#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+#
+#         pprint('End to end test result:')
+#         pprint(result)
+#
+#         self.assertIn('report_name', result)
+#         self.assertIn('report_ref', result)
+#
+#         # make sure the report was created and includes the HTML report and download links
+#         rep = self.getWsClient().get_objects2({'objects':
+#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
+#
+#         print(rep)
+#
+#         self.assertEqual(rep['direct_html_link_index'], 0)
+#         self.assertEqual(len(rep['file_links']), 3)
+#         self.assertEqual(len(rep['html_links']), 1)
+#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 2: Regression test (CheckM <= v1.0.7) for single problem assembly
     #
@@ -283,24 +389,35 @@ class CoreCheckMTest(unittest.TestCase):
             'save_plots_dir': 1,
             'threads': 4
         }
-        result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
 
-        pprint('End to end test result:')
-        pprint(result)
+        expected_results = {
+            'direct_html_link_index': 0,
+            'n_file_links': 3,
+            'n_html_links': 1,
+            'html_links_0_name': 'checkm_results.html',
+        }
 
-        self.assertIn('report_name', result)
-        self.assertIn('report_ref', result)
-
-        # make sure the report was created and includes the HTML report and download links
-        rep = self.getWsClient().get_objects2({'objects':
-                                              [{'ref': result['report_ref']}]})['data'][0]['data']
-
-        print(rep)
-        self.assertEqual(rep['direct_html_link_index'], 0)
-        self.assertEqual(len(rep['file_links']), 3)
-        self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
-
+        self.run_and_check_report(params, expected_results)
+#
+#
+#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+#
+#         pprint('End to end test result:')
+#         pprint(result)
+#
+#         self.assertIn('report_name', result)
+#         self.assertIn('report_ref', result)
+#
+#         # make sure the report was created and includes the HTML report and download links
+#         rep = self.getWsClient().get_objects2({'objects':
+#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
+#
+#         print(rep)
+#         self.assertEqual(rep['direct_html_link_index'], 0)
+#         self.assertEqual(len(rep['file_links']), 3)
+#         self.assertEqual(len(rep['html_links']), 1)
+#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
+#
     # Test 3: binned contigs
     #
     # Uncomment to skip this test
@@ -324,22 +441,33 @@ class CoreCheckMTest(unittest.TestCase):
             'save_plots_dir': 1,
             'threads': 4
         }
-        result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-        print('RESULT:')
-        pprint(result)
 
-        self.assertIn('report_name', result)
-        self.assertIn('report_ref', result)
+        expected_results = {
+            'direct_html_link_index': 0,
+            'n_file_links': 3,
+            'n_html_links': 1,
+            'html_links_0_name': 'checkm_results.html',
+        }
 
-        # make sure the report was created and includes the HTML report and download links
-        rep = self.getWsClient().get_objects2({'objects':
-                                              [{'ref': result['report_ref']}]})['data'][0]['data']
-
-        print(rep)
-        self.assertEqual(rep['direct_html_link_index'], 0)
-        self.assertEqual(len(rep['file_links']), 3)
-        self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
+        self.run_and_check_report(params, expected_results)
+#
+#
+#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+#         print('RESULT:')
+#         pprint(result)
+#
+#         self.assertIn('report_name', result)
+#         self.assertIn('report_ref', result)
+#
+#         # make sure the report was created and includes the HTML report and download links
+#         rep = self.getWsClient().get_objects2({'objects':
+#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
+#
+#         print(rep)
+#         self.assertEqual(rep['direct_html_link_index'], 0)
+#         self.assertEqual(len(rep['file_links']), 3)
+#         self.assertEqual(len(rep['html_links']), 1)
+#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 4: Regression test for empty binned contigs object
     #
@@ -382,23 +510,33 @@ class CoreCheckMTest(unittest.TestCase):
             'save_plots_dir': 1,
             'threads': 4
         }
-        result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
 
-        pprint('End to end test result:')
-        pprint(result)
+        expected_results = {
+            'direct_html_link_index': 0,
+            'n_file_links': 3,
+            'n_html_links': 1,
+            'html_links_0_name': 'checkm_results.html',
+        }
 
-        self.assertIn('report_name', result)
-        self.assertIn('report_ref', result)
+        self.run_and_check_report(params, expected_results)
 
-        # make sure the report was created and includes the HTML report and download links
-        rep = self.getWsClient().get_objects2({'objects':
-                                              [{'ref': result['report_ref']}]})['data'][0]['data']
-        print(rep)
-
-        self.assertEqual(rep['direct_html_link_index'], 0)
-        self.assertEqual(len(rep['file_links']), 3)
-        self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
+#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+#
+#         pprint('End to end test result:')
+#         pprint(result)
+#
+#         self.assertIn('report_name', result)
+#         self.assertIn('report_ref', result)
+#
+#         # make sure the report was created and includes the HTML report and download links
+#         rep = self.getWsClient().get_objects2({'objects':
+#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
+#         print(rep)
+#
+#         self.assertEqual(rep['direct_html_link_index'], 0)
+#         self.assertEqual(len(rep['file_links']), 3)
+#         self.assertEqual(len(rep['html_links']), 1)
+#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 6: Single Genome
     #
@@ -420,23 +558,32 @@ class CoreCheckMTest(unittest.TestCase):
             'save_plots_dir': 1,
             'threads': 4
         }
-        result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+        expected_results = {
+            'direct_html_link_index': 0,
+            'n_file_links': 3,
+            'n_html_links': 1,
+            'html_links_0_name': 'checkm_results.html',
+        }
 
-        pprint('End to end test result:')
-        pprint(result)
-
-        self.assertIn('report_name', result)
-        self.assertIn('report_ref', result)
-
-        # make sure the report was created and includes the HTML report and download links
-        rep = self.getWsClient().get_objects2({'objects':
-                                              [{'ref': result['report_ref']}]})['data'][0]['data']
-
-        print(rep)
-        self.assertEqual(rep['direct_html_link_index'], 0)
-        self.assertEqual(len(rep['file_links']), 3)
-        self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
+        self.run_and_check_report(params, expected_results)
+#
+#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+#
+#         pprint('End to end test result:')
+#         pprint(result)
+#
+#         self.assertIn('report_name', result)
+#         self.assertIn('report_ref', result)
+#
+#         # make sure the report was created and includes the HTML report and download links
+#         rep = self.getWsClient().get_objects2({'objects':
+#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
+#
+#         print(rep)
+#         self.assertEqual(rep['direct_html_link_index'], 0)
+#         self.assertEqual(len(rep['file_links']), 3)
+#         self.assertEqual(len(rep['html_links']), 1)
+#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 7: Genome Set
     #
@@ -458,23 +605,32 @@ class CoreCheckMTest(unittest.TestCase):
             'save_plots_dir': 1,
             'threads': 4
         }
-        result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+        expected_results = {
+            'direct_html_link_index': 0,
+            'n_file_links': 3,
+            'n_html_links': 1,
+            'html_links_0_name': 'checkm_results.html',
+        }
 
-        pprint('End to end test result:')
-        pprint(result)
-
-        self.assertIn('report_name', result)
-        self.assertIn('report_ref', result)
-
-        # make sure the report was created and includes the HTML report and download links
-        rep = self.getWsClient().get_objects2({'objects':
-                                              [{'ref': result['report_ref']}]})['data'][0]['data']
-
-        print(rep)
-        self.assertEqual(rep['direct_html_link_index'], 0)
-        self.assertEqual(len(rep['file_links']), 3)
-        self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
+        self.run_and_check_report(params, expected_results)
+#
+#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+#
+#         pprint('End to end test result:')
+#         pprint(result)
+#
+#         self.assertIn('report_name', result)
+#         self.assertIn('report_ref', result)
+#
+#         # make sure the report was created and includes the HTML report and download links
+#         rep = self.getWsClient().get_objects2({'objects':
+#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
+#
+#         print(rep)
+#         self.assertEqual(rep['direct_html_link_index'], 0)
+#         self.assertEqual(len(rep['file_links']), 3)
+#         self.assertEqual(len(rep['html_links']), 1)
+#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 8: Data staging (intended data not checked into git repo: SKIP)
     #
@@ -584,22 +740,34 @@ class CoreCheckMTest(unittest.TestCase):
             'output_filtered_binnedcontigs_obj_name': 'filter.BinnedContigs',
             'threads': 4
         }
-        result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
-        print('RESULT:')
-        pprint(result)
+#        result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
 
-        self.assertIn('report_name', result)
-        self.assertIn('report_ref', result)
+        expected_results = {
+            'direct_html_link_index': 0,
+            'n_file_links': 3,
+            'n_html_links': 1,
+            'html_links_0_name': 'checkm_results.html',
+        }
 
-        # make sure the report was created and includes the HTML report and download links
-        rep = self.getWsClient().get_objects2({'objects':
-                                              [{'ref': result['report_ref']}]})['data'][0]['data']
+        self.run_and_check_report(params, expected_results, True)
 
-        print(rep)
-        self.assertEqual(rep['direct_html_link_index'], 0)
-        self.assertEqual(len(rep['file_links']), 3)
-        self.assertEqual(len(rep['html_links']), 1)
-        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+
+#         result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
+#         print('RESULT:')
+#         pprint(result)
+#
+#         self.assertIn('report_name', result)
+#         self.assertIn('report_ref', result)
+#
+#         # make sure the report was created and includes the HTML report and download links
+#         rep = self.getWsClient().get_objects2({'objects':
+#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
+#
+#         print(rep)
+#         self.assertEqual(rep['direct_html_link_index'], 0)
+#         self.assertEqual(len(rep['file_links']), 3)
+#         self.assertEqual(len(rep['html_links']), 1)
+#         self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     def setup_local_method_data(self):
         base_dir = os.path.dirname(__file__)

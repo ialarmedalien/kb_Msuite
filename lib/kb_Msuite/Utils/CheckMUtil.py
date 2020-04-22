@@ -364,8 +364,8 @@ class CheckMUtil:
             os.makedirs(filtered_bins_dir)
 
         bin_fasta_files_by_bin_ID = self.datastagingutils.get_bin_fasta_files(
-            input_dir, run_config['fasta_ext'])
-#            input_dir, self.fasta_extension)
+            input_dir, run_config['fasta_ext']
+        )
 
         log("DEBUG: bin_fasta_files_by_bin_ID: ")
         log(bin_fasta_files_by_bin_ID)
