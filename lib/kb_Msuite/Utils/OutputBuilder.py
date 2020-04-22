@@ -4,6 +4,7 @@ import re
 import ast
 import sys
 import time
+import json
 
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
@@ -11,7 +12,7 @@ from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
-    print(('\n' if prefix_newline else '')  + '{0:.2f}'.format(time.time()) + ': ' + str(message))
+    print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
     sys.stdout.flush()
 
 
@@ -31,18 +32,6 @@ class OutputBuilder(object):
         self.callback_url   = checkMUtils_obj.callback_url
         self.DIST_PLOT_EXT  = '.ref_dist_plots.png'
 
-# html_dir
-# results_filtered
-# critical_out_dir
-# tab_text_dir
-# tab_text_file
-# params
-# input_dir
-# plots_dir
-# dest_folder
-# params
-# assembly_ref
-# filtered_bins_dir
 
     def get_fields(self):
         return [
@@ -59,7 +48,6 @@ class OutputBuilder(object):
             {'id': 'Completeness', 'display': 'Completeness', 'round': 2},
             {'id': 'Contamination', 'display': 'Contamination', 'round': 2}
         ]
-
 
 
     def package_folder(self, folder_path, zip_file_name, zip_file_description):
@@ -150,112 +138,133 @@ class OutputBuilder(object):
 
     # requires the stats file - self.output_dir, 'storage', 'bin_stats_ext.tsv'
 #    def build_html_output_for_lineage_wf(self, object_name, html_dir, results_filtered, removed_bins=None):
-    def build_html_output_for_lineage_wf(self, removed_bins=None):
+    def build_html_output_for_lineage_wf(self, bin_stats, removed_bins=None):
 
         '''
         Based on the output of CheckM lineage_wf, build an HTML report
         '''
-        html_files  = []
         html_dir    = self.run_config['html_dir']
+        html_file   = self.run_config['html_file']
+        tmpl_src_dir    = self.run_config['template_src_dir']
+        tmpl_dest_dir   = self.run_config['template_dest_dir']
+        html_plots_dir  = os.path.join(html_dir, 'plots')
 
         os.makedirs(html_dir)
-
-        # params['input_ref']
+        os.makedirs(dest_folder)
 
         # move plots we need into the html directory
-        self._copy_ref_dist_plots(html_dir)
+        self._copy_ref_dist_plots(html_plots_dir)
 
-        html_file   = self.run_config['html_file']
-        stats_file  = self.run_config['bin_stats_ext_file']
-        if not os.path.isfile(stats_file):
-            log('Warning! no stats file found (looking at: ' + stats_file + ')')
-            return
-        bin_stats = dict()
-        with open(stats_file) as lf:
-            for line in lf:
-                if not line:
-                    continue
-                if line.startswith('#'):
-                    continue
-                col = line.split('\t')
-                bin_id = str(col[0])
-                data = ast.literal_eval(col[1])
-                bin_stats[bin_id] = data
+        # copy over the templates
+        for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
+            self._copy_file_ignore_errors(self, tmpl, tmpl_src_dir, tmpl_dest_dir)
 
-        # DEBUG
+        html_files = [
+            {
+                # checkm table:
+                'template': {
+                    'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
+                },
+                'name': 'checkm_results.html',
+                'description': 'Summarized report from CheckM',
+            },{
+                'path': run_config['tab_text_file'],
+                'name': run_config['tab_text_file_name'],
+            },{
+                'path': html_plots_dir,
+                'name': 'plots',
+            }
+        ]
+
         for bid in sorted(bin_stats.keys()):
-            print("BIN STATS BID: "+bid)
-        if removed_bins:
-            for bid in removed_bins:
-                print("REMOVED BID: "+bid)
+            # DEBUG
+            bin_id = re.sub('^[^\.]+\.', '', bid)
+            if removed_bins and bin_id in removed_bins:
+                print("BIN STATS BID " + bid + ": REMOVED")
+            else:
+                print("BIN STATS BID " + bid)
 
-        report_type = 'Table'
+            # create the dist plot page
+            dist_plot_file = os.path.join(html_dir, str(bid) + self.DIST_PLOT_EXT)
+            if os.path.isfile(dist_plot_file):
+                html_files.append(
+                    'template': {
+                        'template_data_json': json.dumps({
+                            'bin_id': bin_id,
+                            'dist_plot_ext': self.DIST_PLOT_EXT,
+                        }),
+                        'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
+                    },
+                    'name': bin_id + '.html',
+                )
 
-        with open(html_file, 'w') as html:
+        return html_files
 
-            # header
-#            self._write_html_header(html, run_config['input_ref'], report_type)
-            html.write('<body>\n')
+#         report_type = 'Table'
+#
+#         with open(html_file, 'w') as html:
+#
+#             # header
+#             self._write_html_header(html, run_config['input_ref'], report_type)
+#             html.write('<body>\n')
+#
+#             # tabs
+#             self._write_tabs(html, report_type)
+#             html.write('<br><br><br>\n')
+#             html.write('<div id="Summary" class="tabcontent">\n')
+#             html.write('<table>\n')
+#             html.write('  <tr>\n')
+#             html.write('    <th><b>Bin Name</b></th>\n')
+#
+#             fields = self.get_fields()
+#
+#             for f in fields:
+#                 html.write('    <th>' + f['display'] + '</th>\n')
+#             html.write('  </tr>\n')
+#
+#             for bid in sorted(bin_stats.keys()):
+#                 row_opening = '<tr>'
+#                 if removed_bins:
+#                     bin_id = re.sub('^[^\.]+\.', '', bid)
+#                     if bin_id in removed_bins:
+#                         row_bgcolor = '#F9E3E2'
+#                         row_opening = '<tr style="background-color:'+row_bgcolor+'">'
+#                 html.write('  '+row_opening+'\n')
+#
+#                 dist_plot_file = os.path.join(html_dir, str(bid) + self.DIST_PLOT_EXT)
+#                 if os.path.isfile(dist_plot_file):
+#
+#                     self._write_dist_html_page(html_dir, bid)
+#                     html.write('    <td><a href="' + bid + '.html">' + bid + '</td>\n')
+#
+#
+#                 else:
+#                     html.write('    <td>' + bid + '</td>\n')
+#
+#                 for f in fields:
+#                     if f['id'] in bin_stats[bid]:
+#                         value = str(bin_stats[bid][f['id']])
+#                         if f.get('round'):
+#                             value = str(round(bin_stats[bid][f['id']], f['round']))
+#                         html.write('    <td>' + value + '</td>\n')
+#                     else:
+#                         html.write('    <td></td>\n')
+#                 html.write('  </tr>\n')
+#
+#             html.write('</table>\n')
+#             html.write('</div>\n')
+#
+#             html.write('</body>\n</html>\n')
+#             html.close()
 
-            # tabs
-#            self._write_tabs(html, report_type)
-            html.write('<br><br><br>\n')
-            html.write('<div id="Summary" class="tabcontent">\n')
-            html.write('<table>\n')
-            html.write('  <tr>\n')
-            html.write('    <th><b>Bin Name</b></th>\n')
+#        html_files.append(html_file)
 
-            fields = self.get_fields()
-
-            for f in fields:
-                html.write('    <th>' + f['display'] + '</th>\n')
-            html.write('  </tr>\n')
-
-            for bid in sorted(bin_stats.keys()):
-                row_opening = '<tr>'
-                if removed_bins:
-                    bin_id = re.sub('^[^\.]+\.', '', bid)
-                    if bin_id in removed_bins:
-                        row_bgcolor = '#F9E3E2'
-                        row_opening = '<tr style="background-color:'+row_bgcolor+'">'
-                html.write('  '+row_opening+'\n')
-
-                dist_plot_file = os.path.join(html_dir, str(bid) + self.DIST_PLOT_EXT)
-                if os.path.isfile(dist_plot_file):
-                    self._write_dist_html_page(html_dir, bid)
-                    html.write('    <td><a href="' + bid + '.html">' + bid + '</td>\n')
-                else:
-                    html.write('    <td>' + bid + '</td>\n')
-
-                for f in fields:
-                    if f['id'] in bin_stats[bid]:
-                        value = str(bin_stats[bid][f['id']])
-                        if f.get('round'):
-                            value = str(round(bin_stats[bid][f['id']], f['round']))
-                        html.write('    <td>' + value + '</td>\n')
-                    else:
-                        html.write('    <td></td>\n')
-                html.write('  </tr>\n')
-
-            html.write('</table>\n')
-            html.write('</div>\n')
-
-            html.write('</body>\n</html>\n')
-            html.close()
-
-        html_files.append(html_file)
-
-#         html_zipped     = self.outputbuilder.package_folder(
-#             run_config['html_dir'],
+#         html_zipped = self.package_folder(
+#             html_dir,
 #             html_files[0],
 #             'Summarized report from CheckM')
-
-        html_zipped = self.package_folder(
-            html_dir,
-            html_files[0],
-            'Summarized report from CheckM')
-
-        return [html_zipped]
+#
+#         return [html_zipped]
 
 
     def _write_dist_html_page(self, html_dir, bin_id):
@@ -274,10 +283,8 @@ class OutputBuilder(object):
             html.write('<br><br><br>\n')
             html.write('</body>\n</html>\n')
 
-    # 'tab_text/CheckM_summary_table.tsv'
-#    def build_summary_tsv_file(self, run_config, tab_text_dir, tab_text_file, results_filtered, removed_bins=None):
-    def build_summary_tsv_file(self, removed_bins=None):
 
+    def read_bin_stats_file(self):
         run_config = self.run_config
         stats_file = run_config['bin_stats_ext_file']
         if not os.path.isfile(stats_file):
@@ -296,6 +303,11 @@ class OutputBuilder(object):
                 data = ast.literal_eval(col[1])
                 bin_stats[bin_id] = data
 
+        return bin_stats
+
+    # 'tab_text/CheckM_summary_table.tsv'
+#    def build_summary_tsv_file(self, run_config, tab_text_dir, tab_text_file, results_filtered, removed_bins=None):
+    def build_summary_tsv_file(self, bin_stats, removed_bins=None):
 
         fields = self.get_fields()
 
@@ -341,12 +353,13 @@ class OutputBuilder(object):
                 out_handle.write("\t".join(row)+"\n")
 
 #        return [tab_text_path]
-        return True
+        return run_config['tab_text_file']
 
 
     def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
         src = os.path.join(src_folder, filename)
         dest = os.path.join(dest_folder, filename)
+        os.makedirs(dest_folder)
         log('copying ' + src + ' to ' + dest)
         try:
             shutil.copy(src, dest)
@@ -368,13 +381,17 @@ class OutputBuilder(object):
 
 #    def build_output_packages(self, params, input_dir, removed_bins=None):
     def build_output_packages(self, removed_bins=None):
+
         output_packages = []
         run_config = self.run_config
         params = self.run_config['params']
+
         # create bin report summary TSV table text file
         log('creating TSV summary table text file')
 
-        self.build_summary_tsv_file(removed_bins)
+        bin_stats_data = self.read_bin_stats_file()
+
+        tsv_summary_file = self.build_summary_tsv_file(bin_stats_data, removed_bins)
 
         tab_text_zipped = self.package_folder(
             run_config['tab_text_dir'],
@@ -383,8 +400,6 @@ class OutputBuilder(object):
         )
         output_packages.append(tab_text_zipped)
 
-        # if 'save_output_dir' in params and str(params['save_output_dir']) == '1':
-#         if True:
         log('packaging full output directory')
         zipped_output_file = self.package_folder(
             run_config['output_dir'],
@@ -413,8 +428,24 @@ class OutputBuilder(object):
         else:
             log('not packaging output plots directory')
 
-        return output_packages
+        # 6) build the HTML report
+        html_files = self.build_html_output_for_lineage_wf(bin_stats_data, removed_bins)
 
+        # 7) save report
+#         report_params   = {
+#             'message': '',
+#             'direct_html_link_index': 0,
+#             'html_links': html_files,
+#             'file_links': output_packages,
+#             'report_object_name': 'kb_checkM_report_' + str(uuid.uuid4()),
+#             'workspace_name': params['workspace_name']
+#         }
+
+        return {
+            'file_links': output_packages,
+            'direct_html_link_index': 0,
+            'html_links': html_files,
+        }
 
     def _copy_ref_dist_plots(self, dest_folder):
         plots_dir = self.plots_dir

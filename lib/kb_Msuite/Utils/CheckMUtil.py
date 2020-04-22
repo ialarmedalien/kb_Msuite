@@ -56,8 +56,10 @@ class CheckMUtil:
 
         tab_text_dir = os.path.join(run_config['output_dir'], 'tab_text')
         run_config['tab_text_dir'] = tab_text_dir
-
         run_config['bin_basename'] = 'Bin'
+
+        run_config['template_src_dir']  = os.path.join('kb', 'module', 'kb_Msuite', 'templates')
+        run_config['template_dest_dir'] = os.path.join(base_dir, 'templates')
 
         # files
         run_config['all_seq_fasta'] = os.path.join(base_dir,
@@ -147,39 +149,28 @@ class CheckMUtil:
 
         # 4) make the plots:
         self.build_checkM_lineage_wf_plots()
-#            input_dir, output_dir, plots_dir, all_seq_fasta_file, tetra_file)
 
-
-        # 5) Package results
-        #   includes building the .tsv file that the HTML report is built from
-        output_packages = self.outputbuilder.build_output_packages(removed_bins)
-#             params,
-#             input_dir,
-#             filter_results,
-#             removed_bins=removed_bins)
-
-        # 6) build the HTML report
-        html_files      = self.outputbuilder.build_html_output_for_lineage_wf(removed_bins)
-#             params['input_ref'],
-#             html_dir,
-#             filter_results,
-#             removed_bins=removed_bins)
-
-#         html_zipped     = self.outputbuilder.package_folder(
-#             run_config['html_dir'],
-#             html_files[0],
-#             'Summarized report from CheckM')
+        report_params = self.outputbuilder.build_report(removed_bins)
+#         5) Package results
+#           includes building the .tsv file that the HTML report is built from
+#         output_packages = self.outputbuilder.build_output_packages(removed_bins)
+#
+#         6) build the HTML report
+#         html_files      = self.outputbuilder.build_html_output_for_lineage_wf(removed_bins)
 
         # 7) save report
-        report_params   = {
-            'message': '',
-             'direct_html_link_index': 0,
-#              'html_links': [html_zipped],
-              'html_links': html_files,
-             'file_links': output_packages,
-             'report_object_name': 'kb_checkM_report_' + str(uuid.uuid4()),
-             'workspace_name': params['workspace_name']
-        }
+
+#        report_params['message'] = ''
+        report_params['report_object_name'] = 'kb_checkM_report_' + str(uuid.uuid4())
+        report_params['workspace_name'] = params['workspace_name']
+#         report_params = {
+#             'message': '',
+#             'direct_html_link_index': 0,
+#             'html_links': html_files,
+#             'file_links': output_packages,
+#             'report_object_name': 'kb_checkM_report_' + str(uuid.uuid4()),
+#             'workspace_name': params['workspace_name']
+#         }
 
         if created_objects:
             report_params['objects_created'] = created_objects
