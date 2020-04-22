@@ -187,7 +187,7 @@ class OutputBuilder(object):
             # create the dist plot page
             dist_plot_file = os.path.join(html_dir, str(bid) + self.DIST_PLOT_EXT)
             if os.path.isfile(dist_plot_file):
-                html_files.append(
+                html_files.append({
                     'template': {
                         'template_data_json': json.dumps({
                             'bin_id': bin_id,
@@ -196,7 +196,7 @@ class OutputBuilder(object):
                         'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
                     },
                     'name': bin_id + '.html',
-                )
+                })
 
         return html_files
 
