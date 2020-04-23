@@ -276,14 +276,14 @@ class CoreCheckMTest(unittest.TestCase):
         # attr_list = ['callback_url', 'service_wizard_url', 'token', 'workspace_url']
 
         err_str = 'Missing required ClientUtil config value: callback_url'
-        with self.assertRaisesRegex('ValueError', err_str):
+        with self.assertRaisesRegex(ValueError, err_str):
             ClientUtil({})
 
-        with self.assertRaisesRegex('ValueError', err_str):
+        with self.assertRaisesRegex(ValueError, err_str):
             ClientUtil({'service_wizard_url': 'foo'})
 
         err_str = 'Missing required ClientUtil config value: token'
-        with self.assertRaisesRegex('ValueError', err_str):
+        with self.assertRaisesRegex(ValueError, err_str):
             ClientUtil({
                 'callback_url': 'http://example.com',
                 'service_wizard_url': 'http://example.com',
@@ -314,7 +314,7 @@ class CoreCheckMTest(unittest.TestCase):
 
         for client in invalid_clients:
             err_str = client + ' client does not exist'
-            with self.assertRaisesRegex('ValueError', err_str):
+            with self.assertRaisesRegex(ValueError, err_str):
                 cmu.client(client)
 
 #         try:
