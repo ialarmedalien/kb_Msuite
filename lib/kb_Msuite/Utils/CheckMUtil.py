@@ -76,9 +76,7 @@ class CheckMUtil:
         run_config['template_dest_dir'] = os.path.join(base_dir, 'templates')
 
         # files
-        run_config['all_seq_fasta'] = os.path.join(base_dir,
-            'all_sequences.' + run_config['fasta_ext']
-        )
+        run_config['all_seq_fasta'] = os.path.join(base_dir, 'all_sequences.' + run_config['fasta_ext'])
         run_config['tetra_file'] = os.path.join(base_dir, 'tetra.tsv')
 
         run_config['bin_stats_ext_file'] = os.path.join(
