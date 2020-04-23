@@ -29,7 +29,7 @@ class CheckMUtil:
         self.client_util = ClientUtil({
             'callback_url':       config['SDK_CALLBACK_URL'],
             'service_wizard_url': config['srv-wiz-url'],
-            'token':              config['token'],
+            'token':              ctx['token'],
             'workspace_url':      config['workspace-url'],
         })
 
@@ -130,6 +130,7 @@ class CheckMUtil:
         if ('reduced_tree' in params):
             lineage_wf_options['reduced_tree'] = params['reduced_tree']
 
+        # dump out the current dir structure
         self.run_checkM('lineage_wf', lineage_wf_options)
 
 
