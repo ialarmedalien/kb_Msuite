@@ -21,7 +21,7 @@ class OutputBuilder(object):
     # (self, run_config)
     def __init__(self, checkMUtil_obj):
         self.checkMUtil     = checkMUtil_obj
-        self.client_util    = checkMUtil.client_util
+        self.client_util    = checkMUtil_obj.client_util
         self.output_dir     = self.run_config['output_dir']
         self.plots_dir      = self.run_config['plots_dir']
         self.scratch        = checkMUtil_obj.scratch
@@ -144,14 +144,13 @@ class OutputBuilder(object):
         '''
         Based on the output of CheckM lineage_wf, build an HTML report
         '''
-        html_dir    = self.run_config['html_dir']
-        html_file   = self.run_config['html_file']
-        tmpl_src_dir    = self.run_config['template_src_dir']
-        tmpl_dest_dir   = self.run_config['template_dest_dir']
+        run_config = self.run_config()
+        html_dir    = run_config['html_dir']
+        tmpl_src_dir    = run_config['template_src_dir']
+        tmpl_dest_dir   = run_config['template_dest_dir']
         html_plots_dir  = os.path.join(html_dir, 'plots')
 
-        os.makedirs(html_dir)
-        os.makedirs(dest_folder)
+        os.makedirs(html_plots_dir)
 
         # move plots we need into the html directory
         self._copy_ref_dist_plots(html_plots_dir)
@@ -311,6 +310,7 @@ class OutputBuilder(object):
     def build_summary_tsv_file(self, bin_stats, removed_bins=None):
 
         fields = self.get_fields()
+        run_config = self.run_config()
 
 #        tab_text_files = []
         if not os.path.exists(run_config['tab_text_dir']):
@@ -396,7 +396,7 @@ class OutputBuilder(object):
 
         bin_stats_data = self.read_bin_stats_file()
 
-        tsv_summary_file = self.build_summary_tsv_file(bin_stats_data, removed_bins)
+        self.build_summary_tsv_file(bin_stats_data, removed_bins)
 
         tab_text_zipped = self.package_folder(
             run_config['tab_text_dir'],
@@ -495,6 +495,7 @@ class OutputBuilder(object):
         run_config = self.checkMUtil.run_config()
         fasta_ext   = run_config['fasta_ext']
         bin_dir     = run_config['filtered_bins_dir']
+        bin_basename = run_config['bin_basename']
 
         bin_summary_info = dict()
         # bid in object is full name of contig fasta file.  want just the number
@@ -520,7 +521,7 @@ class OutputBuilder(object):
             bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.' + fasta_ext, ''))
             bin_IDs.append(bin_ID)
 
-        summary_file_path = os.path.join(bin_dir, run_config['bin_basename'] + '.' + 'summary')
+        summary_file_path = run_config['summary_file_path']
 
         print("writing filtered binned contigs summary file " + summary_file_path)
         with open(summary_file_path, 'w') as summary_file_handle:

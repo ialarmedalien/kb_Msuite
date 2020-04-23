@@ -13,6 +13,7 @@ from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
 
+
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
     print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
@@ -26,10 +27,10 @@ class CheckMUtil:
         self.ctx = ctx
 
         self.client_util = ClientUtil({
-            callback_url:       config['SDK_CALLBACK_URL'],
-            service_wizard_url: config['srv-wiz-url'],
-            token:              config['token'],
-            workspace_url:      config['workspace-url'],
+            'callback_url':       config['SDK_CALLBACK_URL'],
+            'service_wizard_url': config['srv-wiz-url'],
+            'token':              config['token'],
+            'workspace_url':      config['workspace-url'],
         })
 
         self.scratch = config['scratch']
@@ -39,10 +40,8 @@ class CheckMUtil:
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
 
-
     def client(self, client_name):
         return self.client_util.client(client_name)
-
 
     def run_config(self):
         if hasattr(self, 'run_config'):
@@ -50,11 +49,10 @@ class CheckMUtil:
 
         self._set_run_configuration()
 
-
     def _set_run_configuration(self, params):
 
         suffix = str(int(time.time() * 1000))
-        base_dir = os.path.join(self.scratch,'run_' + suffix)
+        base_dir = os.path.join(self.scratch, 'run_' + suffix)
 
         run_config = {
             'params': params,
@@ -63,7 +61,7 @@ class CheckMUtil:
             'input_dir': os.path.join(base_dir, 'bins'),
             'fasta_ext': self.fasta_extension,
             'fasta_ext_binned_contigs': self.binned_contigs_builder_fasta_extension,
-            'results_filtered': False, # this will be updated later
+            'results_filtered': False,  # this will be updated later
         }
 
         # directories
@@ -74,7 +72,7 @@ class CheckMUtil:
         run_config['tab_text_dir'] = tab_text_dir
         run_config['bin_basename'] = 'Bin'
 
-        run_config['template_src_dir']  = os.path.join('kb', 'module', 'kb_Msuite', 'templates')
+        run_config['template_src_dir'] = os.path.join('kb', 'module', 'kb_Msuite', 'templates')
         run_config['template_dest_dir'] = os.path.join(base_dir, 'templates')
 
         # files
@@ -90,11 +88,10 @@ class CheckMUtil:
         run_config['tab_text_file_name'] = 'CheckM_summary_table.tsv'
         run_config['tab_text_file'] = os.path.join(tab_text_dir, run_config['tab_text_file_name'])
 
-
         run_config['html_file_name'] = 'checkm_results.html'
         run_config['html_file'] = os.path.join(run_config['html_dir'], run_config['html_file_name'])
 
-        summary_file_path = os.path.join(
+        run_config['summary_file_path'] = os.path.join(
             run_config['filtered_bins_dir'], run_config['bin_basename'] + '.' + 'summary'
         )
 
@@ -230,7 +227,6 @@ class CheckMUtil:
         }
         self.run_checkM('dist_plot', dist_plot_options) #, dropOutput=True)
 
-
     def run_checkM(self, subcommand, options): #, dropOutput=True):
         '''
             subcommand is the checkm subcommand (eg lineage_wf, tetra, etc)
@@ -252,7 +248,7 @@ class CheckMUtil:
 #         log_output_filename = None
 #         if dropOutput:
 
-        log_file_extra = os.environ.get( 'KB_TEST_ID', str(int(time.time() * 1000)) )
+        log_file_extra = os.environ.get('KB_TEST_ID', str(int(time.time() * 1000)))
         log_output_filename = os.path.join(run_config['base_dir'], subcommand + '--' + log_file_extra + '.log')
 
 
@@ -361,7 +357,6 @@ class CheckMUtil:
             return
 
         input_dir           = run_config['input_dir']
-        output_dir          = run_config['output_dir']
         filtered_bins_dir   = run_config['filtered_bins_dir']
 
         # prep fs stuff and get bin IDs
@@ -459,10 +454,7 @@ class CheckMUtil:
         # create BinnedContig object from filtered bins
         binned_contig_obj = self.datastagingutils.get_obj_from_workspace(params['input_ref'])
 
-        summary_file = self.outputbuilder.build_bin_summary_file_from_binnedcontigs_obj(
-            binned_contig_obj
-        )
-
+        self.outputbuilder.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj)
         assembly_ref = binned_contig_obj['assembly_ref']
         new_binned_contigs_info = self.outputbuilder.save_binned_contigs(assembly_ref)
 

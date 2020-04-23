@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+import sys
+import time
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
@@ -20,9 +21,7 @@ def validate_params(params):
         raise ValueError('workspace_name field was not set in params for run_checkM_lineage_wf')
 
     if 'reduced_tree' in params:
-        if params['reduced_tree'] is not None and int(params['reduced_tree'])) == 1:
-            # fine
-        else:
+        if params['reduced_tree'] is None or int(params['reduced_tree']) != 1:
             del params['reduced_tree']
 
     validator = {
@@ -63,6 +62,7 @@ def validate_params(params):
         },
     }
 
+    '''
     /*
         input_ref - reference to the input Assembly, AssemblySet, Genome, GenomeSet, or BinnedContigs data
     */
@@ -95,3 +95,5 @@ def validate_params(params):
         float contamination_perc;  /* 0-100, default: 2% */
         string output_filtered_binnedcontigs_obj_name;
     } CheckMLineageWf_withFilter_Params;
+
+    '''

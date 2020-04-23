@@ -9,7 +9,7 @@ from os import environ
 from configparser import ConfigParser  # py3
 from pprint import pprint  # noqa: F401
 
-from installed_clients.WorkspaceClient import Workspace as workspaceService
+from installed_clients.WorkspaceClient import WorkspaceClient
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
@@ -22,6 +22,17 @@ from kb_Msuite.authclient import KBaseAuth as _KBaseAuth
 from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
+from kb_Msuite.Utils.ClientUtil import ClientUtil
+
+
+def print_method_name(method):
+    method_name = method.__name__
+    method_name.replace("test_", "")
+    method_name = 'test_checkM_lineage_wf_full_app_single_assembly'
+    print("\n=================================================================")
+    print(("RUNNING " + method_name + "()"))
+    print("=================================================================\n")
+
 
 class CoreCheckMTest(unittest.TestCase):
 
@@ -56,7 +67,7 @@ class CoreCheckMTest(unittest.TestCase):
             'authenticated': 1
         })
         cls.wsURL       = cls.cfg['workspace-url']
-        cls.wsClient    = workspaceService(cls.wsURL)
+        cls.wsClient    = WorkspaceClient(cls.wsURL)
         cls.serviceImpl = kb_Msuite(cls.cfg)
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.scratch     = cls.cfg['scratch']
@@ -85,7 +96,7 @@ class CoreCheckMTest(unittest.TestCase):
         # prepare WS data
         cls.prepare_data()
         end_time_stamp = time.time()
-        print("set up time: " + str( end_time_stamp - init_time_stamp ) )
+        print("set up time: " + str(end_time_stamp - init_time_stamp))
 
     @classmethod
     def tearDownClass(cls):
@@ -93,8 +104,6 @@ class CoreCheckMTest(unittest.TestCase):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print(('Test workspace ' + cls.wsName + ' was deleted'))
         pass
-        #if os.path.exists(cls.scratch):
-        #    os.rmdir(cls.scratch)
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -189,10 +198,12 @@ class CoreCheckMTest(unittest.TestCase):
                                             'GCF_001439985.1_wTPRE_1.0_genomic.gbff']):
             genome_file_path = os.path.join(cls.scratch, genome_filename)
             shutil.copy(os.path.join("data", "genomes", genome_filename), genome_file_path)
-            cls.genome_refs.append(cls.gfu.genbank_to_genome({'file': {'path': genome_file_path},
-                                                              'workspace_name': cls.ws_info[1],
-                                                              'genome_name': genome_filename,
-                                                              'generate_ids_if_needed': 1})['genome_ref'])
+            cls.genome_refs.append(cls.gfu.genbank_to_genome({
+                    'file': {'path': genome_file_path},
+                    'workspace_name': cls.ws_info[1],
+                    'genome_name': genome_filename,
+                    'generate_ids_if_needed': 1
+                })['genome_ref'])
 
         # create a genomeSet
         genome_scinames = dict()
@@ -204,20 +215,22 @@ class CoreCheckMTest(unittest.TestCase):
         }
         for genome_ref in cls.genome_refs:
             testGS['elements'][genome_scinames[genome_ref]] = {'ref': genome_ref}
-        obj_info = cls.wsClient.save_objects({'workspace': cls.ws_info[1],
-                                              'objects': [
-                                                  {
-                                                      'type': 'KBaseSearch.GenomeSet',
-                                                      'data': testGS,
-                                                      'name': 'test_genomeset_1',
-                                                      'meta': {},
-                                                      'provenance': [
-                                                          {
-                                                              'service': 'kb_Msuite',
-                                                              'method': 'test_CheckM'
-                                                          }
-                                                      ]
-                                                  }]})[0]
+        obj_info = cls.wsClient.save_objects({
+            'workspace': cls.ws_info[1],
+            'objects': [
+                {
+                    'type': 'KBaseSearch.GenomeSet',
+                    'data': testGS,
+                    'name': 'test_genomeset_1',
+                    'meta': {},
+                    'provenance': [
+                        {
+                            'service': 'kb_Msuite',
+                            'method': 'test_CheckM'
+                        }
+                    ]
+                }]
+            })[0]
         cls.genomeSet_ref1 = str(obj_info[WSID_I]) + '/' + str(obj_info[OBJID_I]) + '/' + str(obj_info[VERSION_I])
 
 
@@ -240,6 +253,7 @@ class CoreCheckMTest(unittest.TestCase):
 #         return obj
 
     def check_validation_errors(self, params, error_list):
+
         """
         Check that the appropriate errors are thrown when validating extended report params
         Args:
@@ -255,12 +269,10 @@ class CoreCheckMTest(unittest.TestCase):
         for e in error_list:
             self.assertRegex(error_message, e)
 
-
     def test_init_client(self):
         ''' check client initialisation '''
 
-
-        attr_list = ['callback_url', 'service_wizard_url', 'token', 'workspace_url']
+        # attr_list = ['callback_url', 'service_wizard_url', 'token', 'workspace_url']
 
         err_str = 'Missing required ClientUtil config value: callback_url'
         with self.assertRaisesRegex('ValueError', err_str):
@@ -288,9 +300,10 @@ class CoreCheckMTest(unittest.TestCase):
         cmu = CheckMUtil(self.getConfig(), self.getContext())
 
         valid_clients = {
-            'AssemblyUtil': AssemblyUtilClient,
-            'MetagenomeUtils': MetagenomeUtilsClient,
-            'SetAPI': SetAPIServiceClient,
+            'AssemblyUtil': AssemblyUtil,
+            'MetagenomeUtils': MetagenomeUtils,
+            'SetAPI': SetAPI,
+            'Workspace': WorkspaceClient,
         }
         invalid_clients = ['FeatureSetUtils', 'TotallyMadeUpClient']
 
@@ -312,10 +325,10 @@ class CoreCheckMTest(unittest.TestCase):
 
 #    def test_data_staging_utils_stage_input(self):
 
+        # whatever!
 
+    def run_and_check_report(self, params, expected=None, with_filters=False):
 
-
-    def run_and_check_report(params, expected=None, with_filters=False):
         """
         Test utility: check the file upload results for an extended report
         Args:
@@ -342,7 +355,6 @@ class CoreCheckMTest(unittest.TestCase):
                 'html_links_0_name': 'checkm_results.html',
             }
 
-
         if (with_filters):
             result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
         else:
@@ -366,16 +378,12 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(len(rep['html_links']), 1)
         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
-
     # Test 1: single assembly
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
+    @print_method_name
     def test_checkM_lineage_wf_full_app_single_assembly(self):
-        method_name = 'test_checkM_lineage_wf_full_app_single_assembly'
-        print ("\n=================================================================")
-        print(("RUNNING "+method_name+"()"))
-        print ("=================================================================\n")
 
         # run checkM lineage_wf app on a single assembly
         input_ref = self.assembly_ref1
@@ -397,34 +405,12 @@ class CoreCheckMTest(unittest.TestCase):
 
         self.run_and_check_report(params, expected_results)
 
-#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-#
-#         pprint('End to end test result:')
-#         pprint(result)
-#
-#         self.assertIn('report_name', result)
-#         self.assertIn('report_ref', result)
-#
-#         # make sure the report was created and includes the HTML report and download links
-#         rep = self.getWsClient().get_objects2({'objects':
-#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
-#
-#         print(rep)
-#
-#         self.assertEqual(rep['direct_html_link_index'], 0)
-#         self.assertEqual(len(rep['file_links']), 3)
-#         self.assertEqual(len(rep['html_links']), 1)
-#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
-
     # Test 2: Regression test (CheckM <= v1.0.7) for single problem assembly
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_problem_assembly")
+    @print_method_name
     def test_checkM_lineage_wf_full_app_single_problem_assembly(self):
-        method_name = 'test_checkM_lineage_wf_full_app_single_problem_assembly'
-        print ("\n=================================================================")
-        print(("RUNNING "+method_name+"()"))
-        print ("=================================================================\n")
 
         # run checkM lineage_wf app on a single assembly
         input_ref = self.assembly_offending_ref1
@@ -445,35 +431,13 @@ class CoreCheckMTest(unittest.TestCase):
         }
 
         self.run_and_check_report(params, expected_results)
-#
-#
-#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-#
-#         pprint('End to end test result:')
-#         pprint(result)
-#
-#         self.assertIn('report_name', result)
-#         self.assertIn('report_ref', result)
-#
-#         # make sure the report was created and includes the HTML report and download links
-#         rep = self.getWsClient().get_objects2({'objects':
-#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
-#
-#         print(rep)
-#         self.assertEqual(rep['direct_html_link_index'], 0)
-#         self.assertEqual(len(rep['file_links']), 3)
-#         self.assertEqual(len(rep['html_links']), 1)
-#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
-#
+
     # Test 3: binned contigs
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
+    @print_method_name
     def test_checkM_lineage_wf_full_app_binned_contigs(self):
-        method_name = 'test_checkM_lineage_wf_full_app_binned_contigs'
-        print ("\n=================================================================")
-        print(("RUNNING "+method_name+"()"))
-        print ("=================================================================\n")
 
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
@@ -497,34 +461,13 @@ class CoreCheckMTest(unittest.TestCase):
         }
 
         self.run_and_check_report(params, expected_results)
-#
-#
-#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-#         print('RESULT:')
-#         pprint(result)
-#
-#         self.assertIn('report_name', result)
-#         self.assertIn('report_ref', result)
-#
-#         # make sure the report was created and includes the HTML report and download links
-#         rep = self.getWsClient().get_objects2({'objects':
-#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
-#
-#         print(rep)
-#         self.assertEqual(rep['direct_html_link_index'], 0)
-#         self.assertEqual(len(rep['file_links']), 3)
-#         self.assertEqual(len(rep['html_links']), 1)
-#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 4: Regression test for empty binned contigs object
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs_EMPTY")
+    @print_method_name
     def test_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
-        method_name = 'test_checkM_lineage_wf_full_app_binned_contigs_EMPTY'
-        print ("\n=================================================================")
-        print(("RUNNING "+method_name+"()"))
-        print ("=================================================================\n")
 
         # run checkM lineage_wf app on EMPTY BinnedContigs
         input_ref = self.binned_contigs_ref1_empty
@@ -541,11 +484,8 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_assemblySet")
+    @print_method_name
     def test_checkM_lineage_wf_full_app_assemblySet(self):
-        method_name = 'test_checkM_lineage_wf_full_app_assemblySet'
-        print ("\n=================================================================")
-        print(("RUNNING "+method_name+"()"))
-        print ("=================================================================\n")
 
         # run checkM lineage_wf app on an assembly set
         input_ref = self.assemblySet_ref1
@@ -567,33 +507,12 @@ class CoreCheckMTest(unittest.TestCase):
 
         self.run_and_check_report(params, expected_results)
 
-#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-#
-#         pprint('End to end test result:')
-#         pprint(result)
-#
-#         self.assertIn('report_name', result)
-#         self.assertIn('report_ref', result)
-#
-#         # make sure the report was created and includes the HTML report and download links
-#         rep = self.getWsClient().get_objects2({'objects':
-#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
-#         print(rep)
-#
-#         self.assertEqual(rep['direct_html_link_index'], 0)
-#         self.assertEqual(len(rep['file_links']), 3)
-#         self.assertEqual(len(rep['html_links']), 1)
-#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
-
     # Test 6: Single Genome
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
+    @print_method_name
     def test_checkM_lineage_wf_full_app_single_genome(self):
-        method_name = 'test_checkM_lineage_wf_full_app_single_genome'
-        print ("\n=================================================================")
-        print(("RUNNING "+method_name+"()"))
-        print ("=================================================================\n")
 
         # run checkM lineage_wf app on a single genome
         input_ref = self.genome_refs[0]
@@ -613,34 +532,13 @@ class CoreCheckMTest(unittest.TestCase):
         }
 
         self.run_and_check_report(params, expected_results)
-#
-#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-#
-#         pprint('End to end test result:')
-#         pprint(result)
-#
-#         self.assertIn('report_name', result)
-#         self.assertIn('report_ref', result)
-#
-#         # make sure the report was created and includes the HTML report and download links
-#         rep = self.getWsClient().get_objects2({'objects':
-#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
-#
-#         print(rep)
-#         self.assertEqual(rep['direct_html_link_index'], 0)
-#         self.assertEqual(len(rep['file_links']), 3)
-#         self.assertEqual(len(rep['html_links']), 1)
-#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 7: Genome Set
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_genomeSet")
+    @print_method_name
     def test_checkM_lineage_wf_full_app_genomeSet(self):
-        method_name = 'test_checkM_lineage_wf_full_app_genomeSet'
-        print ("\n=================================================================")
-        print(("RUNNING "+method_name+"()"))
-        print ("=================================================================\n")
 
         # run checkM lineage_wf app on a genome set
         input_ref = self.genomeSet_ref1
@@ -660,24 +558,6 @@ class CoreCheckMTest(unittest.TestCase):
         }
 
         self.run_and_check_report(params, expected_results)
-#
-#         result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-#
-#         pprint('End to end test result:')
-#         pprint(result)
-#
-#         self.assertIn('report_name', result)
-#         self.assertIn('report_ref', result)
-#
-#         # make sure the report was created and includes the HTML report and download links
-#         rep = self.getWsClient().get_objects2({'objects':
-#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
-#
-#         print(rep)
-#         self.assertEqual(rep['direct_html_link_index'], 0)
-#         self.assertEqual(len(rep['file_links']), 3)
-#         self.assertEqual(len(rep['html_links']), 1)
-#         self.assertEqual(rep['html_links'][0]['name'], 'checkm_results.html')
 
     # Test 8: Data staging (intended data not checked into git repo: SKIP)
     #
@@ -720,7 +600,6 @@ class CoreCheckMTest(unittest.TestCase):
     @unittest.skip("skipped test_output_plotting")
     # missing test data for this custom test
     # note that the OutputBuilder interface has not been updated below since the test is skipped
-
     def test_output_plotting(self):
         impl = self.getImpl()
         cmu = CheckMUtil(impl)
@@ -743,7 +622,7 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertIn('name', res)
         self.assertIn('description', res)
 
-        self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+        self.assertEqual(res['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 10: tetra wiring (intended data not checked into git repo: SKIP)
     #
@@ -766,11 +645,8 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
+    @print_method_name
     def test_checkM_lineage_wf_withFilter_binned_contigs(self):
-        method_name = 'test_checkM_lineage_wf_withFilter_binned_contigs'
-        print ("\n=================================================================")
-        print(("RUNNING "+method_name+"()"))
-        print ("=================================================================\n")
 
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
@@ -798,29 +674,11 @@ class CoreCheckMTest(unittest.TestCase):
 
         self.run_and_check_report(params, expected_results, True)
 
-
-#         result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
-#         print('RESULT:')
-#         pprint(result)
-#
-#         self.assertIn('report_name', result)
-#         self.assertIn('report_ref', result)
-#
-#         # make sure the report was created and includes the HTML report and download links
-#         rep = self.getWsClient().get_objects2({'objects':
-#                                               [{'ref': result['report_ref']}]})['data'][0]['data']
-#
-#         print(rep)
-#         self.assertEqual(rep['direct_html_link_index'], 0)
-#         self.assertEqual(len(rep['file_links']), 3)
-#         self.assertEqual(len(rep['html_links']), 1)
-#         self.assertEqual(rep['html_links'][0]['name'], self.getImpl().run_config['html_file'])
-
     def setup_local_method_data(self):
+
         base_dir = os.path.dirname(__file__)
         test_data_dir = os.path.join(base_dir, 'data', 'example-bins')
         scratch_input_dir = os.path.join(self.scratch, 'lineage_wf_input_dir')
-        #scratch_output_dir = os.path.join(self.scratch, 'lineage_wf_output_dir')
         scratch_output_dir = os.path.join(self.scratch, 'lineage_wf_output_dir'+'_'+str(self.suffix))
         shutil.copytree(test_data_dir, scratch_input_dir)
         if not os.path.exists(scratch_output_dir):
@@ -846,7 +704,7 @@ class CoreCheckMTest(unittest.TestCase):
             }
         })
         out_contents = sorted(os.listdir(output_dir))
-        #self.assertEqual(out_contents, ['storage', 'lineage.ms', 'bins'])
+        # self.assertEqual(out_contents, ['storage', 'lineage.ms', 'bins'])
         self.assertEqual(out_contents, ['bins', 'checkm.log', 'lineage.ms', 'storage'])
         self.assertTrue(os.path.exists(log_path))
         # Remove test data

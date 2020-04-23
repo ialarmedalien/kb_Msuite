@@ -1,20 +1,16 @@
 import os
-import time
 import glob
 import re
 import subprocess
 
-from installed_clients.WorkspaceClient import Workspace
-from installed_clients.AssemblyUtilClient import AssemblyUtil
-from installed_clients.SetAPIServiceClient import SetAPI
-from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
-
 
 class DataStagingUtils(object):
 
+    [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
+
     def __init__(self, checkMUtil_obj):
         self.checkMUtil = checkMUtil_obj
-        self.client_util = checkMUtil.client_util
+        self.client_util = checkMUtil_obj.client_util
         config = checkMUtil_obj.config
         self.scratch = os.path.abspath(config['scratch'])
 
@@ -44,7 +40,6 @@ class DataStagingUtils(object):
         # config
         #SERVICE_VER = 'dev'
         run_config = self.checkMUtil.run_config()
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
 
         # 1) generate a folder in scratch to hold the input
         suffix          = run_config['suffix']
@@ -56,12 +51,13 @@ class DataStagingUtils(object):
             os.makedirs(input_dir)
 
         input_info = self._get_workspace_object_info(input_ref)
-        obj_name  = input_info[NAME_I]
-        type_name = input_info[TYPE_I].split('-')[0]
+        obj_name  = input_info[1]
+        obj_type = input_info[2].split('-')[0]
+
+        """
 
 
         # 2) based on type, download the files
-"""
         # auClient
         try:
             auClient = AssemblyUtil(self.callbackURL, token=self.ctx['token'], service_ver=SERVICE_VER)
@@ -79,7 +75,8 @@ class DataStagingUtils(object):
             mguClient = MetagenomeUtils(self.callbackURL, token=self.ctx['token'], service_ver=SERVICE_VER)
         except Exception as e:
             raise ValueError('Unable to instantiate mguClient with callbackURL: ' + self.callbackURL + ' ERROR: ' + str(e))
-"""
+
+        """
 
         type_to_method = {
 
@@ -95,11 +92,10 @@ class DataStagingUtils(object):
             'KBaseSearch.GenomeSet': self.process_genome_genome_set,
         }
 
+        if obj_type not in type_to_method:
+            raise ValueError('Cannot stage fasta file input directory from type: ' + obj_type)
 
-        if type_name not in type_to_method:
-            raise ValueError('Cannot stage fasta file input directory from type: ' + type_name)
-
-        type_to_method[type_name](input_ref, input_dir, fasta_ext, obj_name)
+        type_to_method[obj_type](input_ref, input_dir, fasta_ext, obj_name, obj_type)
 
         # create summary fasta file with all bins
         self.cat_fasta_files(input_dir, fasta_ext, all_seq_fasta)
@@ -110,7 +106,7 @@ class DataStagingUtils(object):
             'all_seq_fasta': all_seq_fasta,
         }
 
-    def process_assembly_contigset(self, input_ref, input_dir, fasta_ext, obj_name):
+    def process_assembly_contigset(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
         auClient = self.client('AssemblyUtil')
 
@@ -126,8 +122,7 @@ class DataStagingUtils(object):
 
         return True
 
-
-    def process_assembly_set(self, input_ref, input_dir, fasta_ext, obj_name):
+    def process_assembly_set(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
         setAPI_Client = self.client('SetAPI')
         auClient = self.client('AssemblyUtil')
@@ -145,7 +140,7 @@ class DataStagingUtils(object):
             # assembly obj info
             try:
                 this_assembly_info = self.client('Workspace').get_object_info_new({'objects': [{'ref': this_assembly_ref}]})[0]
-                this_assembly_name = this_assembly_info[NAME_I]
+                this_assembly_name = this_assembly_info[1]
             except Exception as e:
                 raise ValueError('Unable to get object from workspace: (' + this_assembly_ref + '): ' + str(e))
             assembly_refs.append(this_assembly_ref)
@@ -170,9 +165,7 @@ class DataStagingUtils(object):
 
         return True
 
-
-
-    def process_binned_contigs(self, input_ref, input_dir, fasta_ext, obj_name):
+    def process_binned_contigs(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
         mguClient = self.init_client('MetagenomeUtils')
 
@@ -194,8 +187,7 @@ class DataStagingUtils(object):
 
         return True
 
-
-    def process_genome_genome_set(self, input_ref, input_dir, fasta_ext, obj_name):
+    def process_genome_genome_set(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
         auClient = self.init_client('AssemblyUtil')
 
@@ -203,7 +195,7 @@ class DataStagingUtils(object):
         genome_sci_names = []
         genome_assembly_refs = []
 
-        if type_name == 'KBaseGenomes.Genome':
+        if obj_type == 'KBaseGenomes.Genome':
             genomeSet_refs = [input_ref]
         else:  # get genomeSet_refs from GenomeSet object
             genomeSet_refs = []
@@ -216,8 +208,8 @@ class DataStagingUtils(object):
             # iterate through genomeSet members
             for genome_id in list(genomeSet_object['elements'].keys()):
                 if 'ref' not in genomeSet_object['elements'][genome_id] or \
-                   genomeSet_object['elements'][genome_id]['ref'] is None or \
-                   genomeSet_object['elements'][genome_id]['ref'] == '':
+                  genomeSet_object['elements'][genome_id]['ref'] is None or \
+                  genomeSet_object['elements'][genome_id]['ref'] == '':
                     raise ValueError('genome_ref not found for genome_id: ' + str(genome_id) + ' in genomeSet: ' + str(input_ref))
                 else:
                     genomeSet_refs.append(genomeSet_object['elements'][genome_id]['ref'])
@@ -228,7 +220,7 @@ class DataStagingUtils(object):
                 objects = self.client('Workspace').get_objects2({'objects': [{'ref': this_input_ref}]})['data']
                 genome_obj = objects[0]['data']
                 genome_obj_info = objects[0]['info']
-                genome_obj_names.append(genome_obj_info[NAME_I])
+                genome_obj_names.append(genome_obj_info[1])
                 genome_sci_names.append(genome_obj['scientific_name'])
             except:
                 raise ValueError("unable to fetch genome: " + this_input_ref)
@@ -252,7 +244,7 @@ class DataStagingUtils(object):
         for ass_i, assembly_ref in enumerate(genome_assembly_refs):
             this_name = genome_obj_names[ass_i]
             filename = os.path.join(input_dir, this_name + '.' + fasta_ext)
-            result = auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
+            auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
             if not os.path.isfile(filename):
                 raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
             # make sure fasta file isn't empty
@@ -261,7 +253,6 @@ class DataStagingUtils(object):
                 raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
 
         return True
-
 
     def fasta_seq_len_at_least(self, fasta_path, min_fasta_len=1):
         '''
@@ -278,7 +269,6 @@ class DataStagingUtils(object):
                 if seq_len >= min_fasta_len:
                     return True
         return False
-
 
     def set_fasta_file_extensions(self, folder, new_extension):
         '''
@@ -390,6 +380,5 @@ class DataStagingUtils(object):
             workspace_object = self.client('Workspace').get_objects2({'objects': [{'ref': object_ref}]})['data'][0]['data']
         except Exception as e:
             raise ValueError('Unable to fetch '+str(object_ref)+' object from workspace: ' + str(e))
-            #to get the full stack trace: traceback.format_exc()
+            # to get the full stack trace: traceback.format_exc()
         return workspace_object
-
