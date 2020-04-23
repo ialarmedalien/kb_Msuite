@@ -12,54 +12,18 @@ from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 
 class DataStagingUtils(object):
 
-    def __init__(self, checkMUtils_obj):
-        self.checkMUtils = checkMUtils_obj
-        self.run_config = self.checkMUtils.run_config
-        config = checkMUtils_obj.config
-        self.ctx = checkMUtils_obj.ctx
+    def __init__(self, checkMUtil_obj):
+        self.checkMUtil = checkMUtil_obj
+        self.client_util = checkMUtil.client_util
+        config = checkMUtil_obj.config
         self.scratch = os.path.abspath(config['scratch'])
-        self.ws_url = config['workspace-url']
-        self.ws = Workspace(self.ws_url)
-        self.serviceWizardURL = config['srv-wiz-url']
-        self.callbackURL = config['SDK_CALLBACK_URL']
 
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
 
+    def client(self, client_name):
 
-    def init_AssemblyUtil(self, service_version):
-
-        return AssemblyUtil(self.callbackURL, token=self.ctx['token'], service_ver=SERVICE_VER)
-
-    def init_SetAPI(self, service_version):
-
-        return SetAPI(url=self.serviceWizardURL, token=self.ctx['token'])
-
-    def init_MetagenomeUtils(self, service_version):
-
-        return MetagenomeUtils(self.callbackURL, token=self.ctx['token'], service_ver=SERVICE_VER)
-
-    def init_client(self, client):
-
-        SERVICE_VER = 'release'
-
-        client_obj = None
-
-        client_mapping = {
-            'AssemblyUtil':     self.init_AssemblyUtil,
-            'MetagenomeUtils':  self.init_MetagenomeUtils,
-            'SetAPI':           self.init_SetAPI,
-        }
-
-        if client not in client_mapping:
-            raise ValueError(client + ' does not exist')
-
-        try:
-            client_obj = client_mapping[client](SERVICE_VER)
-        except Exception as e:
-            raise ValueError('Error instantiating client ' + client + ': ' + str(e))
-
-        return client_obj
+        return self.client_util.client(client_name)
 
     def stage_input(self, input_ref):
         '''
@@ -79,7 +43,7 @@ class DataStagingUtils(object):
         '''
         # config
         #SERVICE_VER = 'dev'
-        run_config = self.run_config
+        run_config = self.checkMUtil.run_config()
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
 
         # 1) generate a folder in scratch to hold the input
@@ -138,11 +102,7 @@ class DataStagingUtils(object):
         type_to_method[type_name](input_ref, input_dir, fasta_ext, obj_name)
 
         # create summary fasta file with all bins
-        self.cat_fasta_files(
-            run_config['input_dir'],
-            run_config['fasta_ext'],
-            run_config['all_seq_fasta']
-        )
+        self.cat_fasta_files(input_dir, fasta_ext, all_seq_fasta)
 
         return {
             'input_dir': input_dir,
@@ -152,7 +112,7 @@ class DataStagingUtils(object):
 
     def process_assembly_contigset(self, input_ref, input_dir, fasta_ext, obj_name):
 
-        auClient = self.init_client('AssemblyUtil')
+        auClient = self.client('AssemblyUtil')
 
         # create file data
         filename = os.path.join(input_dir, obj_name + '.' + fasta_ext)
@@ -169,8 +129,8 @@ class DataStagingUtils(object):
 
     def process_assembly_set(self, input_ref, input_dir, fasta_ext, obj_name):
 
-        setAPI_Client = self.init_client('SetAPI')
-        auClient = self.init_client('AssemblyUtil')
+        setAPI_Client = self.client('SetAPI')
+        auClient = self.client('AssemblyUtil')
 
         # read assemblySet
         try:
@@ -184,7 +144,7 @@ class DataStagingUtils(object):
             this_assembly_ref = assembly_item['ref']
             # assembly obj info
             try:
-                this_assembly_info = ws.get_object_info_new({'objects': [{'ref': this_assembly_ref}]})[0]
+                this_assembly_info = self.client('Workspace').get_object_info_new({'objects': [{'ref': this_assembly_ref}]})[0]
                 this_assembly_name = this_assembly_info[NAME_I]
             except Exception as e:
                 raise ValueError('Unable to get object from workspace: (' + this_assembly_ref + '): ' + str(e))
@@ -248,7 +208,7 @@ class DataStagingUtils(object):
         else:  # get genomeSet_refs from GenomeSet object
             genomeSet_refs = []
             try:
-                genomeSet_object = ws.get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
+                genomeSet_object = self.client('Workspace').get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
             except Exception as e:
                 raise ValueError('Unable to fetch ' + str(input_ref) + ' object from workspace: ' + str(e))
                 #to get the full stack trace: traceback.format_exc()
@@ -265,7 +225,7 @@ class DataStagingUtils(object):
         # genome obj data
         for i, this_input_ref in enumerate(genomeSet_refs):
             try:
-                objects = ws.get_objects2({'objects': [{'ref': this_input_ref}]})['data']
+                objects = self.client('Workspace').get_objects2({'objects': [{'ref': this_input_ref}]})['data']
                 genome_obj = objects[0]['data']
                 genome_obj_info = objects[0]['info']
                 genome_obj_names.append(genome_obj_info[NAME_I])
@@ -379,7 +339,7 @@ class DataStagingUtils(object):
 
 
     def _get_workspace_object_info(self, input_ref):
-        input_info = self.ws.get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
+        input_info = self.client('Workspace').get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
         return input_info
 
 
@@ -427,7 +387,7 @@ class DataStagingUtils(object):
     def get_obj_from_workspace(self, object_ref):
 
         try:
-            workspace_object = self.ws.get_objects2({'objects': [{'ref': object_ref}]})['data'][0]['data']
+            workspace_object = self.client('Workspace').get_objects2({'objects': [{'ref': object_ref}]})['data'][0]['data']
         except Exception as e:
             raise ValueError('Unable to fetch '+str(object_ref)+' object from workspace: ' + str(e))
             #to get the full stack trace: traceback.format_exc()

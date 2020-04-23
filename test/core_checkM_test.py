@@ -61,11 +61,6 @@ class CoreCheckMTest(unittest.TestCase):
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.scratch     = cls.cfg['scratch']
         cls.suffix      = test_time_stamp
-#         cls.suffix = test_time_stamp
-#         cls.scratch = cls.cfg['scratch']+'--'+test_time_stamp
-#         cls.cfg['scratch'] = cls.scratch
-#         if not os.path.exists(cls.scratch):
-#             os.mkdir(cls.scratch)
         cls.checkm_runner = CheckMUtil(cls.cfg, cls.ctx)
 
         cls.wsName  = "test_kb_Msuite_" + str(cls.suffix)
@@ -84,6 +79,8 @@ class CoreCheckMTest(unittest.TestCase):
         shutil.copytree(os.path.join('data', 'example_out', 'output'), cls.output_dir)
         shutil.copy(os.path.join('data', 'example_out', 'all_seq.fna'), cls.all_seq_fasta)
         """
+
+        cls.test_init_client()
 
         # prepare WS data
         cls.prepare_data()
@@ -107,6 +104,9 @@ class CoreCheckMTest(unittest.TestCase):
 
     def getContext(self):
         return self.__class__.ctx
+
+    def getConfig(self):
+        return self.__class__.serviceImpl.config
 
     @classmethod
     def prepare_data(cls):
@@ -256,14 +256,61 @@ class CoreCheckMTest(unittest.TestCase):
             self.assertRegex(error_message, e)
 
 
-
-
-    def test_data_staging_utils_init_client(self):
+    def test_init_client(self):
         ''' check client initialisation '''
 
 
+        attr_list = ['callback_url', 'service_wizard_url', 'token', 'workspace_url']
 
-    def test_data_staging_utils_stage_input(self):
+        err_str = 'Missing required ClientUtil config value: callback_url'
+        with self.assertRaisesRegex('ValueError', err_str):
+            ClientUtil({})
+
+        with self.assertRaisesRegex('ValueError', err_str):
+            ClientUtil({'service_wizard_url': 'foo'})
+
+        err_str = 'Missing required ClientUtil config value: token'
+        with self.assertRaisesRegex('ValueError', err_str):
+            ClientUtil({
+                'callback_url': 'http://example.com',
+                'service_wizard_url': 'http://example.com',
+                'workspace_url': 'http://example.com',
+            })
+
+        cu = ClientUtil({
+            'callback_url': 'http://example.com',
+            'service_wizard_url': 'http://example.com',
+            'workspace_url': 'http://example.com',
+            'token': 'TOKEN!',
+        })
+        self.assertIsInstance(cu, ClientUtil)
+
+        cmu = CheckMUtil(self.getConfig(), self.getContext())
+
+        valid_clients = {
+            'AssemblyUtil': AssemblyUtilClient,
+            'MetagenomeUtils': MetagenomeUtilsClient,
+            'SetAPI': SetAPIServiceClient,
+        }
+        invalid_clients = ['FeatureSetUtils', 'TotallyMadeUpClient']
+
+        for client in valid_clients.keys():
+            client_obj = cmu.client(client)
+            self.assertIsInstance(client_obj, valid_clients[client])
+
+        for client in invalid_clients:
+            err_str = client + ' client does not exist'
+            with self.assertRaisesRegex('ValueError', err_str):
+                cmu.client(client)
+
+#         try:
+#             client_obj = client_mapping[client](SERVICE_VER)
+#         except Exception as e:
+#             raise ValueError('Error instantiating client ' + client + ': ' + str(e))
+        return True
+
+
+#    def test_data_staging_utils_stage_input(self):
 
 
 

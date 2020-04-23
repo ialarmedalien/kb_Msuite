@@ -6,10 +6,6 @@ import sys
 import time
 import json
 
-from installed_clients.DataFileUtilClient import DataFileUtil
-from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
-
-
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
     print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
@@ -23,14 +19,18 @@ class OutputBuilder(object):
     '''
 
     # (self, run_config)
-    def __init__(self, checkMUtils_obj):
-        self.checkMUtils    = checkMUtils_obj
-        self.run_config     = checkMUtils_obj.run_config
+    def __init__(self, checkMUtil_obj):
+        self.checkMUtil     = checkMUtil_obj
+        self.client_util    = checkMUtil.client_util
         self.output_dir     = self.run_config['output_dir']
         self.plots_dir      = self.run_config['plots_dir']
-        self.scratch        = checkMUtils_obj.scratch
-        self.callback_url   = checkMUtils_obj.callback_url
+        self.scratch        = checkMUtil_obj.scratch
         self.DIST_PLOT_EXT  = '.ref_dist_plots.png'
+
+
+    def client(self, client_name):
+
+        return self.client_util.client(client_name)
 
 
     def get_fields(self):
@@ -54,9 +54,10 @@ class OutputBuilder(object):
         ''' Simple utility for packaging a folder and saving to shock '''
         if folder_path == self.scratch:
             raise ValueError("cannot package folder that is not a subfolder of scratch")
-        dfu = DataFileUtil(self.callback_url)
         if not os.path.exists(folder_path):
             raise ValueError("cannot package folder that doesn't exist: " + folder_path)
+
+        dfu = self.client('DataFileUtil')
         output = dfu.file_to_shock({
             'file_path': folder_path,
             'make_handle': 0,
@@ -387,8 +388,8 @@ class OutputBuilder(object):
     def build_output_packages(self, removed_bins=None):
 
         output_packages = []
-        run_config = self.run_config
-        params = self.run_config['params']
+        run_config = self.checkMUtil.run_config()
+        params = run_config['params']
 
         # create bin report summary TSV table text file
         log('creating TSV summary table text file')
@@ -465,9 +466,10 @@ class OutputBuilder(object):
 
 
     def save_binned_contigs(self, assembly_ref):
-        run_config  = self.run_config
+        run_config = self.checkMUtil.run_config()
+
         try:
-            mgu = MetagenomeUtils(self.callback_url)
+            mgu = self.client('MetagenomeUtils')
         except:
             raise ValueError("unable to connect with MetagenomeUtils")
 
@@ -490,8 +492,10 @@ class OutputBuilder(object):
 
     def build_bin_summary_file_from_binnedcontigs_obj(self, binned_contig_obj):
 
-        fasta_ext   = self.run_config['fasta_ext']
-        bin_dir     = self.run_config['filtered_bins_dir']
+        run_config = self.checkMUtil.run_config()
+        fasta_ext   = run_config['fasta_ext']
+        bin_dir     = run_config['filtered_bins_dir']
+
         bin_summary_info = dict()
         # bid in object is full name of contig fasta file.  want just the number
         for bin_item in binned_contig_obj['bins']:
@@ -509,14 +513,14 @@ class OutputBuilder(object):
         # write summary file for just those bins present in bin_dir
         header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
 
-        dsu = self.checkMUtils.datastagingutils
+        dsu = self.checkMUtil.datastagingutils
         bin_fasta_files_by_bin_ID = dsu.get_bin_fasta_files(bin_dir, fasta_ext)
         bin_IDs = []
         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
             bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.' + fasta_ext, ''))
             bin_IDs.append(bin_ID)
 
-        summary_file_path = os.path.join(bin_dir, self.run_config['bin_basename'] + '.' + 'summary')
+        summary_file_path = os.path.join(bin_dir, run_config['bin_basename'] + '.' + 'summary')
 
         print("writing filtered binned contigs summary file " + summary_file_path)
         with open(summary_file_path, 'w') as summary_file_handle:

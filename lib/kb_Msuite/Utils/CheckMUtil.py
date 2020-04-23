@@ -9,11 +9,9 @@ import ast
 import json
 from decimal import Decimal
 
-from installed_clients.KBaseReportClient import KBaseReport
-
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
-
+from kb_Msuite.Utils.ClientUtil import ClientUtil
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
@@ -26,7 +24,14 @@ class CheckMUtil:
     def __init__(self, config, ctx):
         self.config = config
         self.ctx = ctx
-        self.callback_url = config['SDK_CALLBACK_URL']
+
+        self.client_util = ClientUtil({
+            callback_url:       config['SDK_CALLBACK_URL'],
+            service_wizard_url: config['srv-wiz-url'],
+            token:              config['token'],
+            workspace_url:      config['workspace-url'],
+        })
+
         self.scratch = config['scratch']
         self.threads = config['threads']
         self.fasta_extension = 'fna'
@@ -35,7 +40,18 @@ class CheckMUtil:
             os.makedirs(self.scratch)
 
 
-    def set_run_configuration(self, params):
+    def client(self, client_name):
+        return self.client_util.client(client_name)
+
+
+    def run_config(self):
+        if hasattr(self, 'run_config'):
+            return self._run_config
+
+        self._set_run_configuration()
+
+
+    def _set_run_configuration(self, params):
 
         suffix = str(int(time.time() * 1000))
         base_dir = os.path.join(self.scratch,'run_' + suffix)
@@ -81,8 +97,8 @@ class CheckMUtil:
         summary_file_path = os.path.join(
             run_config['filtered_bins_dir'], run_config['bin_basename'] + '.' + 'summary'
         )
-        self.run_config = run_config
 
+        self._run_config = run_config
         self.datastagingutils   = DataStagingUtils(self)
         self.outputbuilder      = OutputBuilder(self)
 
@@ -103,7 +119,7 @@ class CheckMUtil:
             if params['reduced_tree'] is None or not int(params['reduced_tree']) == 1:
                 del params['reduced_tree']
 
-        run_config = self.set_run_configuration(params)
+        run_config = self._set_run_configuration(params)
 
         # 1) stage input data
         self.datastagingutils.stage_input(params['input_ref'])
@@ -175,7 +191,7 @@ class CheckMUtil:
         if created_objects:
             report_params['objects_created'] = created_objects
 
-        kr = KBaseReport(self.callback_url)
+        kr = self.client('KBaseReport')
         report_output = kr.create_extended_report(report_params)
 
         returnVal = {
@@ -190,19 +206,8 @@ class CheckMUtil:
 
 
     def build_checkM_lineage_wf_plots(self):
-#            input_dir, output_dir, plots_dir, all_seq_fasta_file, tetra_file)
 
-#     bin_folder, out_folder, plots_folder,
-#                                       all_seq_fasta_file, tetra_file):
-
-        # first build generic plot for entire dataset
-#         log('Creating basic QA plot (checkm bin_qa_plot) ...')
-#         bin_qa_plot_options = {'bin_folder': bin_folder,
-#                                'out_folder': out_folder,
-#                                'plots_folder': plots_folder
-#                                }
-#         self.run_checkM('bin_qa_plot', bin_qa_plot_options, dropOutput=True)
-        run_config = self.run_config
+        run_config = self.run_config()
         # compute tetranucleotide frequencies based on the concatenated fasta file
         log('Computing tetranucleotide distributions...')
         tetra_options = {
@@ -241,7 +246,7 @@ class CheckMUtil:
         '''
         command = self._build_command(subcommand, options)
         log('\n\ncheckMUtil.run_checkM: Running: ' + ' '.join(command) + '\n\n')
-        run_config = self.run_config
+        run_config = self.run_config()
 
 #         log_output_file = None
 #         log_output_filename = None
@@ -346,8 +351,8 @@ class CheckMUtil:
 
     def _filter_binned_contigs(self):
 
-        run_config          = self.run_config
-        params              = self.run_config['params']
+        run_config          = self.run_config()
+        params              = run_config['params']
 
         if self.datastagingutils.get_data_obj_type(params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
           and params.get('output_filtered_binnedcontigs_obj_name'):

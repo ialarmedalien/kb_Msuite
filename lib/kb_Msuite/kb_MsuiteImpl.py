@@ -88,9 +88,9 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
             raise ValueError('"subcommand" parameter field must be specified ' +
                              '(to one of lineage_wf, tetra, bin_qa_plot, dist_plot, etc)')
 
-        checkM_runner = CheckMUtil(self.config, ctx)
-        checkM_runner.set_run_configuration(params)
-        checkM_runner.run_checkM(params['subcommand'], params)
+        self.checkMUtil = CheckMUtil(self.config, ctx)
+        self.checkMUtil.set_run_configuration(params)
+        self.checkMUtil.run_checkM(params['subcommand'], params)
 
         #END run_checkM
         pass
@@ -115,8 +115,8 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         print('--->\nRunning kb_Msuite.run_checkM_lineage_wf\nparams:')
         print(json.dumps(params, indent=1))
 
-        cmu = CheckMUtil(self.config, ctx)
-        result = cmu.run_checkM_lineage_wf(params)
+        self.checkMUtil = CheckMUtil(self.config, ctx)
+        result = self.checkMUtil.run_checkM_lineage_wf(params)
 
         #END run_checkM_lineage_wf
 
@@ -152,8 +152,8 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         print('--->\nRunning kb_Msuite.run_checkM_lineage_wf_withFilter\nparams:')
         print(json.dumps(params, indent=1))
 
-        cmu = CheckMUtil(self.config, ctx)
-        result = cmu.run_checkM_lineage_wf(params)
+        self.checkMUtil = CheckMUtil(self.config, ctx)
+        result = self.checkMUtil.run_checkM_lineage_wf(params)
 
         #END run_checkM_lineage_wf_withFilter
 
