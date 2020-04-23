@@ -269,6 +269,7 @@ class CoreCheckMTest(unittest.TestCase):
         for e in error_list:
             self.assertRegex(error_message, e)
 
+    @classmethod
     def test_init_client(self):
         ''' check client initialisation '''
 

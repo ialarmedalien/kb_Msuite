@@ -77,6 +77,8 @@ RUN \
     && ln -sf /data/DATA_CONFIG /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG \
     && chmod +rwx /data/DATA_CONFIG
 
+RUN apt-get install -y tree
+
 COPY ./ /kb/module
 
 WORKDIR /kb/module
@@ -85,8 +87,6 @@ RUN mkdir -p /kb/module/work \
     && chmod -R a+rw /kb/module \
     && make all \
     && rm -f /data/__READY__
-
-RUN apt-get install -y tree
 
 ENTRYPOINT [ "./scripts/entrypoint.sh" ]
 
