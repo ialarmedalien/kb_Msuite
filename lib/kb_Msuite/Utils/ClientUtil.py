@@ -20,7 +20,7 @@ class ClientUtil:
         attr_list = ['callback_url', 'service_wizard_url', 'token', 'workspace_url']
 
         for attr in attr_list:
-            if attr not in config or not config['attr']:
+            if attr not in config or not config[attr]:
                 raise ValueError('Missing required ClientUtil config value: ' + attr)
             setattr(self, attr, config[attr])
 
