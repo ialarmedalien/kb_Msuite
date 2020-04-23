@@ -9,7 +9,7 @@ from os import environ
 from configparser import ConfigParser  # py3
 from pprint import pprint  # noqa: F401
 
-from installed_clients.WorkspaceClient import WorkspaceClient
+from installed_clients.WorkspaceClient import Workspace
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
@@ -67,7 +67,7 @@ class CoreCheckMTest(unittest.TestCase):
             'authenticated': 1
         })
         cls.wsURL       = cls.cfg['workspace-url']
-        cls.wsClient    = WorkspaceClient(cls.wsURL)
+        cls.wsClient    = Workspace(cls.wsURL)
         cls.serviceImpl = kb_Msuite(cls.cfg)
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.scratch     = cls.cfg['scratch']
@@ -303,7 +303,7 @@ class CoreCheckMTest(unittest.TestCase):
             'AssemblyUtil': AssemblyUtil,
             'MetagenomeUtils': MetagenomeUtils,
             'SetAPI': SetAPI,
-            'Workspace': WorkspaceClient,
+            'Workspace': Workspace,
         }
         invalid_clients = ['FeatureSetUtils', 'TotallyMadeUpClient']
 
