@@ -106,7 +106,7 @@ class OutputBuilder(object):
 
         # copy over the templates
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
-            self._copy_file_ignore_errors(self, tmpl, tmpl_src_dir, tmpl_dest_dir)
+            self._copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
 
         html_files = [
             {
