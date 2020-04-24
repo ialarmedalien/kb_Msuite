@@ -155,7 +155,7 @@ class CoreCheckMTest(unittest.TestCase):
             setattr(cls, assembly['attr'], saved_assembly)
             pprint('Saved Assembly: ' + getattr(cls, assembly['attr'])
 
-"""
+        """
         # build the example Assembly
         assembly_filename = 'assembly.fasta'
         assembly_objname = 'Assembly_Test1.Assembly'
@@ -179,7 +179,7 @@ class CoreCheckMTest(unittest.TestCase):
                            }
         cls.assembly_dodgy_ref = cls.au.save_assembly_from_fasta(assembly_params)
         pprint('Saved Assembly: ' + cls.assembly_dodgy_ref)
-"""
+        """
         # create an AssemblySet
         assembly_items = [
             {'ref': cls.assembly_OK_ref, 'label': 'assembly_1'},
@@ -216,7 +216,7 @@ class CoreCheckMTest(unittest.TestCase):
             })
             setattr(cls, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
             pprint('Saved BinnedContigs: ' + getattr(cls, bc['path'] + '_ref')
-'''
+        '''
 
         # create a BinnedContigs object
         binned_contigs_dir_name = 'binned_contigs'
@@ -249,7 +249,7 @@ class CoreCheckMTest(unittest.TestCase):
                                                 binned_contigs_params)['binned_contig_obj_ref']
         pprint('Saved BinnedContigs: ' + cls.binned_contigs_empty_ref)
 
-'''
+        '''
 
         # upload a few genomes
         cls.genome_refs = []
