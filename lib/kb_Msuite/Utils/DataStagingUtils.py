@@ -167,7 +167,7 @@ class DataStagingUtils(object):
 
     def process_binned_contigs(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
-        mguClient = self.init_client('MetagenomeUtils')
+        mguClient = self.client('MetagenomeUtils')
 
         # download the bins as fasta and set the input folder name
         bin_file_dir = mguClient.binned_contigs_to_file({
@@ -189,7 +189,7 @@ class DataStagingUtils(object):
 
     def process_genome_genome_set(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
-        auClient = self.init_client('AssemblyUtil')
+        auClient = self.client('AssemblyUtil')
 
         genome_obj_names = []
         genome_sci_names = []
