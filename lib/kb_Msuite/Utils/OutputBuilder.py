@@ -22,8 +22,6 @@ class OutputBuilder(object):
     def __init__(self, checkMUtil_obj):
         self.checkMUtil     = checkMUtil_obj
         self.client_util    = checkMUtil_obj.client_util
-        self.output_dir     = self.run_config['output_dir']
-        self.plots_dir      = self.run_config['plots_dir']
         self.scratch        = checkMUtil_obj.scratch
         self.DIST_PLOT_EXT  = '.ref_dist_plots.png'
 
@@ -72,13 +70,14 @@ class OutputBuilder(object):
 
     def build_critical_output(self, critical_out_dir):
 
-        self._copy_file_ignore_errors('lineage.ms', self.output_dir, critical_out_dir)
+        run_config = self.checkMUtil.run_config()
+        self._copy_file_ignore_errors('lineage.ms', run_config['output_dir'], critical_out_dir)
 
         storage_folder = os.path.join(critical_out_dir, 'storage')
         if not os.path.exists(storage_folder):
             os.makedirs(storage_folder)
 
-        src = self.output_dir
+        src = run_config['output_dir']
         dest = critical_out_dir
         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats.analyze.tsv'), src, dest)
         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats.tree.tsv'), src, dest)
@@ -94,7 +93,7 @@ class OutputBuilder(object):
         '''
         Based on the output of CheckM lineage_wf, build an HTML report
         '''
-        run_config = self.run_config()
+        run_config = self.checkMUtil.run_config()
         html_dir    = run_config['html_dir']
         tmpl_src_dir    = run_config['template_src_dir']
         tmpl_dest_dir   = run_config['template_dest_dir']
@@ -229,7 +228,7 @@ class OutputBuilder(object):
 
 
     def read_bin_stats_file(self):
-        run_config = self.run_config
+        run_config = self.checkMUtil.run_config()
         stats_file = run_config['bin_stats_ext_file']
         if not os.path.isfile(stats_file):
             log('Warning! no stats file found (looking at: ' + stats_file + ')')
@@ -254,7 +253,7 @@ class OutputBuilder(object):
     def build_summary_tsv_file(self, bin_stats, removed_bins=None):
 
         fields = self.get_fields()
-        run_config = self.run_config()
+        run_config = self.checkMUtil.run_config()
 
 #        tab_text_files = []
         if not os.path.exists(run_config['tab_text_dir']):
@@ -370,7 +369,7 @@ class OutputBuilder(object):
         if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
             log('packaging output plots directory')
             zipped_output_file = self.package_folder(
-                self.plots_dir,
+                run_config['plots_dir'],
                 'plots.zip',
                 'Output plots from CheckM')
             output_packages.append(zipped_output_file)
@@ -397,7 +396,8 @@ class OutputBuilder(object):
         }
 
     def _copy_ref_dist_plots(self, dest_folder):
-        plots_dir = self.plots_dir
+        run_config = self.checkMUtil.run_config()
+        plots_dir = run_config['plots_dir']
         for plotfile in os.listdir(plots_dir):
             plot_file_path = os.path.join(plots_dir, plotfile)
             if os.path.isfile(plot_file_path) and plotfile.endswith(self.DIST_PLOT_EXT):
