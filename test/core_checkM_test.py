@@ -146,7 +146,8 @@ class CoreCheckMTest(unittest.TestCase):
 
         for assembly in assembly_list:
             assembly_file_path = os.path.join(test_data_dir, assembly['path'])
-            shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
+            if not os.path.exists(assembly_file_path):
+                shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
             saved_assembly = cls.au.save_assembly_from_fasta({
                 'file': {'path': assembly_file_path},
                 'workspace_name': cls.ws_info[1],
@@ -207,7 +208,8 @@ class CoreCheckMTest(unittest.TestCase):
 
         for bc in binned_contigs_list:
             binned_contigs_path = os.path.join(test_data_dir, bc['path'])
-            shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
+            if not os.path.exists(binned_contigs_path):
+                shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
             saved_object = cls.mu.file_to_binned_contigs({
                 'file_directory': binned_contigs_path,
                 'workspace_name': cls.ws_info[1],
@@ -256,7 +258,8 @@ class CoreCheckMTest(unittest.TestCase):
         for genome_filename in ['GCF_000022285.1_ASM2228v1_genomic.gbff',
                                 'GCF_001439985.1_wTPRE_1.0_genomic.gbff']:
             genome_file_path = os.path.join(test_data_dir, genome_filename)
-            shutil.copy(os.path.join("data", "genomes", genome_filename), genome_file_path)
+            if not os.path.exists(genome_file_path):
+                shutil.copy(os.path.join("data", "genomes", genome_filename), genome_file_path)
             cls.genome_refs.append(cls.gfu.genbank_to_genome({
                     'file': {'path': genome_file_path},
                     'workspace_name': cls.ws_info[1],
