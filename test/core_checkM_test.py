@@ -26,12 +26,14 @@ from kb_Msuite.Utils.ClientUtil import ClientUtil
 
 
 def print_method_name(method):
-    method_name = method.__name__
-    method_name.replace("test_", "")
-    print("\n=================================================================")
-    print(("RUNNING " + method_name + "()"))
-    print("=================================================================\n")
-
+    def wrapper(*args, **kwargs):
+        method_name = method.__name__
+        method_name.replace("test_", "")
+        print("\n=================================================================")
+        print(("RUNNING " + method_name + "()"))
+        print("=================================================================\n")
+        return method(*args, **kwargs)
+    return wrapper
 
 class CoreCheckMTest(unittest.TestCase):
 
@@ -341,6 +343,8 @@ class CoreCheckMTest(unittest.TestCase):
 #         saved_names = set([str(f['name']) for f in file_links])
 #         self.assertEqual(saved_names, set(file_names))
 #         return obj
+
+        print("Running run_and_check_report")
 
         if not expected:
             expected = {
