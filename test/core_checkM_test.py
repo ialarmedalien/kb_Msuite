@@ -28,9 +28,9 @@ from kb_Msuite.Utils.ClientUtil import ClientUtil
 def print_method_name(method):
     method_name = method.__name__
     method_name.replace("test_", "")
-#     print("\n=================================================================")
-#     print(("RUNNING " + method_name + "()"))
-#     print("=================================================================\n")
+    print("\n=================================================================")
+    print(("RUNNING " + method_name + "()"))
+    print("=================================================================\n")
 
 
 class CoreCheckMTest(unittest.TestCase):
@@ -91,7 +91,7 @@ class CoreCheckMTest(unittest.TestCase):
         """
 
         # prepare WS data
-#        cls.prepare_data()
+        cls.prepare_data()
         end_time_stamp = time.time()
         print("set up time: " + str(end_time_stamp - init_time_stamp))
 
