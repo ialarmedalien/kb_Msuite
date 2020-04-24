@@ -122,9 +122,40 @@ class CoreCheckMTest(unittest.TestCase):
         cls.test_directory_path = os.path.join(cls.scratch, test_directory_name)
         os.makedirs(cls.test_directory_path)
 
+        test_data_dir = os.path.join(cls.scratch, 'test_data')
+        os.makedirs(cls.test_directory_path)
+
+
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
          WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
 
+        assembly_list = [
+            {
+                # example assembly
+                'path': 'assembly.fasta'
+                'name': 'Test.Assembly',
+                'attr': 'assembly_OK_ref',
+            },
+            {
+                # contig that breaks checkm v1.0.7 reduced_tree (works on v1.0.8)
+                'path': 'offending_contig_67815-67907.fa',
+                'name': 'Dodgy_Contig.Assembly',
+                'attr': 'assembly_dodgy_ref',
+            }
+        ]
+
+        for assembly in assembly_list:
+            assembly_file_path = os.path.join(test_data_dir, assembly['path'])
+            shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
+            saved_assembly = cls.au.save_assembly_from_fasta({
+                'file':{'path': assembly_file_path},
+                'workspace_name': cls.ws_info[1],
+                'assembly_name': assembly['name'],
+            })
+            setattr(cls, assembly['attr'], saved_assembly)
+            pprint('Saved Assembly: ' + getattr(cls, assembly['attr'])
+
+"""
         # build the example Assembly
         assembly_filename = 'assembly.fasta'
         assembly_objname = 'Assembly_Test1.Assembly'
@@ -134,8 +165,8 @@ class CoreCheckMTest(unittest.TestCase):
                            'workspace_name': cls.ws_info[1],
                            'assembly_name': assembly_objname
                            }
-        cls.assembly_ref1 = cls.au.save_assembly_from_fasta(assembly_params)
-        pprint('Saved Assembly: ' + cls.assembly_ref1)
+        cls.assembly_OK_ref = cls.au.save_assembly_from_fasta(assembly_params)
+        pprint('Saved Assembly: ' + cls.assembly_OK_ref)
 
         # contig that breaks checkm v1.0.7 reduced_tree (works on v1.0.8)
         assembly_filename = 'offending_contig_67815-67907.fa'
@@ -146,19 +177,46 @@ class CoreCheckMTest(unittest.TestCase):
                            'workspace_name': cls.ws_info[1],
                            'assembly_name': assembly_objname
                            }
-        cls.assembly_offending_ref1 = cls.au.save_assembly_from_fasta(assembly_params)
-        pprint('Saved Assembly: ' + cls.assembly_offending_ref1)
-
+        cls.assembly_dodgy_ref = cls.au.save_assembly_from_fasta(assembly_params)
+        pprint('Saved Assembly: ' + cls.assembly_dodgy_ref)
+"""
         # create an AssemblySet
-        assembly_items = [{'ref': cls.assembly_ref1, 'label': 'assembly_1'},
-                          {'ref': cls.assembly_offending_ref1, 'label': 'assembly_2'}]
-        assemblySet_obj = {'description': 'test assembly set',
-                           'items': assembly_items}
-        assemblySet_objname = 'TEST_ASSEMBLY_SET'
-        cls.assemblySet_ref1 = cls.setAPI.save_assembly_set_v1({
-                                        'workspace_name': cls.ws_info[1],
-                                        'output_object_name': assemblySet_objname,
-                                        'data': assemblySet_obj})['set_ref']
+        assembly_items = [
+            {'ref': cls.assembly_OK_ref, 'label': 'assembly_1'},
+            {'ref': cls.assembly_dodgy_ref, 'label': 'assembly_2'}
+        ]
+        cls.assemblySet_ref = cls.setAPI.save_assembly_set_v1({
+            'workspace_name': cls.ws_info[1],
+            'output_object_name': 'TEST_ASSEMBLY_SET',
+            'data': {
+                'description': 'test assembly set',
+                'items': assembly_items,
+            },
+        })['set_ref']
+
+        binned_contigs_list = [
+            {
+                'path': 'binned_contigs',
+                'name': 'Binned_Contigs',
+            },
+            {
+                'path': 'binned_contigs_empty',
+                'name': 'Binned_Contigs_Empty',
+            }
+        ]
+
+        for bc in binned_contigs_list:
+            binned_contigs_path = os.path.join(test_data_dir, bc['path'])
+            shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
+            saved_object = cls.mu.file_to_binned_contigs({
+                'file_directory': binned_contigs_path,
+                'workspace_name': cls.ws_info[1],
+                'assembly_ref': cls.assembly_OK_ref,
+                'binned_contig_name': bc['name'],
+            })
+            setattr(cls, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
+            pprint('Saved BinnedContigs: ' + getattr(cls, bc['path'] + '_ref')
+'''
 
         # create a BinnedContigs object
         binned_contigs_dir_name = 'binned_contigs'
@@ -168,12 +226,12 @@ class CoreCheckMTest(unittest.TestCase):
 
         binned_contigs_params = {'file_directory': binned_contigs_dir_path,
                                  'workspace_name': cls.ws_info[1],
-                                 'assembly_ref': cls.assembly_ref1,
+                                 'assembly_ref': cls.assembly_OK_ref,
                                  'binned_contig_name': binned_contigs_objname
                                  }
-        cls.binned_contigs_ref1 = cls.mu.file_to_binned_contigs(
+        cls.binned_contigs_ref = cls.mu.file_to_binned_contigs(
                                                 binned_contigs_params)['binned_contig_obj_ref']
-        pprint('Saved BinnedContigs: ' + cls.binned_contigs_ref1)
+        pprint('Saved BinnedContigs: ' + cls.binned_contigs_ref)
 
         # create an empty BinnedContigs object
         binned_contigs_dir_name_empty = 'binned_contigs_empty'
@@ -184,24 +242,26 @@ class CoreCheckMTest(unittest.TestCase):
 
         binned_contigs_params = {'file_directory': binned_contigs_dir_path_empty,
                                  'workspace_name': cls.ws_info[1],
-                                 'assembly_ref': cls.assembly_ref1,
+                                 'assembly_ref': cls.assembly_OK_ref,
                                  'binned_contig_name': binned_contigs_objname_empty
                                  }
-        cls.binned_contigs_ref1_empty = cls.mu.file_to_binned_contigs(
+        cls.binned_contigs_empty_ref = cls.mu.file_to_binned_contigs(
                                                 binned_contigs_params)['binned_contig_obj_ref']
-        pprint('Saved BinnedContigs: ' + cls.binned_contigs_ref1_empty)
+        pprint('Saved BinnedContigs: ' + cls.binned_contigs_empty_ref)
+
+'''
 
         # upload a few genomes
         cls.genome_refs = []
-        for i, genome_filename in enumerate(['GCF_000022285.1_ASM2228v1_genomic.gbff',
-                                            'GCF_001439985.1_wTPRE_1.0_genomic.gbff']):
-            genome_file_path = os.path.join(cls.scratch, genome_filename)
+        for genome_filename in ['GCF_000022285.1_ASM2228v1_genomic.gbff',
+                                'GCF_001439985.1_wTPRE_1.0_genomic.gbff']:
+            genome_file_path = os.path.join(test_data_dir, genome_filename)
             shutil.copy(os.path.join("data", "genomes", genome_filename), genome_file_path)
             cls.genome_refs.append(cls.gfu.genbank_to_genome({
                     'file': {'path': genome_file_path},
                     'workspace_name': cls.ws_info[1],
                     'genome_name': genome_filename,
-                    'generate_ids_if_needed': 1
+                    'generate_ids_if_needed': 1,
                 })['genome_ref'])
 
         # create a genomeSet
@@ -389,7 +449,7 @@ class CoreCheckMTest(unittest.TestCase):
         print("=================================================================\n")
 
         # run checkM lineage_wf app on a single assembly
-        input_ref = self.assembly_ref1
+        input_ref = self.assembly_OK_ref
         params = {
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
@@ -418,7 +478,7 @@ class CoreCheckMTest(unittest.TestCase):
         print("=================================================================\n")
 
         # run checkM lineage_wf app on a single assembly
-        input_ref = self.assembly_offending_ref1
+        input_ref = self.assembly_dodgy_ref
         params = {
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
@@ -450,7 +510,7 @@ class CoreCheckMTest(unittest.TestCase):
         # machine has less than ~16gb memory
 
         # run checkM lineage_wf app on BinnedContigs
-        input_ref = self.binned_contigs_ref1
+        input_ref = self.binned_contigs_ref
         params = {
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
@@ -479,7 +539,7 @@ class CoreCheckMTest(unittest.TestCase):
         print("=================================================================\n")
 
         # run checkM lineage_wf app on EMPTY BinnedContigs
-        input_ref = self.binned_contigs_ref1_empty
+        input_ref = self.binned_contigs_empty_ref
         params = {
             'workspace_name': self.ws_info[1],
             'reduced_tree': 1,
@@ -499,7 +559,7 @@ class CoreCheckMTest(unittest.TestCase):
         print("=================================================================\n")
 
         # run checkM lineage_wf app on an assembly set
-        input_ref = self.assemblySet_ref1
+        input_ref = self.assemblySet_ref
         params = {
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
@@ -574,6 +634,41 @@ class CoreCheckMTest(unittest.TestCase):
 
         self.run_and_check_report(params, expected_results)
 
+    # Test 11: filter binned contigs to HQ binned contigs
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
+    def test_checkM_lineage_wf_withFilter_binned_contigs(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
+        print("=================================================================\n")
+
+        # Even with the reduced_tree option, this will take a long time and crash if your
+        # machine has less than ~16gb memory
+        # run checkM lineage_wf app on BinnedContigs
+        input_ref = self.binned_contigs_ref
+        params = {
+            'workspace_name': self.ws_info[1],
+            'input_ref': input_ref,
+            'reduced_tree': 1,
+            'save_output_dir': 1,
+            'save_plots_dir': 1,
+            'completeness_perc': 95.0,
+            'contamination_perc': 1.5,
+            'output_filtered_binnedcontigs_obj_name': 'filter.BinnedContigs',
+            'threads': 4
+        }
+#        result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
+
+        expected_results = {
+            'direct_html_link_index': 0,
+            'n_file_links': 3,
+            'n_html_links': 1,
+            'html_links_0_name': 'checkm_results.html',
+        }
+
+        self.run_and_check_report(params, expected_results, True)
+
     # Test 8: Data staging (intended data not checked into git repo: SKIP)
     #
     # Uncomment to skip this test
@@ -584,7 +679,7 @@ class CoreCheckMTest(unittest.TestCase):
 
         # test stage assembly
         dsu = DataStagingUtils(self.cfg, self.ctx)
-        staged_input = dsu.stage_input(self.assembly_ref1, 'strange_fasta_extension')
+        staged_input = dsu.stage_input(self.assembly_OK_ref, 'strange_fasta_extension')
         pprint(staged_input)
 
         self.assertTrue(os.path.isdir(staged_input['input_dir']))
@@ -595,7 +690,7 @@ class CoreCheckMTest(unittest.TestCase):
                                                     'MyMetagenomeAssembly.strange_fasta_extension')))
 
         # test stage binned contigs
-        staged_input2 = dsu.stage_input(self.binned_contigs_ref1, 'fna')
+        staged_input2 = dsu.stage_input(self.binned_contigs_ref, 'fna')
         pprint(staged_input2)
 
         self.assertTrue(os.path.isdir(staged_input2['input_dir']))
@@ -655,41 +750,6 @@ class CoreCheckMTest(unittest.TestCase):
         }
         self.getImpl().run_checkM(self.getContext(), params)
         os.path.isfile(tetra_file)
-
-    # Test 11: filter binned contigs to HQ binned contigs
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
-    def test_checkM_lineage_wf_withFilter_binned_contigs(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
-        print("=================================================================\n")
-
-        # Even with the reduced_tree option, this will take a long time and crash if your
-        # machine has less than ~16gb memory
-        # run checkM lineage_wf app on BinnedContigs
-        input_ref = self.binned_contigs_ref1
-        params = {
-            'workspace_name': self.ws_info[1],
-            'input_ref': input_ref,
-            'reduced_tree': 1,
-            'save_output_dir': 1,
-            'save_plots_dir': 1,
-            'completeness_perc': 95.0,
-            'contamination_perc': 1.5,
-            'output_filtered_binnedcontigs_obj_name': 'filter.BinnedContigs',
-            'threads': 4
-        }
-#        result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
-
-        expected_results = {
-            'direct_html_link_index': 0,
-            'n_file_links': 3,
-            'n_html_links': 1,
-            'html_links_0_name': 'checkm_results.html',
-        }
-
-        self.run_and_check_report(params, expected_results, True)
 
     def setup_local_method_data(self):
 

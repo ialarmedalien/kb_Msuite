@@ -68,22 +68,22 @@ class OutputBuilder(object):
         }
 
 
-    def build_critical_output(self, critical_out_dir):
-
-        run_config = self.checkMUtil.run_config()
-        self._copy_file_ignore_errors('lineage.ms', run_config['output_dir'], critical_out_dir)
-
-        storage_folder = os.path.join(critical_out_dir, 'storage')
-        if not os.path.exists(storage_folder):
-            os.makedirs(storage_folder)
-
-        src = run_config['output_dir']
-        dest = critical_out_dir
-        self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats.analyze.tsv'), src, dest)
-        self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats.tree.tsv'), src, dest)
-        self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats_ext.tsv'), src, dest)
-        self._copy_file_ignore_errors(os.path.join('storage', 'marker_gene_stats.tsv'), src, dest)
-        self._copy_file_ignore_errors(os.path.join('storage', 'tree', 'concatenated.tre'), src, dest)
+#     def build_critical_output(self, critical_out_dir):
+#
+#         run_config = self.checkMUtil.run_config()
+#         self._copy_file_ignore_errors('lineage.ms', run_config['output_dir'], critical_out_dir)
+#
+#         storage_folder = os.path.join(critical_out_dir, 'storage')
+#         if not os.path.exists(storage_folder):
+#             os.makedirs(storage_folder)
+#
+#         src = run_config['output_dir']
+#         dest = critical_out_dir
+#         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats.analyze.tsv'), src, dest)
+#         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats.tree.tsv'), src, dest)
+#         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats_ext.tsv'), src, dest)
+#         self._copy_file_ignore_errors(os.path.join('storage', 'marker_gene_stats.tsv'), src, dest)
+#         self._copy_file_ignore_errors(os.path.join('storage', 'tree', 'concatenated.tre'), src, dest)
 
 
     # requires the stats file - self.output_dir, 'storage', 'bin_stats_ext.tsv'
@@ -106,7 +106,8 @@ class OutputBuilder(object):
 
         # copy over the templates
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
-            self._copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
+            if not os.path.exists(os.path.join(tmpl_dest_dir, tmpl):
+                self._copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
 
         html_files = [
             {
@@ -148,67 +149,6 @@ class OutputBuilder(object):
                 })
 
         return html_files
-
-#         report_type = 'Table'
-#
-#         with open(html_file, 'w') as html:
-#
-#             html.write('<br><br><br>\n')
-#             html.write('<div id="Summary" class="tabcontent">\n')
-#             html.write('<table>\n')
-#             html.write('  <tr>\n')
-#             html.write('    <th><b>Bin Name</b></th>\n')
-#
-#             fields = self.get_fields()
-#
-#             for f in fields:
-#                 html.write('    <th>' + f['display'] + '</th>\n')
-#             html.write('  </tr>\n')
-#
-#             for bid in sorted(bin_stats.keys()):
-#                 row_opening = '<tr>'
-#                 if removed_bins:
-#                     bin_id = re.sub('^[^\.]+\.', '', bid)
-#                     if bin_id in removed_bins:
-#                         row_bgcolor = '#F9E3E2'
-#                         row_opening = '<tr style="background-color:'+row_bgcolor+'">'
-#                 html.write('  '+row_opening+'\n')
-#
-#                 dist_plot_file = os.path.join(html_dir, str(bid) + self.DIST_PLOT_EXT)
-#                 if os.path.isfile(dist_plot_file):
-#
-#                     self._write_dist_html_page(html_dir, bid)
-#                     html.write('    <td><a href="' + bid + '.html">' + bid + '</td>\n')
-#
-#
-#                 else:
-#                     html.write('    <td>' + bid + '</td>\n')
-#
-#                 for f in fields:
-#                     if f['id'] in bin_stats[bid]:
-#                         value = str(bin_stats[bid][f['id']])
-#                         if f.get('round'):
-#                             value = str(round(bin_stats[bid][f['id']], f['round']))
-#                         html.write('    <td>' + value + '</td>\n')
-#                     else:
-#                         html.write('    <td></td>\n')
-#                 html.write('  </tr>\n')
-#
-#             html.write('</table>\n')
-#             html.write('</div>\n')
-#
-#             html.write('</body>\n</html>\n')
-#             html.close()
-
-#        html_files.append(html_file)
-
-#         html_zipped = self.package_folder(
-#             html_dir,
-#             html_files[0],
-#             'Summarized report from CheckM')
-#
-#         return [html_zipped]
-
 
     def _write_dist_html_page(self, html_dir, bin_id):
 
@@ -301,23 +241,18 @@ class OutputBuilder(object):
 
 
     def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
+
         src = os.path.join(src_folder, filename)
         dest = os.path.join(dest_folder, filename)
-        os.makedirs(dest_folder)
-        log('copying ' + src + ' to ' + dest)
-        try:
-            shutil.copy(src, dest)
-        except:
-            # TODO: add error message reporting
-            log('copy failed')
+        os.makedirs(dest_folder, exists_ok=True)
+
+        return self._copy_file_new_name_ignore_errors(src, dest)
 
 
-    def _copy_file_new_name_ignore_errors(self, src_path, dst_path):
-        src = src_path
-        dest = dst_path
-        log('copying ' + src + ' to ' + dest)
+    def _copy_file_new_name_ignore_errors(self, source_path, destination_path):
+        log('copying ' + source_path + ' to ' + destination_path)
         try:
-            shutil.copy(src, dest)
+            shutil.copy(source_path, destination_path)
         except:
             # TODO: add error message reporting
             log('copy failed')
@@ -325,12 +260,11 @@ class OutputBuilder(object):
 
     def build_report(self, removed_bins=None):
 
-        return self.build_output_packages(removed_bins)
+#        return self.build_output_packages(removed_bins)
 
 #    def build_output_packages(self, params, input_dir, removed_bins=None):
-    def build_output_packages(self, removed_bins=None):
+#    def build_output_packages(self, removed_bins=None):
 
-        output_packages = []
         run_config = self.checkMUtil.run_config()
         params = run_config['params']
 
@@ -346,15 +280,15 @@ class OutputBuilder(object):
             run_config['tab_text_file'] + '.zip',
             'TSV Summary Table from CheckM'
         )
-        output_packages.append(tab_text_zipped)
+#        output_packages.append(tab_text_zipped)
 
         log('packaging full output directory')
-        zipped_output_file = self.package_folder(
+        output_dir_zipped = self.package_folder(
             run_config['output_dir'],
             'full_output.zip',
             'Full output of CheckM'
         )
-        output_packages.append(zipped_output_file)
+#        output_packages.append(output_dir_zipped)
 
 #         else:  # ADD LATER?
 #             log('not packaging full output directory, selecting specific files')
@@ -366,28 +300,20 @@ class OutputBuilder(object):
 #                 'Selected output from the CheckM analysis')
 #             output_packages.append(zipped_output_file)
 
+        output_packages = [tab_text_zipped, output_dir_zipped]
+
         if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
             log('packaging output plots directory')
-            zipped_output_file = self.package_folder(
+            plots_dir_zipped = self.package_folder(
                 run_config['plots_dir'],
                 'plots.zip',
                 'Output plots from CheckM')
-            output_packages.append(zipped_output_file)
+            output_packages.append(plots_dir_zipped)
         else:
             log('not packaging output plots directory')
 
         # 6) build the HTML report
         html_files = self.build_html_output_for_lineage_wf(bin_stats_data, removed_bins)
-
-        # 7) save report
-#         report_params   = {
-#             'message': '',
-#             'direct_html_link_index': 0,
-#             'html_links': html_files,
-#             'file_links': output_packages,
-#             'report_object_name': 'kb_checkM_report_' + str(uuid.uuid4()),
-#             'workspace_name': params['workspace_name']
-#         }
 
         return {
             'file_links': output_packages,
@@ -410,21 +336,18 @@ class OutputBuilder(object):
 
 
     def save_binned_contigs(self, assembly_ref):
-        run_config = self.checkMUtil.run_config()
 
-        try:
-            mgu = self.client('MetagenomeUtils')
-        except:
-            raise ValueError("unable to connect with MetagenomeUtils")
-
+        run_config  = self.checkMUtil.run_config()
         object_name = run_config['params'].get('output_filtered_binnedcontigs_obj_name')
-        params = {
+
+        mgu = self.client('MetagenomeUtils')
+        binned_contigs_ref = mgu.file_to_binned_contigs({
             'file_directory':       run_config['filtered_bins_dir'],
             'assembly_ref':         assembly_ref,
             'binned_contig_name':   object_name,
             'workspace_name':       run_config['params'].get('workspace_name'),
-        }
-        object_ref = mgu.file_to_binned_contigs(params).get('binned_contig_obj_ref')
+        })
+        object_ref = binned_contigs_ref.get('binned_contig_obj_ref')
 
         return {
             'obj_name': object_name,

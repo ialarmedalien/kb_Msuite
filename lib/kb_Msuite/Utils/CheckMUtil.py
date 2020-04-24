@@ -126,7 +126,6 @@ class CheckMUtil:
             'out_folder': run_config['output_dir'],
             'threads':    self.threads,
         }
-
         if ('reduced_tree' in params):
             lineage_wf_options['reduced_tree'] = params['reduced_tree']
 
@@ -139,16 +138,8 @@ class CheckMUtil:
         created_objects = None
         removed_bins = None
 
-
-#         if self.datastagingutils.get_data_obj_type(params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
-#           and params.get('output_filtered_binnedcontigs_obj_name'):
-#             filter_results = True
-#             self.run_config['results_filtered'] = True
-#             self.run_config = run_config
         filtered_obj_info = self._filter_binned_contigs()
-#                                                             input_dir,
-#                                                             output_dir,
-#                                                             filtered_bins_dir)
+
         if filtered_obj_info is None:
             log("No Bins passed QC filters.  Not saving filtered BinnedContig object")
         else:
@@ -162,7 +153,6 @@ class CheckMUtil:
         # 4) make the plots:
         self.build_checkM_lineage_wf_plots()
 
-        report_params = self.outputbuilder.build_report(removed_bins)
 #         5) Package results
 #           includes building the .tsv file that the HTML report is built from
 #         output_packages = self.outputbuilder.build_output_packages(removed_bins)
@@ -170,11 +160,12 @@ class CheckMUtil:
 #         6) build the HTML report
 #         html_files      = self.outputbuilder.build_html_output_for_lineage_wf(removed_bins)
 
-        # 7) save report
 
-#        report_params['message'] = ''
+        # 5) build the report and package output
+        report_params = self.outputbuilder.build_report(removed_bins)
         report_params['report_object_name'] = 'kb_checkM_report_' + str(uuid.uuid4())
         report_params['workspace_name'] = params['workspace_name']
+        # 7) save report
 #         report_params = {
 #             'message': '',
 #             'direct_html_link_index': 0,
