@@ -135,7 +135,7 @@ class OutputBuilder(object):
                 print("BIN STATS BID " + bid)
 
             # create the dist plot page
-            dist_plot_file = os.path.join(html_dir, str(bid) + self.DIST_PLOT_EXT)
+            dist_plot_file = os.path.join(html_plots_dir, str(bid) + self.DIST_PLOT_EXT)
             if os.path.isfile(dist_plot_file):
                 html_files.append({
                     'template': {
@@ -324,6 +324,11 @@ class OutputBuilder(object):
                 'plots.zip',
                 'Output plots from CheckM')
             output_packages.append(plots_dir_zipped)
+            output_packages.append({
+                'name': 'plots',
+                'path': run_config['plots_dir'],
+                'description': 'Output plots from CheckM',
+            })
         else:
             log('not packaging output plots directory')
 

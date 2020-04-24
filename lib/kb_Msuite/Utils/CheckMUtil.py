@@ -49,7 +49,7 @@ class CheckMUtil:
 
         self._set_run_configuration()
 
-    def _set_run_configuration(self, params):
+    def _set_run_configuration(self, params=None):
 
         suffix = str(int(time.time() * 1000))
         base_dir = os.path.join(self.scratch, 'run_' + suffix)
