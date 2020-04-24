@@ -383,8 +383,10 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
-    @print_method_name
     def test_checkM_lineage_wf_full_app_single_assembly(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_single_assembly")
+        print("=================================================================\n")
 
         # run checkM lineage_wf app on a single assembly
         input_ref = self.assembly_ref1
@@ -410,8 +412,10 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_problem_assembly")
-    @print_method_name
     def test_checkM_lineage_wf_full_app_single_problem_assembly(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_single_problem_assembly")
+        print("=================================================================\n")
 
         # run checkM lineage_wf app on a single assembly
         input_ref = self.assembly_offending_ref1
@@ -437,8 +441,10 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
-    @print_method_name
     def test_checkM_lineage_wf_full_app_binned_contigs(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_binned_contigs")
+        print("=================================================================\n")
 
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
@@ -467,8 +473,10 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs_EMPTY")
-    @print_method_name
     def test_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_binned_contigs_EMPTY")
+        print("=================================================================\n")
 
         # run checkM lineage_wf app on EMPTY BinnedContigs
         input_ref = self.binned_contigs_ref1_empty
@@ -485,8 +493,10 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_assemblySet")
-    @print_method_name
     def test_checkM_lineage_wf_full_app_assemblySet(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_assemblySet")
+        print("=================================================================\n")
 
         # run checkM lineage_wf app on an assembly set
         input_ref = self.assemblySet_ref1
@@ -512,8 +522,10 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
-    @print_method_name
     def test_checkM_lineage_wf_full_app_single_genome(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_single_genome")
+        print("=================================================================\n")
 
         # run checkM lineage_wf app on a single genome
         input_ref = self.genome_refs[0]
@@ -538,8 +550,10 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_genomeSet")
-    @print_method_name
     def test_checkM_lineage_wf_full_app_genomeSet(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_genomeSet")
+        print("=================================================================\n")
 
         # run checkM lineage_wf app on a genome set
         input_ref = self.genomeSet_ref1
@@ -646,8 +660,10 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
-    @print_method_name
     def test_checkM_lineage_wf_withFilter_binned_contigs(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
+        print("=================================================================\n")
 
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
