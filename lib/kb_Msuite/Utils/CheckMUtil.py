@@ -259,7 +259,7 @@ class CheckMUtil:
         print("\n\n", file=log_output_file)
 
         p = subprocess.Popen(command, cwd=self.scratch, shell=False,
-                             stdout=log_output_file, stderr=subprocess.STDOUT)
+            stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
 #         else:
 #             p = subprocess.Popen(command, cwd=self.scratch, shell=False)
 
