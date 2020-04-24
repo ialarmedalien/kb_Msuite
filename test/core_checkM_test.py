@@ -345,6 +345,8 @@ class CoreCheckMTest(unittest.TestCase):
 #         return obj
 
         print("Running run_and_check_report")
+        print(self)
+        print(params)
 
         if not expected:
             expected = {
