@@ -250,15 +250,25 @@ class CheckMUtil:
         log_file_extra = os.environ.get('KB_TEST_ID', str(int(time.time() * 1000)))
         log_output_filename = os.path.join(run_config['base_dir'], subcommand + '--' + log_file_extra + '.log')
 
-
         log('sending log output to ' + log_output_filename)
         log_output_file = open(log_output_filename, 'w')
+
+        current_tree = subprocess.run(['tree', run_config['base_dir']],
+            stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
+        print(current_tree.stdout, file=log_output_file)
+        print("\n\n", file=log_output_file)
+
         p = subprocess.Popen(command, cwd=self.scratch, shell=False,
                              stdout=log_output_file, stderr=subprocess.STDOUT)
 #         else:
 #             p = subprocess.Popen(command, cwd=self.scratch, shell=False)
 
         exitCode = p.wait()
+
+        print("\n\n", file=log_output_file)
+        current_tree = subprocess.run(['tree', run_config['base_dir']],
+            stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
+        print(current_tree.stdout, file=log_output_file)
 
         if log_output_file:
             log_output_file.close()

@@ -6,7 +6,7 @@ import time
 import shutil
 
 from os import environ
-from configparser import ConfigParser  # py3
+from configparser import ConfigParser
 from pprint import pprint  # noqa: F401
 
 from installed_clients.WorkspaceClient import Workspace
@@ -28,10 +28,9 @@ from kb_Msuite.Utils.ClientUtil import ClientUtil
 def print_method_name(method):
     method_name = method.__name__
     method_name.replace("test_", "")
-    method_name = 'test_checkM_lineage_wf_full_app_single_assembly'
-    print("\n=================================================================")
-    print(("RUNNING " + method_name + "()"))
-    print("=================================================================\n")
+#     print("\n=================================================================")
+#     print(("RUNNING " + method_name + "()"))
+#     print("=================================================================\n")
 
 
 class CoreCheckMTest(unittest.TestCase):
@@ -91,10 +90,8 @@ class CoreCheckMTest(unittest.TestCase):
         shutil.copy(os.path.join('data', 'example_out', 'all_seq.fna'), cls.all_seq_fasta)
         """
 
-        cls.test_init_client()
-
         # prepare WS data
-        cls.prepare_data()
+#        cls.prepare_data()
         end_time_stamp = time.time()
         print("set up time: " + str(end_time_stamp - init_time_stamp))
 
@@ -269,7 +266,6 @@ class CoreCheckMTest(unittest.TestCase):
         for e in error_list:
             self.assertRegex(error_message, e)
 
-    @classmethod
     def test_init_client(self):
         ''' check client initialisation '''
 
@@ -309,24 +305,22 @@ class CoreCheckMTest(unittest.TestCase):
         invalid_clients = ['FeatureSetUtils', 'TotallyMadeUpClient']
 
         for client in valid_clients.keys():
+            self.assertFalse(hasattr(cmu.client_util, '_' + client))
             client_obj = cmu.client(client)
+            self.assertTrue(hasattr(cmu.client_util, '_' + client))
             self.assertIsInstance(client_obj, valid_clients[client])
+
+            # a bit of dirtiness to test that the same client is being returned
+            setattr( getattr( cmu.client_util, '_' + client), '__seen', True)
+            new_client_obj = cmu.client(client)
+            self.assertTrue(hasattr(new_client_obj, '__seen'))
 
         for client in invalid_clients:
             err_str = client + ' client does not exist'
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.client(client)
+            self.assertFalse(hasattr(cmu.client_util, '_' + client))
 
-#         try:
-#             client_obj = client_mapping[client](SERVICE_VER)
-#         except Exception as e:
-#             raise ValueError('Error instantiating client ' + client + ': ' + str(e))
-        return True
-
-
-#    def test_data_staging_utils_stage_input(self):
-
-        # whatever!
 
     def run_and_check_report(self, params, expected=None, with_filters=False):
 

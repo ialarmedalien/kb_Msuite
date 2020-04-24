@@ -66,7 +66,7 @@ class ClientUtil:
 
         # already initialised
         if hasattr(self, '_' + client):
-            return self.getattr('_' + client)
+            return getattr(self, '_' + client)
 
         try:
             client_obj = client_mapping[client]()

@@ -33,7 +33,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
     ######################################### noqa
     VERSION = "1.4.0"
     GIT_URL = "https://github.com/kbaseapps/kb_Msuite.git"
-    GIT_COMMIT_HASH = "c70c9c7c023c74dc09f864c244c919f9cb771427"
+    GIT_COMMIT_HASH = "8066f700b76e1c8e36d8bfc8809559a62fd79933"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -64,7 +64,7 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
            to a value between 0 and 100 threads -  number of threads
            reduced_tree - if set to 1, run checkM with the reduced_tree flag,
            which will keep memory limited to less than 16gb (otherwise needs
-           40+ GB, which NJS worker nodes do have) quiet - pass the --quite
+           40+ GB, which NJS worker nodes do have) quiet - pass the --quiet
            parameter to checkM, but doesn't seem to work for all subcommands)
            -> structure: parameter "subcommand" of String, parameter
            "bin_folder" of String, parameter "out_folder" of String,
@@ -137,10 +137,9 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
            parameter "save_output_dir" of type "boolean" (A boolean - 0 for
            false, 1 for true. @range (0, 1)), parameter "save_plots_dir" of
            type "boolean" (A boolean - 0 for false, 1 for true. @range (0,
-           1)), parameter "completeness_perc" of Double, parameter
-           "contamination_perc" of Double, parameter
-           "output_filtered_binnedcontigs_obj_name" of String, parameter
-           "threads" of Long
+           1)), parameter "threads" of Long, parameter "completeness_perc" of
+           Double, parameter "contamination_perc" of Double, parameter
+           "output_filtered_binnedcontigs_obj_name" of String
         :returns: instance of type "CheckMLineageWf_withFilter_Result" ->
            structure: parameter "report_name" of String, parameter
            "report_ref" of String, parameter "binned_contig_obj_ref" of type
@@ -199,6 +198,10 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         out_dir = params['output_dir']
         log_path = params['log_path']
         run_checkm(in_dir, out_dir, log_path, params.get('options'))
+        from subprocess import run, PIPE, STDOUT
+        current_tree = run(['tree', out_dir], stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+        print(current_tree.stdout)
+
         result = {}
         #END lineage_wf
 

@@ -87,56 +87,6 @@ class OutputBuilder(object):
         self._copy_file_ignore_errors(os.path.join('storage', 'tree', 'concatenated.tre'), src, dest)
 
 
-    def _write_html_header(self, html, object_name, report_type):
-
-        html.write('<html>\n')
-        html.write('<head>\n')
-        html.write('<title>CheckM '+report_type+' Report for ' + object_name + '</title>')
-
-        style = '''
-        <style style="text/css">
-            a {
-                color: #337ab7;
-            }
-
-            a:hover {
-                color: #23527c;
-            }
-
-            table {
-                border: 1px solid #bbb;
-                border-collapse: collapse;
-            }
-
-            th, td {
-                text-align: left;
-                border: 1px solid #bbb;
-                padding: 8px;
-            }
-
-            tr:nth-child(odd) {
-                background-color: #f9f9f9;
-            }
-
-            tr:hover {
-                background-color: #f5f5f5;
-            }
-
-        </style>\n</head>\n'''
-
-        html.write(style)
-        html.write('</head>\n')
-
-
-    def _write_tabs(self, html, report_type):
-        if report_type == 'Plot':
-            tabs = '<div><b>CheckM PLOT</b> | <a href="CheckM_Table.html">CheckM Table</a></div>'
-        else:
-            tabs = '<div><a href="CheckM_Plot.html">CheckM Plot</a> | <b>CheckM TABLE</b></div>'
-
-        html.write(tabs)
-
-
     # requires the stats file - self.output_dir, 'storage', 'bin_stats_ext.tsv'
 #    def build_html_output_for_lineage_wf(self, object_name, html_dir, results_filtered, removed_bins=None):
     def build_html_output_for_lineage_wf(self, bin_stats, removed_bins=None):
@@ -204,12 +154,6 @@ class OutputBuilder(object):
 #
 #         with open(html_file, 'w') as html:
 #
-#             # header
-#             self._write_html_header(html, run_config['input_ref'], report_type)
-#             html.write('<body>\n')
-#
-#             # tabs
-#             self._write_tabs(html, report_type)
 #             html.write('<br><br><br>\n')
 #             html.write('<div id="Summary" class="tabcontent">\n')
 #             html.write('<table>\n')

@@ -1,10 +1,5 @@
 FROM kbase/sdkbase2:python
 MAINTAINER KBase Developer
-# -----------------------------------------
-# In this section, you can install any system dependencies required
-# to run your App.  For instance, you could place an apt-get update or
-# install line here, a git checkout to download code, or run any other
-# installation scripts.
 
 # install cython that pysam likes
 RUN apt-get update && apt-get install -y build-essential wget
@@ -64,7 +59,8 @@ RUN \
     && pip3 install matplotlib==3.1.0 \
     && pip3 install pysam \
     && pip3 install scipy \
-    && pip3 install dendropy
+    && pip3 install dendropy \
+    && pip3 install coverage
 
 RUN pip3 install checkm-genome \
     && cp -R /miniconda/bin/checkm /kb/deployment/bin/CheckMBin
