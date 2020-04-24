@@ -148,12 +148,12 @@ class CoreCheckMTest(unittest.TestCase):
             assembly_file_path = os.path.join(test_data_dir, assembly['path'])
             shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
             saved_assembly = cls.au.save_assembly_from_fasta({
-                'file':{'path': assembly_file_path},
+                'file': {'path': assembly_file_path},
                 'workspace_name': cls.ws_info[1],
                 'assembly_name': assembly['name'],
             })
             setattr(cls, assembly['attr'], saved_assembly)
-            pprint('Saved Assembly: ' + getattr(cls, assembly['attr'])
+            pprint('Saved Assembly: ' + getattr(cls, assembly['attr']))
 
         """
         # build the example Assembly
@@ -215,7 +215,7 @@ class CoreCheckMTest(unittest.TestCase):
                 'binned_contig_name': bc['name'],
             })
             setattr(cls, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
-            pprint('Saved BinnedContigs: ' + getattr(cls, bc['path'] + '_ref')
+            pprint('Saved BinnedContigs: ' + getattr(cls, bc['path'] + '_ref'))
         '''
 
         # create a BinnedContigs object
