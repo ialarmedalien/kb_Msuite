@@ -302,6 +302,21 @@ class OutputBuilder(object):
 
         output_packages = [tab_text_zipped, output_dir_zipped]
 
+        dir_list = [
+            {
+                'name': run_config['tab_text_file_name'],
+                'path': run_config['tab_text_file'],
+                'description': 'TSV Summary Table from CheckM',
+            },
+            {
+                'name': 'full_output',
+                'path': run_config['output_dir'],
+                'description': 'Full output of CheckM',
+            }
+        ]
+
+        output_packages = output_packages + dir_list
+
         if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
             log('packaging output plots directory')
             plots_dir_zipped = self.package_folder(

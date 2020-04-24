@@ -132,7 +132,7 @@ class CoreCheckMTest(unittest.TestCase):
         assembly_list = [
             {
                 # example assembly
-                'path': 'assembly.fasta'
+                'path': 'assembly.fasta',
                 'name': 'Test.Assembly',
                 'attr': 'assembly_OK_ref',
             },
