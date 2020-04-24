@@ -118,12 +118,12 @@ class CoreCheckMTest(unittest.TestCase):
 
     @classmethod
     def prepare_data(cls):
-        test_directory_name = 'test_kb_Msuite'
-        cls.test_directory_path = os.path.join(cls.scratch, test_directory_name)
-        os.makedirs(cls.test_directory_path)
+#         test_directory_name = 'test_kb_Msuite'
+#         cls.test_directory_path = os.path.join(cls.scratch, test_directory_name)
+#         os.makedirs(cls.test_directory_path)
 
         test_data_dir = os.path.join(cls.scratch, 'test_data')
-        os.makedirs(cls.test_directory_path)
+        os.makedirs(test_data_dir, exists_ok=True)
 
 
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
