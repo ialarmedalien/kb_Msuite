@@ -106,7 +106,7 @@ class OutputBuilder(object):
 
         # copy over the templates
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
-            if not os.path.exists(os.path.join(tmpl_dest_dir, tmpl):
+            if not os.path.exists(os.path.join(tmpl_dest_dir, tmpl)):
                 self._copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
 
         html_files = [
