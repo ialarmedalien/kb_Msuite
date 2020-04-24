@@ -36,7 +36,7 @@ class ClientUtil:
 
     def init_KBaseReport(self):
 
-        return KBaseReport(self.callback_url, service_ver='dev')
+        return KBaseReport(self.callback_url)
 
     def init_MetagenomeUtils(self):
 

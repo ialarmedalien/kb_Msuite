@@ -179,6 +179,10 @@ class CheckMUtil:
             report_params['objects_created'] = created_objects
 
         kr = self.client('KBaseReport')
+
+        log('kbase report params:')
+
+
         report_output = kr.create_extended_report(report_params)
 
         returnVal = {
@@ -238,40 +242,40 @@ class CheckMUtil:
 #         log_output_filename = None
 #         if dropOutput:
 
-        log_file_extra = os.environ.get('KB_TEST_ID', str(int(time.time() * 1000)))
-        log_output_filename = os.path.join(run_config['base_dir'], subcommand + '--' + log_file_extra + '.log')
+        log_output_filename = os.path.join(run_config['base_dir'], subcommand + '.log')
 
         log('sending log output to ' + log_output_filename)
-        log_output_file = open(log_output_filename, 'w')
+        with open(log_output_filename, 'w') as log_output_file:
 
-        current_tree = subprocess.run(['tree', run_config['base_dir']],
-            stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-        print(current_tree.stdout, file=log_output_file)
-        print("\n\n", file=log_output_file)
+            current_tree = subprocess.run(['tree', run_config['base_dir']],
+                stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
+            print(current_tree.stdout, file=log_output_file)
+            print("\n\n", file=log_output_file)
 
-        p = subprocess.Popen(command, cwd=self.scratch, shell=False,
-            stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-#         else:
-#             p = subprocess.Popen(command, cwd=self.scratch, shell=False)
+            p = subprocess.Popen(command, cwd=self.scratch, shell=False,
+                stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
+    #         else:
+    #             p = subprocess.Popen(command, cwd=self.scratch, shell=False)
 
-        exitCode = p.wait()
+            exitCode = p.wait()
 
-        print("\n\n", file=log_output_file)
-        current_tree = subprocess.run(['tree', run_config['base_dir']],
-            stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-        print(current_tree.stdout, file=log_output_file)
+            print("\n\n", file=log_output_file)
+            current_tree = subprocess.run(['tree', run_config['base_dir']],
+                stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
+            print(current_tree.stdout, file=log_output_file)
 
-        if log_output_file:
-            log_output_file.close()
+#         if log_output_file:
+#             log_output_file.close()
 
         if (exitCode == 0):
             log('Executed command: ' + ' '.join(command) + '\n' +
                 'Exit Code: ' + str(exitCode))
         else:
             log('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
-            log_output_file = open(log_output_filename, 'r')
-            for line in log_output_file:
-                log(line)
+            with open(log_output_filename, 'r') as log_output_file:
+                for line in log_output_file:
+                    log(line)
+
             raise ValueError('Error running command: ' + ' '.join(command) + '\n' +
                              'Exit Code: ' + str(exitCode))
 
@@ -295,7 +299,7 @@ class CheckMUtil:
         if checkBin and 'bin_folder' not in options:
             raise ValueError('cannot run checkm ' + subcommand + ' without bin_folder option set')
         if checkOut and 'out_folder' not in options:
-            raise ValueError('cannot run checkm ' + subcommand + ' without bin_folder option set')
+            raise ValueError('cannot run checkm ' + subcommand + ' without out_folder option set')
         if checkPlots and 'plots_folder' not in options:
             raise ValueError('cannot run checkm ' + subcommand + ' without plots_folder option set')
         if checkTetraFile and 'tetra_file' not in options:

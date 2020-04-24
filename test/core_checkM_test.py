@@ -710,10 +710,86 @@ class CoreCheckMTest(unittest.TestCase):
     # Test 9: Plotting (intended data not checked into git repo: SKIP)
     #
     # Uncomment to skip this test
-    @unittest.skip("skipped test_output_plotting")
+    # @unittest.skip("skipped test_output_plotting")
     # missing test data for this custom test
     # note that the OutputBuilder interface has not been updated below since the test is skipped
-    def test_output_plotting(self):
+#     def test_outputbuilder(self):
+#
+#         build_report(removed_bins)
+#
+#
+#
+#
+#         return {
+#             'file_links': output_packages,
+#             'direct_html_link_index': 0,
+#             'html_links': html_files,
+#         }
+#
+#
+
+#         no dist plots or tetra output
+#         bins/
+#         output/
+#             tab_text/CheckM_summary_table.tsv   # headers
+#         plots/
+#         tetra.tsv                               # headers
+#
+#         not all items have plots
+# ├── all_sequences.fna
+# ├── bins
+# │   └── Dodgy_Contig.Assembly.fna
+# └── lineage_wf--1587748746496.log
+#
+# ├── all_sequences.fna
+# ├── bins
+# │   └── Dodgy_Contig.Assembly.fna
+# ├── lineage_wf--1587748746496.log
+# └── output
+#     ├── bins
+#     │   └── Dodgy_Contig.Assembly
+#     │       ├── genes.faa
+#     │       ├── genes.gff
+#     │       ├── hmmer.analyze.txt
+#     │       └── hmmer.tree.txt
+#     ├── checkm.log
+#     ├── lineage.ms
+#     └── storage
+#         ├── aai_qa
+#         ├── bin_stats.analyze.tsv
+#         ├── bin_stats.tree.tsv
+#         ├── bin_stats_ext.tsv
+#         ├── checkm_hmm_info.pkl.gz
+#         ├── marker_gene_stats.tsv
+#         ├── phylo_hmm_info.pkl.gz
+#         └── tree
+#             ├── PF00189.15.masked.faa
+#             ├── PF00203.16.masked.faa
+#             ├── PF00237.14.masked.faa
+#             ├── PF00238.14.masked.faa
+#             ├── PF00252.13.masked.faa
+#             ├── PF00281.14.masked.faa
+#             ├── PF00333.15.masked.faa
+#             ├── PF00366.15.masked.faa
+#             ├── PF00410.14.masked.faa
+#             ├── PF00673.16.masked.faa
+#             ├── PF00831.18.masked.faa
+#             ├── PF00861.17.masked.faa
+#             ├── PF03719.10.masked.faa
+#             ├── PF03947.13.masked.faa
+#             ├── concatenated.fasta
+#             ├── concatenated.pplacer.json
+#             ├── concatenated.tre
+#             └── pplacer.out
+#
+# ├── plots
+# │   ├── Dodgy_Contig.Assembly.ref_dist_plots.png
+# │   └── checkm.log
+#
+
+        # all items present and correct
+
+
         impl = self.getImpl()
         cmu = CheckMUtil(impl)
         plots_dir = os.path.join(self.scratch, 'plots_1')

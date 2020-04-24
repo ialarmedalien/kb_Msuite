@@ -93,8 +93,8 @@ class OutputBuilder(object):
         '''
         Based on the output of CheckM lineage_wf, build an HTML report
         '''
-        run_config = self.checkMUtil.run_config()
-        html_dir    = run_config['html_dir']
+        run_config      = self.checkMUtil.run_config()
+        html_dir        = run_config['html_dir']
         tmpl_src_dir    = run_config['template_src_dir']
         tmpl_dest_dir   = run_config['template_dest_dir']
         html_plots_dir  = os.path.join(html_dir, 'plots')
@@ -106,15 +106,20 @@ class OutputBuilder(object):
 
         # copy over the templates
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
-            if not os.path.exists(os.path.join(tmpl_dest_dir, tmpl)):
+            tmpl_file = os.path.join(tmpl_dest_dir, tmpl)
+
+            if not os.path.exists(tmpl_file) or not os.path.isfile(tmpl_file):
                 self._copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
+
+        html_index_file = os.path.join(html_dir, 'checkm_results.html')
 
         html_files = [
             {
                 # checkm table:
-                'template': {
-                    'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
-                },
+#                 'template': {
+#                     'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
+#                 },
+                'path': html_index_file,
                 'name': 'checkm_results.html',
                 'description': 'Summarized report from CheckM',
             },{
@@ -126,34 +131,45 @@ class OutputBuilder(object):
             }
         ]
 
-        for bid in sorted(bin_stats.keys()):
-            # DEBUG
-            bin_id = re.sub('^[^\.]+\.', '', bid)
-            if removed_bins and bin_id in removed_bins:
-                print("BIN STATS BID " + bid + ": REMOVED")
-            else:
-                print("BIN STATS BID " + bid)
+        with open(html_index_file, 'w') as open_fh:
 
-            # create the dist plot page
-            dist_plot_file = os.path.join(html_plots_dir, str(bid) + self.DIST_PLOT_EXT)
-            if os.path.isfile(dist_plot_file):
-                html_files.append({
-                    'template': {
-                        'template_data_json': json.dumps({
-                            'bin_id': bin_id,
-                            'dist_plot_ext': self.DIST_PLOT_EXT,
-                        }),
-                        'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
-                    },
-                    'name': bin_id + '.html',
-                })
+            for bid in sorted(bin_stats.keys()):
+                # DEBUG
+                bin_id = re.sub('^[^\.]+\.', '', bid)
+                if removed_bins and bin_id in removed_bins:
+                    print("BIN STATS BID " + bid + ": REMOVED")
+                else:
+                    print("BIN STATS BID " + bid)
+
+                print("BIN ID: " + bin_id + "\n", open_fh)
+
+                # create the dist plot page
+                dist_plot_file = os.path.join(html_plots_dir, str(bid) + self.DIST_PLOT_EXT)
+                if os.path.isfile(dist_plot_file):
+                    bin_html_file = self._write_dist_html_page(html_dir, bin_id)
+                    html_files.append({
+                        'name': bin_id + '.html',
+                        'path': bin_html_file,
+                    })
+
+#                 html_files.append({
+#                     'template': {
+#                         'template_data_json': json.dumps({
+#                             'bin_id': bin_id,
+#                             'dist_plot_ext': self.DIST_PLOT_EXT,
+#                         }),
+#                         'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
+#                     },
+#                     'name': bin_id + '.html',
+#                 })
 
         return html_files
 
     def _write_dist_html_page(self, html_dir, bin_id):
 
+        bin_html_file = os.path.join(html_dir, bin_id + '.html')
         # write the html report to file
-        with open(os.path.join(html_dir, bin_id + '.html'), 'w') as html:
+        with open(bin_html_file, 'w') as html:
 
             html.write('<html>\n')
             html.write('<head>\n')
@@ -166,6 +182,7 @@ class OutputBuilder(object):
             html.write('<br><br><br>\n')
             html.write('</body>\n</html>\n')
 
+        return bin_html_file
 
     def read_bin_stats_file(self):
         run_config = self.checkMUtil.run_config()
@@ -242,7 +259,7 @@ class OutputBuilder(object):
 
     def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
 
-        src = os.path.join(src_folder, filename)
+        src  = os.path.join(src_folder, filename)
         dest = os.path.join(dest_folder, filename)
         os.makedirs(dest_folder, exist_ok=True)
 
@@ -253,9 +270,10 @@ class OutputBuilder(object):
         log('copying ' + source_path + ' to ' + destination_path)
         try:
             shutil.copy(source_path, destination_path)
-        except:
+        except Exception as e:
             # TODO: add error message reporting
             log('copy failed')
+            log(e)
 
 
     def build_report(self, removed_bins=None):
@@ -403,6 +421,7 @@ class OutputBuilder(object):
 
         dsu = self.checkMUtil.datastagingutils
         bin_fasta_files_by_bin_ID = dsu.get_bin_fasta_files(bin_dir, fasta_ext)
+
         bin_IDs = []
         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
             bin_ID = re.sub('^[^\.]+\.', '', bin_ID.replace('.' + fasta_ext, ''))
