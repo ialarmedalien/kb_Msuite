@@ -123,7 +123,7 @@ class CoreCheckMTest(unittest.TestCase):
 #         os.makedirs(cls.test_directory_path)
 
         test_data_dir = os.path.join(cls.scratch, 'test_data')
-        os.makedirs(test_data_dir, exists_ok=True)
+        os.makedirs(test_data_dir, exist_ok=True)
 
 
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,

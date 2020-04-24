@@ -244,7 +244,7 @@ class OutputBuilder(object):
 
         src = os.path.join(src_folder, filename)
         dest = os.path.join(dest_folder, filename)
-        os.makedirs(dest_folder, exists_ok=True)
+        os.makedirs(dest_folder, exist_ok=True)
 
         return self._copy_file_new_name_ignore_errors(src, dest)
 
