@@ -94,7 +94,7 @@ class DataStagingUtils(object):
         # make sure fasta file isn't empty
         min_fasta_len = 1
         if not self.fasta_seq_len_at_least(filename, min_fasta_len):
-            raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
+            raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
 
         return True
 
@@ -137,7 +137,7 @@ class DataStagingUtils(object):
             # make sure fasta file isn't empty
             min_fasta_len = 1
             if not self.fasta_seq_len_at_least(filename, min_fasta_len):
-                raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
+                raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
 
         return True
 
@@ -158,7 +158,7 @@ class DataStagingUtils(object):
                 fasta_path = os.path.join(input_dir, fasta_file)
                 min_fasta_len = 1
                 if not self.fasta_seq_len_at_least(fasta_path, min_fasta_len):
-                    raise ValueError('Binned Assembly is empty for fasta_path: '+str(fasta_path))
+                    raise ValueError('Binned Assembly is empty for fasta_path: ' + str(fasta_path))
             break
 
         return True

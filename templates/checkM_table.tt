@@ -8,7 +8,7 @@
 
     WRAPPER 'views/inc/page_wrapper.tt';
     PROCESS 'views/inc/macros.tt';
-    PROCESS 'views/inc/js.tt';
+    # PROCESS 'views/inc/js.tt';
 
     page_content = [
       {
@@ -51,13 +51,13 @@
       return '<a href="' + data + '.html">' + data + '</a>'
     }
 
-    [% PROCESS default_table_conf %]
+    [%# PROCESS default_table_conf %]
     tableConfig.createdRow = function( row, data ) {
       if ( data[ 'Contamination' ] > 1.0 ) {
         $(row).addClass( 'danger' );
       }
     }
-    [% PROCESS default_data_load %]
+    [%# PROCESS default_data_load %]
 
     $('#navigation li:first-child a').tab('show')
 
