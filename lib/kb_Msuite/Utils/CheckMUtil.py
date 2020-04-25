@@ -7,6 +7,7 @@ import sys
 import re
 import ast
 import json
+import logging
 from decimal import Decimal
 
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
@@ -72,7 +73,8 @@ class CheckMUtil:
         run_config['tab_text_dir'] = tab_text_dir
         run_config['bin_basename'] = 'Bin'
 
-        run_config['template_src_dir'] = os.path.join('kb', 'module', 'kb_Msuite', 'templates')
+        # THIS SEEMS HIGHLY SUSPECT!
+        run_config['template_src_dir'] = 'templates' # os.path.join('templates')
         run_config['template_dest_dir'] = os.path.join(base_dir, 'templates')
 
         # files

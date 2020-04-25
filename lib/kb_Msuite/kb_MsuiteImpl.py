@@ -118,6 +118,9 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         self.checkMUtil = CheckMUtil(self.config, ctx)
         result = self.checkMUtil.run_checkM_lineage_wf(params)
 
+        print('--->\nResult from kb_Msuite.run_checkM_lineage_wf:')
+        print(json.dumps(result, indent=1))
+
         #END run_checkM_lineage_wf
 
         # At some point might do deeper type checking...
@@ -153,6 +156,9 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
 
         self.checkMUtil = CheckMUtil(self.config, ctx)
         result = self.checkMUtil.run_checkM_lineage_wf(params)
+
+        print('--->\nResult from kb_Msuite.run_checkM_lineage_wf_withFilter')
+        print(json.dumps(result, indent=1))
 
         #END run_checkM_lineage_wf_withFilter
 
@@ -198,10 +204,6 @@ Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: asses
         out_dir = params['output_dir']
         log_path = params['log_path']
         run_checkm(in_dir, out_dir, log_path, params.get('options'))
-        from subprocess import run, PIPE, STDOUT
-        current_tree = run(['tree', out_dir], stdout=PIPE, stderr=STDOUT, universal_newlines=True)
-        print(current_tree.stdout)
-
         result = {}
         #END lineage_wf
 

@@ -5,6 +5,7 @@ import ast
 import sys
 import time
 import json
+import csv
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
@@ -95,19 +96,16 @@ class OutputBuilder(object):
         '''
         run_config      = self.checkMUtil.run_config()
         html_dir        = run_config['html_dir']
+        plots_dir       = run_config['plots_dir']
+        html_plots_dir  = os.path.join(html_dir, 'plots')
         tmpl_src_dir    = run_config['template_src_dir']
         tmpl_dest_dir   = run_config['template_dest_dir']
-        html_plots_dir  = os.path.join(html_dir, 'plots')
 
         os.makedirs(html_plots_dir)
-
-        # move plots we need into the html directory
-        self._copy_ref_dist_plots(html_plots_dir)
 
         # copy over the templates
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
             tmpl_file = os.path.join(tmpl_dest_dir, tmpl)
-
             if not os.path.exists(tmpl_file) or not os.path.isfile(tmpl_file):
                 self._copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
 
@@ -123,13 +121,20 @@ class OutputBuilder(object):
                 'name': 'checkm_results.html',
                 'description': 'Summarized report from CheckM',
             },{
-                'path': run_config['tab_text_file'],
+                'path': run_config['tab_text_file'] + '-extra',
                 'name': run_config['tab_text_file_name'],
             },{
                 'path': html_plots_dir,
                 'name': 'plots',
             }
         ]
+
+        results_filtered = 'results_filtered' in run_config
+
+        # init the TSV output file
+        tsv_file = open(run_config['tab_text_file'] + '-extra', w)
+        header = self._generate_row_header(results_filtered)
+        tsv_file.write("\t".join(header)+"\n")
 
         with open(html_index_file, 'w') as open_fh:
 
@@ -144,8 +149,13 @@ class OutputBuilder(object):
                 print("BIN ID: " + bin_id + "\n", open_fh)
 
                 # create the dist plot page
-                dist_plot_file = os.path.join(html_plots_dir, str(bid) + self.DIST_PLOT_EXT)
-                if os.path.isfile(dist_plot_file):
+                plot_file = os.path.join(plots_dir, str(bid) + self.DIST_PLOT_EXT)
+                has_plot_file = False
+                if os.path.isfile(plot_file):
+                    has_plot_file = True
+                    html_dir_plot_file = os.path.join(html_plots_dir, str(bid) + self.DIST_PLOT_EXT)
+                    # copy it to the html_plot
+                    self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
                     bin_html_file = self._write_dist_html_page(html_dir, bin_id)
                     html_files.append({
                         'name': bin_id + '.html',
@@ -163,7 +173,55 @@ class OutputBuilder(object):
 #                     'name': bin_id + '.html',
 #                 })
 
+                row = self._generate_row_data(
+                    bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins
+                )
+                tsv_file.write("\t".join(row)+"\n")
+
+        tsv_file.close()
+
+
         return html_files
+
+    def _generate_row_header(self, results_filtered):
+        out_header = ['Bin Name']
+        for f in fields:
+            out_header.append(f['display'])
+        out_header.append('has_plot_file')
+        if results_filtered:
+            out_header.append('QC Pass')
+        return out_header
+
+    def _generate_row_data(self, bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins):
+
+        row = [bid]
+
+        fields = self.get_fields()
+        for f in fields:
+            if f['id'] in bin_stats[bid]:
+                value = str(bin_stats[bid][f['id']])
+                if f.get('round'):
+                    value = str(round(bin_stats[bid][f['id']], f['round']))
+                row.append(str(value))
+
+        # is there a plot file for this entry?
+        if has_plot_file:
+            row.append('true')
+        else:
+            row.append('false')
+
+        # add a column to indicate whether the bin should be removed
+        if results_filtered:
+            if removed_bins:
+                bin_id = re.sub('^[^\.]+\.', '', bid)
+                if bin_id in removed_bins:
+                    row.append('false')
+                else:
+                    row.append('true')
+            else:
+                row.append('true')
+
+
 
     def _write_dist_html_page(self, html_dir, bin_id):
 
@@ -205,14 +263,11 @@ class OutputBuilder(object):
 
         return bin_stats
 
-    # 'tab_text/CheckM_summary_table.tsv'
-#    def build_summary_tsv_file(self, run_config, tab_text_dir, tab_text_file, results_filtered, removed_bins=None):
     def build_summary_tsv_file(self, bin_stats, removed_bins=None):
 
         fields = self.get_fields()
         run_config = self.checkMUtil.run_config()
 
-#        tab_text_files = []
         if not os.path.exists(run_config['tab_text_dir']):
             os.makedirs(run_config['tab_text_dir'])
 
@@ -277,11 +332,6 @@ class OutputBuilder(object):
 
 
     def build_report(self, removed_bins=None):
-
-#        return self.build_output_packages(removed_bins)
-
-#    def build_output_packages(self, params, input_dir, removed_bins=None):
-#    def build_output_packages(self, removed_bins=None):
 
         run_config = self.checkMUtil.run_config()
         params = run_config['params']

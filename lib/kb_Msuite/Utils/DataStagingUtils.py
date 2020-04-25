@@ -6,7 +6,7 @@ import subprocess
 
 class DataStagingUtils(object):
 
-    [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
+    # [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
 
     def __init__(self, checkMUtil_obj):
         self.checkMUtil = checkMUtil_obj
@@ -51,32 +51,8 @@ class DataStagingUtils(object):
             os.makedirs(input_dir)
 
         input_info = self._get_workspace_object_info(input_ref)
-        obj_name  = input_info[1]
+        obj_name = input_info[1]
         obj_type = input_info[2].split('-')[0]
-
-        """
-
-
-        # 2) based on type, download the files
-        # auClient
-        try:
-            auClient = AssemblyUtil(self.callbackURL, token=self.ctx['token'], service_ver=SERVICE_VER)
-        except Exception as e:
-            raise ValueError('Unable to instantiate auClient with callbackURL: ' + self.callbackURL + ' ERROR: ' + str(e))
-
-        # setAPI_Client
-        try:
-            setAPI_Client = SetAPI(url=self.serviceWizardURL, token=self.ctx['token'])
-        except Exception as e:
-            raise ValueError('Unable to instantiate setAPI_Client with serviceWizardURL: ' + self.serviceWizardURL + ' ERROR: ' + str(e))
-
-        # mguClient
-        try:
-            mguClient = MetagenomeUtils(self.callbackURL, token=self.ctx['token'], service_ver=SERVICE_VER)
-        except Exception as e:
-            raise ValueError('Unable to instantiate mguClient with callbackURL: ' + self.callbackURL + ' ERROR: ' + str(e))
-
-        """
 
         type_to_method = {
 
