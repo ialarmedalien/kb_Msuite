@@ -343,7 +343,7 @@ class OutputBuilder(object):
         # do this more nicely
         report_params = {}
 
-        report_params['report_object_name'] = 'kb_checkM_report_' + str(uuid.uuid4())
+        report_params['report_object_name'] = 'kb_checkM_report_' + run_config['suffix']
         report_params['workspace_name'] = params['workspace_name']
 
 

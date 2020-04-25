@@ -74,18 +74,16 @@ class CheckMUtil:
         run_config['tab_text_dir'] = tab_text_dir
         run_config['bin_basename'] = 'Bin'
 
-        # THIS SEEMS HIGHLY SUSPECT!
         run_config['template_src_dir'] = os.path.join(self.appdir, 'templates')
         run_config['template_dest_dir'] = os.path.join(base_dir, 'templates')
+
+        run_config['storage'] = os.path.join(run_config['output_dir'], 'storage')
 
         # files
         run_config['all_seq_fasta'] = os.path.join(base_dir, 'all_sequences.' + run_config['fasta_ext'])
         run_config['tetra_file'] = os.path.join(base_dir, 'tetra.tsv')
 
-        run_config['storage'] = os.path.join(run_config['output_dir'], 'storage')
-        run_config['bin_stats_ext_file'] = os.path.join(
-            run_config['storage'], 'bin_stats_ext.tsv'
-        )
+        run_config['bin_stats_ext_file'] = os.path.join(run_config['storage'], 'bin_stats_ext.tsv')
 
         run_config['tab_text_file_name'] = 'CheckM_summary_table.tsv'
         run_config['tab_text_file'] = os.path.join(tab_text_dir, run_config['tab_text_file_name'])
@@ -148,7 +146,6 @@ class CheckMUtil:
                 'report_ref':  report_output['ref'],
             }
 
-
         # 3) optionally filter bins by quality scores and save object
         binned_contig_obj_ref = None
         created_objects = None
@@ -168,14 +165,6 @@ class CheckMUtil:
 
         # 4) make the plots:
         self.build_checkM_lineage_wf_plots()
-
-#         5) Package results
-#           includes building the .tsv file that the HTML report is built from
-#         output_packages = self.outputbuilder.build_output_packages(removed_bins)
-#
-#         6) build the HTML report
-#         html_files      = self.outputbuilder.build_html_output_for_lineage_wf(removed_bins)
-
 
         # 5) build the report and package output
         report_params = self.outputbuilder.build_report(params, removed_bins)
@@ -318,13 +307,6 @@ class CheckMUtil:
                 command.append('--reduced_tree')
             command.append(options['bin_folder'])
             command.append(options['out_folder'])
-
-#         elif subcommand == 'bin_qa_plot':
-#             self._validate_options(options, checkBin=True, checkOut=True, checkPlots=True,
-#                                    subcommand='bin_qa_plot')
-#             command.append(options['out_folder'])
-#             command.append(options['bin_folder'])
-#             command.append(options['plots_folder'])
 
         elif subcommand == 'tetra':
             self._validate_options(options, checkTetraFile=True, subcommand='tetra')
