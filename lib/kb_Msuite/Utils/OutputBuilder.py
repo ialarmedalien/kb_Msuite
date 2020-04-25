@@ -132,7 +132,7 @@ class OutputBuilder(object):
         results_filtered = 'results_filtered' in run_config
 
         # init the TSV output file
-        tsv_file = open(run_config['tab_text_file'] + '-extra', w)
+        tsv_file = open(run_config['tab_text_file'] + '-extra', 'w')
         header = self._generate_row_header(results_filtered)
         tsv_file.write("\t".join(header)+"\n")
 
@@ -176,7 +176,7 @@ class OutputBuilder(object):
                 row = self._generate_row_data(
                     bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins
                 )
-                tsv_file.write("\t".join(row)+"\n")
+                tsv_file.write("\t".join(row) + "\n")
 
         tsv_file.close()
 
@@ -245,11 +245,13 @@ class OutputBuilder(object):
     def read_bin_stats_file(self):
         run_config = self.checkMUtil.run_config()
         stats_file = run_config['bin_stats_ext_file']
-        if not os.path.isfile(stats_file):
-            log('Warning! no stats file found (looking at: ' + stats_file + ')')
-            return
 
         bin_stats = dict()
+
+        if not os.path.isfile(stats_file):
+            log('Warning! no stats file found (looking at: ' + stats_file + ')')
+            return bin_stats
+
         with open(stats_file) as lf:
             for line in lf:
                 if not line:
@@ -331,17 +333,28 @@ class OutputBuilder(object):
             log(e)
 
 
-    def build_report(self, removed_bins=None):
+    def build_report(self, params, removed_bins=None):
 
         run_config = self.checkMUtil.run_config()
-        params = run_config['params']
 
         # create bin report summary TSV table text file
         log('creating TSV summary table text file')
 
         bin_stats_data = self.read_bin_stats_file()
+        if not bin_stats_data:
+            log("WARNING: No output produced!")
+#             return {
+#                 'message': 'CheckM did not produce any output.',
+#                 'file_list': [{
+#                     'name': 'full_output',
+#                     'path': run_config['output_dir'],
+#                     'description': 'Full output of CheckM',
+#                 }]
+#             }
 
         self.build_summary_tsv_file(bin_stats_data, removed_bins)
+
+        html_files = self.build_html_output_for_lineage_wf(bin_stats_data, removed_bins)
 
         tab_text_zipped = self.package_folder(
             run_config['tab_text_dir'],
@@ -399,9 +412,6 @@ class OutputBuilder(object):
             })
         else:
             log('not packaging output plots directory')
-
-        # 6) build the HTML report
-        html_files = self.build_html_output_for_lineage_wf(bin_stats_data, removed_bins)
 
         return {
             'file_links': output_packages,

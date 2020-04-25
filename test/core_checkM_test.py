@@ -73,6 +73,7 @@ class CoreCheckMTest(unittest.TestCase):
         cls.serviceImpl = kb_Msuite(cls.cfg)
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.scratch     = cls.cfg['scratch']
+        cls.appdir      = cls.cfg['appdir']
         cls.suffix      = test_time_stamp
         cls.checkm_runner = CheckMUtil(cls.cfg, cls.ctx)
 
@@ -136,7 +137,7 @@ class CoreCheckMTest(unittest.TestCase):
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
             tmpl_file = os.path.join(test_tmpl_dir, tmpl)
             if not os.path.exists(tmpl_file):
-                old_loc = os.path.join("/kb", "module", "templates", tmpl)
+                old_loc = os.path.join(cls.appdir, "templates", tmpl)
                 if not os.path.isfile(old_loc):
                     print("Wat?! file " + old_loc + " can't be found")
                 shutil.copy(old_loc, tmpl_file)
@@ -169,14 +170,6 @@ class CoreCheckMTest(unittest.TestCase):
             'direct_html_link_index': 0,
             'html_links': tmpl_arr,
         })
-        print(report_output)
-        got_object = cls.wsClient.get_objects2({
-            'objects': [{'ref': report_output['ref']}]
-        })
-
-        print(got_object)
-        rep = got_object['data'][0]['data']
-        print(rep)
         cls.report_ref = report_output['ref']
 
         assembly_list = [
@@ -269,8 +262,6 @@ class CoreCheckMTest(unittest.TestCase):
         }
         for genome_ref in cls.genome_refs:
             testGS['elements'][genome_scinames[genome_ref]] = {'ref': genome_ref}
-
-        print(testGS)
 
         obj_info = cls.wsClient.save_objects({
             'workspace': cls.ws_info[1],
@@ -664,53 +655,54 @@ class CoreCheckMTest(unittest.TestCase):
     # Test 8: Data staging (intended data not checked into git repo: SKIP)
     #
     # Uncomment to skip this test
-    @unittest.skip("skipped test_data_staging")
+    # @unittest.skip("skipped test_data_staging")
     # missing test data for this custom test
     # note that the DataStagingUtils interface has not been updated below since the test is skipped
     def test_data_staging(self):
 
-        # instantiate dsu
+        # test stage assembly
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        # init the run_config
+        cmu.run_config()
+        dsu = cmu.datastagingutils
 
         err_msg = 'Cannot stage fasta file input directory from type: '
-
-
-
-        # test stage assembly
-        dsu = DataStagingUtils(self.cfg, self.ctx)
-        staged_input = dsu.stage_input(self.assembly_OK_ref, 'strange_fasta_extension')
-        pprint(staged_input)
-
-
-
         with self.assertRaisesRegex(ValueError, err_msg):
             dsu.stage_input(self.report_ref)
+
+        # test stage binned contigs
+        staged_input = dsu.stage_input(self.binned_contigs_ref)
+        pprint(staged_input)
 
         self.assertTrue(os.path.isdir(staged_input['input_dir']))
         self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
         self.assertIn('folder_suffix', staged_input)
 
         self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
-                                                    'MyMetagenomeAssembly.strange_fasta_extension')))
-
-        # test stage binned contigs
-        staged_input2 = dsu.stage_input(self.binned_contigs_ref, 'fna')
-        pprint(staged_input2)
-
-        self.assertTrue(os.path.isdir(staged_input2['input_dir']))
-        self.assertTrue(os.path.isfile(staged_input2['all_seq_fasta']))
-        self.assertIn('folder_suffix', staged_input2)
-
-        self.assertTrue(os.path.isfile(os.path.join(staged_input2['input_dir'],
                                                     'out_header.001.fna')))
-        self.assertTrue(os.path.isfile(os.path.join(staged_input2['input_dir'],
+        self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
                                                     'out_header.002.fna')))
-        self.assertTrue(os.path.isfile(os.path.join(staged_input2['input_dir'],
+        self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
                                                     'out_header.003.fna')))
+
+        cmu.fasta_extension = 'strange_fasta_extension'
+        # reset the run_config
+        cmu._set_run_configuration()
+        dsu = cmu.datastagingutils
+        staged_input = dsu.stage_input(self.assembly_OK_ref)
+        pprint(staged_input)
+        self.assertTrue(os.path.isdir(staged_input['input_dir']))
+        self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
+        self.assertIn('folder_suffix', staged_input)
+
+        self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
+                                                    'Test.Assembly.strange_fasta_extension')))
+
 
     # Test 9: Plotting (intended data not checked into git repo: SKIP)
     #
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_output_plotting")
+    @unittest.skip("skipped test_output_plotting")
     # missing test data for this custom test
     # note that the OutputBuilder interface has not been updated below since the test is skipped
     def test_outputbuilder(self):

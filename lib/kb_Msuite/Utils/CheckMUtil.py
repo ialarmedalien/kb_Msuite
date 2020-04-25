@@ -36,6 +36,7 @@ class CheckMUtil:
 
         self.scratch = config['scratch']
         self.threads = config['threads']
+        self.appdir = config['appdir']
         self.fasta_extension = 'fna'
         self.binned_contigs_builder_fasta_extension = 'fasta'
         if not os.path.exists(self.scratch):
@@ -74,7 +75,7 @@ class CheckMUtil:
         run_config['bin_basename'] = 'Bin'
 
         # THIS SEEMS HIGHLY SUSPECT!
-        run_config['template_src_dir'] = os.path.join('/kb', 'module', 'templates')
+        run_config['template_src_dir'] = os.path.join(self.appdir, 'templates')
         run_config['template_dest_dir'] = os.path.join(base_dir, 'templates')
 
         # files
@@ -140,7 +141,7 @@ class CheckMUtil:
         created_objects = None
         removed_bins = None
 
-        filtered_obj_info = self._filter_binned_contigs()
+        filtered_obj_info = self._filter_binned_contigs(params)
 
         if filtered_obj_info is None:
             log("No Bins passed QC filters.  Not saving filtered BinnedContig object")
@@ -164,7 +165,7 @@ class CheckMUtil:
 
 
         # 5) build the report and package output
-        report_params = self.outputbuilder.build_report(removed_bins)
+        report_params = self.outputbuilder.build_report(params, removed_bins)
         report_params['report_object_name'] = 'kb_checkM_report_' + str(uuid.uuid4())
         report_params['workspace_name'] = params['workspace_name']
         # 7) save report
@@ -351,10 +352,9 @@ class CheckMUtil:
         return command
 
 
-    def _filter_binned_contigs(self):
+    def _filter_binned_contigs(self, params):
 
         run_config          = self.run_config()
-        params              = run_config['params']
 
         if self.datastagingutils.get_data_obj_type(params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
           and params.get('output_filtered_binnedcontigs_obj_name'):
