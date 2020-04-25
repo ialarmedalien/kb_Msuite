@@ -221,6 +221,7 @@ class OutputBuilder(object):
             else:
                 row.append('true')
 
+        return row
 
 
     def _write_dist_html_page(self, html_dir, bin_id):
