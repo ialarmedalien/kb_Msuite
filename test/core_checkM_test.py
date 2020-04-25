@@ -170,7 +170,7 @@ class CoreCheckMTest(unittest.TestCase):
             'html_links': tmpl_arr,
         })
         print(report_output)
-        got_object = cls.getWsClient().get_objects2({
+        got_object = cls.wsClient.get_objects2({
             'objects': [{'ref': report_output['ref']}]
         })
 
@@ -178,7 +178,6 @@ class CoreCheckMTest(unittest.TestCase):
         rep = got_object['data'][0]['data']
         print(rep)
         cls.report_ref = report_output['ref']
-
 
         assembly_list = [
             {
