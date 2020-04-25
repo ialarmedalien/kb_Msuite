@@ -185,6 +185,7 @@ class OutputBuilder(object):
 
     def _generate_row_header(self, results_filtered):
         out_header = ['Bin Name']
+        fields = self.get_fields()
         for f in fields:
             out_header.append(f['display'])
         out_header.append('has_plot_file')
@@ -195,7 +196,6 @@ class OutputBuilder(object):
     def _generate_row_data(self, bid, bin_stats, has_plot_file, results_filtered, removed_bins):
 
         row = [bid]
-
         fields = self.get_fields()
         for f in fields:
             if f['id'] in bin_stats:
@@ -340,17 +340,23 @@ class OutputBuilder(object):
         # create bin report summary TSV table text file
         log('creating TSV summary table text file')
 
+        # do this more nicely
+        report_params = {}
+
+        report_params['report_object_name'] = 'kb_checkM_report_' + str(uuid.uuid4())
+        report_params['workspace_name'] = params['workspace_name']
+
+
         bin_stats_data = self.read_bin_stats_file()
         if not bin_stats_data:
             log("WARNING: No output produced!")
-#             return {
-#                 'message': 'CheckM did not produce any output.',
-#                 'file_list': [{
-#                     'name': 'full_output',
-#                     'path': run_config['output_dir'],
-#                     'description': 'Full output of CheckM',
-#                 }]
-#             }
+            report_params['message'] = 'CheckM did not produce any output.'
+            report_params['file_list'] = [{
+                'name': 'full_output',
+                'path': run_config['output_dir'],
+                'description': 'Full output of CheckM',
+            }]
+            return report_params
 
         self.build_summary_tsv_file(bin_stats_data, removed_bins)
 
@@ -413,11 +419,11 @@ class OutputBuilder(object):
         else:
             log('not packaging output plots directory')
 
-        return {
-            'file_links': output_packages,
-            'direct_html_link_index': 0,
-            'html_links': html_files,
-        }
+        report_params['file_links'] = output_packages
+        report_params['direct_html_link_index'] = 0
+        report_params['html_links'] = html_files
+
+        return report_params
 
     def _copy_ref_dist_plots(self, dest_folder):
         run_config = self.checkMUtil.run_config()

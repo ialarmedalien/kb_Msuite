@@ -46,7 +46,7 @@ class CheckMUtil:
         return self.client_util.client(client_name)
 
     def run_config(self):
-        if hasattr(self, 'run_config'):
+        if hasattr(self, '_run_config'):
             return self._run_config
 
         self._set_run_configuration()
@@ -82,8 +82,9 @@ class CheckMUtil:
         run_config['all_seq_fasta'] = os.path.join(base_dir, 'all_sequences.' + run_config['fasta_ext'])
         run_config['tetra_file'] = os.path.join(base_dir, 'tetra.tsv')
 
+        run_config['storage'] = os.path.join(run_config['output_dir'], 'storage')
         run_config['bin_stats_ext_file'] = os.path.join(
-            run_config['output_dir'], 'storage', 'bin_stats_ext.tsv'
+            run_config['storage'], 'bin_stats_ext.tsv'
         )
 
         run_config['tab_text_file_name'] = 'CheckM_summary_table.tsv'
@@ -135,6 +136,18 @@ class CheckMUtil:
         # dump out the current dir structure
         self.run_checkM('lineage_wf', lineage_wf_options)
 
+        # check whether it was successful
+        if not os.path.exists(run_config['storage']):
+            log("WARNING: NO RESULTS FOUND!")
+            report_params = self.outputbuilder.build_report(params)
+            kr = self.client('KBaseReport')
+            report_output = kr.create_extended_report(report_params)
+
+            return {
+                'report_name': report_output['name'],
+                'report_ref':  report_output['ref'],
+            }
+
 
         # 3) optionally filter bins by quality scores and save object
         binned_contig_obj_ref = None
@@ -166,26 +179,11 @@ class CheckMUtil:
 
         # 5) build the report and package output
         report_params = self.outputbuilder.build_report(params, removed_bins)
-        report_params['report_object_name'] = 'kb_checkM_report_' + str(uuid.uuid4())
-        report_params['workspace_name'] = params['workspace_name']
-        # 7) save report
-#         report_params = {
-#             'message': '',
-#             'direct_html_link_index': 0,
-#             'html_links': html_files,
-#             'file_links': output_packages,
-#             'report_object_name': 'kb_checkM_report_' + str(uuid.uuid4()),
-#             'workspace_name': params['workspace_name']
-#         }
 
         if created_objects:
             report_params['objects_created'] = created_objects
 
         kr = self.client('KBaseReport')
-
-        log('kbase report params:')
-
-
         report_output = kr.create_extended_report(report_params)
 
         returnVal = {
@@ -375,6 +373,8 @@ class CheckMUtil:
 
         log("DEBUG: bin_fasta_files_by_bin_ID: ")
         log(bin_fasta_files_by_bin_ID)
+        if not bin_fasta_files_by_bin_ID:
+            return None
 
         bin_IDs = []
         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):

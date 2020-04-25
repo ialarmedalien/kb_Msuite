@@ -75,8 +75,6 @@ RUN \
 
 RUN apt-get install -y tree
 
-ENV APP_DIR /kb/module
-
 COPY ./ /kb/module
 
 WORKDIR /kb/module
