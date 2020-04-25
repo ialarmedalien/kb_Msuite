@@ -132,10 +132,13 @@ class CoreCheckMTest(unittest.TestCase):
 
         # copy over the templates
         test_tmpl_dir = os.path.join(test_data_dir, 'templates')
+        os.makedirs(test_tmpl_dir, exist_ok=True)
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
             tmpl_file = os.path.join(test_tmpl_dir, tmpl)
             if not os.path.exists(tmpl_file):
-                shutil.copy(os.path.join("/kb", "module", "templates", tmpl), tmpl_file)
+                old_loc = os.path.join("/kb", "module", "templates", tmpl)
+                cls.assertTrue(os.path.isfile(old_loc))
+                shutil.copy(old_loc, tmpl_file)
             cls.assertTrue(os.path.isfile(tmpl_file))
 
         tmpl_arr = [
