@@ -74,7 +74,7 @@ class CheckMUtil:
         run_config['bin_basename'] = 'Bin'
 
         # THIS SEEMS HIGHLY SUSPECT!
-        run_config['template_src_dir'] = os.path.join('kb', 'module', 'templates')
+        run_config['template_src_dir'] = os.path.join('/kb', 'module', 'templates')
         run_config['template_dest_dir'] = os.path.join(base_dir, 'templates')
 
         # files

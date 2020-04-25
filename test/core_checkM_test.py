@@ -135,7 +135,7 @@ class CoreCheckMTest(unittest.TestCase):
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
             tmpl_file = os.path.join(test_tmpl_dir, tmpl)
             if not os.path.exists(tmpl_file):
-                shutil.copy(os.path.join("kb", "module", "templates", tmpl), tmpl_file)
+                shutil.copy(os.path.join("/kb", "module", "templates", tmpl), tmpl_file)
             cls.assertTrue(os.path.isfile(tmpl_file))
 
         tmpl_arr = [
