@@ -192,16 +192,16 @@ class OutputBuilder(object):
             out_header.append('QC Pass')
         return out_header
 
-    def _generate_row_data(self, bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins):
+    def _generate_row_data(self, bid, bin_stats, has_plot_file, results_filtered, removed_bins):
 
         row = [bid]
 
         fields = self.get_fields()
         for f in fields:
-            if f['id'] in bin_stats[bid]:
-                value = str(bin_stats[bid][f['id']])
+            if f['id'] in bin_stats:
+                value = str(bin_stats[f['id']])
                 if f.get('round'):
-                    value = str(round(bin_stats[bid][f['id']], f['round']))
+                    value = str(round(bin_stats[f['id']], f['round']))
                 row.append(str(value))
 
         # is there a plot file for this entry?
