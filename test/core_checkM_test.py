@@ -14,7 +14,7 @@ from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
-from installed_client.KBaseReportClient import KBaseReport
+from installed_clients.KBaseReportClient import KBaseReport
 
 from kb_Msuite.kb_MsuiteImpl import kb_Msuite
 from kb_Msuite.kb_MsuiteServer import MethodContext
