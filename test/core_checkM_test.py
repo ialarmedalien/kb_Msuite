@@ -137,9 +137,11 @@ class CoreCheckMTest(unittest.TestCase):
             tmpl_file = os.path.join(test_tmpl_dir, tmpl)
             if not os.path.exists(tmpl_file):
                 old_loc = os.path.join("/kb", "module", "templates", tmpl)
-                cls.assertTrue(os.path.isfile(old_loc))
+                if not os.path.isfile(old_loc):
+                    print("Wat?! file " + old_loc + " can't be found")
                 shutil.copy(old_loc, tmpl_file)
-            cls.assertTrue(os.path.isfile(tmpl_file))
+                if not os.path.isfile(tmpl_file):
+                    print("Crap! file " + tmpl_file + " can't be found")
 
         tmpl_arr = [
             {
