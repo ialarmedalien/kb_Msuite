@@ -227,7 +227,7 @@ class CoreCheckMTest(unittest.TestCase):
 
         for bc in binned_contigs_list:
             binned_contigs_path = os.path.join(test_data_dir, bc['path'])
-            if not os.path.exists(binned_contigs_path):
+            if not os.path.exists(binned_contigs_path) or not os.path.exists(os.path.join(binned_contigs_path, 'out_header.summary')):
                 shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
             saved_object = cls.mu.file_to_binned_contigs({
                 'file_directory': binned_contigs_path,
@@ -706,9 +706,15 @@ class CoreCheckMTest(unittest.TestCase):
     # missing test data for this custom test
     # note that the OutputBuilder interface has not been updated below since the test is skipped
     def test_outputbuilder(self):
+
+#         build_report(params, removed_bins)
 #
-#         build_report(removed_bins)
-#
+        # no checkM output: no report
+
+        expected = {
+
+
+        }
 #
 #
 #
