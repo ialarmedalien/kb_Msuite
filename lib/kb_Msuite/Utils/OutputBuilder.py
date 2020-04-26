@@ -146,8 +146,6 @@ class OutputBuilder(object):
                 else:
                     print("BIN STATS BID " + bid)
 
-                print("BIN ID: " + bin_id + "\n", open_fh)
-
                 # create the dist plot page
                 plot_file = os.path.join(plots_dir, str(bid) + self.DIST_PLOT_EXT)
                 has_plot_file = False
@@ -157,29 +155,30 @@ class OutputBuilder(object):
                     # copy it to the html_plot
                     self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
                     bin_html_file = self._write_dist_html_page(html_dir, bin_id)
-                    html_files.append({
-                        'name': bin_id + '.html',
-                        'path': bin_html_file,
-                    })
+#                     html_files.append({
+#                         'name': bin_id + '.html',
+#                         'path': bin_html_file,
+#                     })
 
-#                 html_files.append({
-#                     'template': {
-#                         'template_data_json': json.dumps({
-#                             'bin_id': bin_id,
-#                             'dist_plot_ext': self.DIST_PLOT_EXT,
-#                         }),
-#                         'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
-#                     },
-#                     'name': bin_id + '.html',
-#                 })
+                    html_files.append({
+                        'template': {
+                            'template_data_json': json.dumps({
+                                'bin_id': bin_id,
+                                'dist_plot_ext': self.DIST_PLOT_EXT,
+                            }),
+                            'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
+                        },
+                        'name': bin_id + '.html',
+                    })
 
                 row = self._generate_row_data(
                     bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins
                 )
                 tsv_file.write("\t".join(row) + "\n")
 
-        tsv_file.close()
+                open_fh.write("BIN ID: " + bin_id + "\t".join(row) + "\n")
 
+        tsv_file.close()
 
         return html_files
 
@@ -232,7 +231,7 @@ class OutputBuilder(object):
 
             html.write('<html>\n')
             html.write('<head>\n')
-            html.write('<title>CheckM Dist Plots for Bin' + bin_id + '</title>')
+            html.write('<title>CheckM Dist Plots for Bin ' + bin_id + '</title>')
             html.write('<style style="text/css">\n a { color: #337ab7; } \n a:hover { color: #23527c; }\n</style>\n')
             html.write('<body>\n')
             html.write('<br><a href="CheckM_Table.html">Back to summary</a><br>\n')
@@ -334,49 +333,46 @@ class OutputBuilder(object):
             log(e)
 
 
-    def build_report(self, params, removed_bins=None):
+    def build_report(self, params, filtered_obj_info=None):
 
         run_config = self.checkMUtil.run_config()
 
-        # create bin report summary TSV table text file
-        log('creating TSV summary table text file')
+        binned_contig_obj_ref = None
+        removed_bins = None
 
-        # do this more nicely
-        report_params = {}
+        if filtered_obj_info:
+            binned_contig_obj_ref   = filtered_obj_info['filtered_obj_ref']
+            removed_bins            = filtered_obj_info['removed_bin_IDs']
 
-        report_params['report_object_name'] = 'kb_checkM_report_' + run_config['suffix']
-        report_params['workspace_name'] = params['workspace_name']
-
+        report_params = {
+            'report_object_name': 'kb_checkM_report_' + run_config['suffix'],
+            'workspace_name': params['workspace_name'],
+        }
 
         bin_stats_data = self.read_bin_stats_file()
-        if not bin_stats_data:
-            log("WARNING: No output produced!")
-            report_params['message'] = 'CheckM did not produce any output.'
-            report_params['file_list'] = [{
-                'name': 'full_output',
-                'path': run_config['output_dir'],
-                'description': 'Full output of CheckM',
-            }]
-            return report_params
+        output_packages = []
 
-        self.build_summary_tsv_file(bin_stats_data, removed_bins)
+        if bin_stats_data:
+            # create bin report summary TSV table text file
+            log('creating TSV summary table text file')
+            self.build_summary_tsv_file(bin_stats_data, removed_bins)
 
-        html_files = self.build_html_output_for_lineage_wf(bin_stats_data, removed_bins)
+            html_links = self.build_html_output_for_lineage_wf(bin_stats_data, removed_bins)
+            report_params['direct_html_link_index'] = 0
+            report_params['html_links'] = html_links
 
-        tab_text_zipped = self.package_folder(
-            run_config['tab_text_dir'],
-            run_config['tab_text_file'] + '.zip',
-            'TSV Summary Table from CheckM'
-        )
-#        output_packages.append(tab_text_zipped)
+            tab_text_zipped = self.package_folder(
+                run_config['tab_text_dir'],
+                run_config['tab_text_file'] + '.zip',
+                'TSV Summary Table from CheckM'
+            )
 
-        log('packaging full output directory')
-        output_dir_zipped = self.package_folder(
-            run_config['output_dir'],
-            'full_output.zip',
-            'Full output of CheckM'
-        )
-#        output_packages.append(output_dir_zipped)
+            log('packaging full output directory')
+            output_dir_zipped = self.package_folder(
+                run_config['output_dir'],
+                'full_output.zip',
+                'Full output of CheckM'
+            )
 
 #         else:  # ADD LATER?
 #             log('not packaging full output directory, selecting specific files')
@@ -388,43 +384,57 @@ class OutputBuilder(object):
 #                 'Selected output from the CheckM analysis')
 #             output_packages.append(zipped_output_file)
 
-        output_packages = [tab_text_zipped, output_dir_zipped]
-
-        dir_list = [
-            {
+            output_packages = [tab_text_zipped, output_dir_zipped, {
                 'name': run_config['tab_text_file_name'],
                 'path': run_config['tab_text_file'],
                 'description': 'TSV Summary Table from CheckM',
-            },
-            {
-                'name': 'full_output',
-                'path': run_config['output_dir'],
-                'description': 'Full output of CheckM',
-            }
-        ]
+            }]
 
-        output_packages = output_packages + dir_list
+            if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
+                log('packaging output plots directory')
+                output_packages.append({
+                    'name': 'plots',
+                    'path': run_config['plots_dir'],
+                    'description': 'Output plots from CheckM',
+                })
+                plots_dir_zipped = self.package_folder(
+                    run_config['plots_dir'],
+                    'plots.zip',
+                    'Output plots from CheckM')
+                output_packages.append(plots_dir_zipped)
+            else:
+                log('not packaging output plots directory')
 
-        if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
-            log('packaging output plots directory')
-            plots_dir_zipped = self.package_folder(
-                run_config['plots_dir'],
-                'plots.zip',
-                'Output plots from CheckM')
-            output_packages.append(plots_dir_zipped)
-            output_packages.append({
-                'name': 'plots',
-                'path': run_config['plots_dir'],
-                'description': 'Output plots from CheckM',
-            })
+            if binned_contig_obj_ref:
+                report_params['objects_created'] = [{
+                    'ref':          binned_contig_obj_ref,
+                    'description':  'HQ BinnedContigs ' + filtered_obj_info['filtered_obj_name']
+                }]
+
         else:
-            log('not packaging output plots directory')
+            log("WARNING: No output produced!")
+            report_params['message'] = 'CheckM did not produce any output.'
+
+        output_packages.append({
+            'name': 'full_output',
+            'path': run_config['output_dir'],
+            'description': 'Full output of CheckM',
+        })
 
         report_params['file_links'] = output_packages
-        report_params['direct_html_link_index'] = 0
-        report_params['html_links'] = html_files
 
-        return report_params
+        kr = self.client('KBaseReport')
+        report_output = kr.create_extended_report(report_params)
+
+        returnVal = {
+            'report_name': report_output['name'],
+            'report_ref':  report_output['ref'],
+        }
+
+        if binned_contig_obj_ref:
+            returnVal.update({'binned_contig_obj_ref': binned_contig_obj_ref})
+
+        return returnVal
 
     def _copy_ref_dist_plots(self, dest_folder):
         run_config = self.checkMUtil.run_config()

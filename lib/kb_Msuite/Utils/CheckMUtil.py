@@ -70,7 +70,8 @@ class CheckMUtil:
         for type in ['filtered_bins', 'output', 'plots', 'html']:
             run_config[type + '_dir'] = os.path.join(base_dir, type)
 
-        tab_text_dir = os.path.join(run_config['output_dir'], 'tab_text')
+#        tab_text_dir = os.path.join(run_config['output_dir'], 'tab_text')
+        tab_text_dir = os.path.join(base_dir, 'tab_text')
         run_config['tab_text_dir'] = tab_text_dir
         run_config['bin_basename'] = 'Bin'
 
@@ -137,53 +138,16 @@ class CheckMUtil:
         # check whether it was successful
         if not os.path.exists(run_config['storage']):
             log("WARNING: NO RESULTS FOUND!")
-            report_params = self.outputbuilder.build_report(params)
-            kr = self.client('KBaseReport')
-            report_output = kr.create_extended_report(report_params)
-
-            return {
-                'report_name': report_output['name'],
-                'report_ref':  report_output['ref'],
-            }
+            return self.outputbuilder.build_report(params)
 
         # 3) optionally filter bins by quality scores and save object
-        binned_contig_obj_ref = None
-        created_objects = None
-        removed_bins = None
-
         filtered_obj_info = self._filter_binned_contigs(params)
-
-        if filtered_obj_info is None:
-            log("No Bins passed QC filters.  Not saving filtered BinnedContig object")
-        else:
-            binned_contig_obj_ref   = filtered_obj_info['filtered_obj_ref']
-            removed_bins            = filtered_obj_info['removed_bin_IDs']
-            created_objects = [{
-                'ref':          binned_contig_obj_ref,
-                'description':  'HQ BinnedContigs ' + filtered_obj_info['filtered_obj_name']
-            }]
 
         # 4) make the plots:
         self.build_checkM_lineage_wf_plots()
 
         # 5) build the report and package output
-        report_params = self.outputbuilder.build_report(params, removed_bins)
-
-        if created_objects:
-            report_params['objects_created'] = created_objects
-
-        kr = self.client('KBaseReport')
-        report_output = kr.create_extended_report(report_params)
-
-        returnVal = {
-            'report_name': report_output['name'],
-            'report_ref':  report_output['ref'],
-        }
-
-        if binned_contig_obj_ref:
-            returnVal.update({'binned_contig_obj_ref': binned_contig_obj_ref})
-
-        return returnVal
+        return self.outputbuilder.build_report(params, filtered_object_info)
 
 
     def build_checkM_lineage_wf_plots(self):
