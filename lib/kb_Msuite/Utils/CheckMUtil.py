@@ -54,7 +54,7 @@ class CheckMUtil:
     def _set_run_configuration(self, params=None):
 
         suffix = str(int(time.time() * 1000))
-        if params && 'dir_name' in params:
+        if params and 'dir_name' in params:
             suffix = '__' + params['dirname'] + '__' + suffix
 
         base_dir = os.path.join(self.scratch, 'run_' + suffix)
