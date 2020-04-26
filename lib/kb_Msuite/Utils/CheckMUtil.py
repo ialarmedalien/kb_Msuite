@@ -150,7 +150,7 @@ class CheckMUtil:
         self.build_checkM_lineage_wf_plots()
 
         # 5) build the report and package output
-        return self.outputbuilder.build_report(params, filtered_object_info)
+        return self.outputbuilder.build_report(params, filtered_obj_info)
 
 
     def build_checkM_lineage_wf_plots(self):
