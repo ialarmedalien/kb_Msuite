@@ -55,7 +55,7 @@ class CheckMUtil:
 
         suffix = str(int(time.time() * 1000))
         if params and 'dir_name' in params:
-            suffix = '__' + params['dirname'] + '__' + suffix
+            suffix = '__' + params['dir_name'] + '__' + suffix
 
         base_dir = os.path.join(self.scratch, 'run_' + suffix)
 
