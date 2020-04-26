@@ -21,7 +21,6 @@ from kb_Msuite.kb_MsuiteServer import MethodContext
 from kb_Msuite.authclient import KBaseAuth as _KBaseAuth
 
 from kb_Msuite.Utils.CheckMUtil import CheckMUtil
-from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
 
@@ -434,6 +433,7 @@ class CoreCheckMTest(unittest.TestCase):
         # run checkM lineage_wf app on a single assembly
         input_ref = self.assembly_OK_ref
         params = {
+            'dir_name': 'single_assembly',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 0,
@@ -463,6 +463,7 @@ class CoreCheckMTest(unittest.TestCase):
         # run checkM lineage_wf app on a single assembly
         input_ref = self.assembly_dodgy_ref
         params = {
+            'dir_name': 'dodgy_assembly',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,  # this must be 1 to regression test with --reduced_tree
@@ -495,6 +496,7 @@ class CoreCheckMTest(unittest.TestCase):
         # run checkM lineage_wf app on BinnedContigs
         input_ref = self.binned_contigs_ref
         params = {
+            'dir_name': 'binned_contigs',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -524,6 +526,7 @@ class CoreCheckMTest(unittest.TestCase):
         # run checkM lineage_wf app on EMPTY BinnedContigs
         input_ref = self.binned_contigs_empty_ref
         params = {
+            'dir_name': 'binned_contigs_empty',
             'workspace_name': self.ws_info[1],
             'reduced_tree': 1,
             'input_ref': input_ref
@@ -544,6 +547,7 @@ class CoreCheckMTest(unittest.TestCase):
         # run checkM lineage_wf app on an assembly set
         input_ref = self.assembly_set_ref
         params = {
+            'dir_name': 'assembly_set',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -573,6 +577,7 @@ class CoreCheckMTest(unittest.TestCase):
         # run checkM lineage_wf app on a single genome
         input_ref = self.genome_refs[0]
         params = {
+            'dir_name': 'single_genome',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -601,6 +606,7 @@ class CoreCheckMTest(unittest.TestCase):
         # run checkM lineage_wf app on a genome set
         input_ref = self.genome_set_ref
         params = {
+            'dir_name': 'genome_set',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -631,6 +637,7 @@ class CoreCheckMTest(unittest.TestCase):
         # run checkM lineage_wf app on BinnedContigs
         input_ref = self.binned_contigs_ref
         params = {
+            'dir_name': 'binned_contigs_filter',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,

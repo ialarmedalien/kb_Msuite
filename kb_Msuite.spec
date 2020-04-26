@@ -75,6 +75,9 @@ module kb_Msuite {
         input_ref - reference to the input Assembly, AssemblySet, Genome, GenomeSet, or BinnedContigs data
     */
     typedef structure {
+
+        string dir_name;
+
         string input_ref;
         string workspace_name;
 
@@ -97,6 +100,9 @@ module kb_Msuite {
         input_ref - reference to the input BinnedContigs data
     */
     typedef structure {
+
+        string dir_name;
+
         string input_ref;
         string workspace_name;
 
