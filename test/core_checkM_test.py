@@ -125,6 +125,7 @@ class CoreCheckMTest(unittest.TestCase):
 #         os.makedirs(cls.test_directory_path)
 
         test_data_dir = os.path.join(cls.scratch, 'test_data')
+#        shutil.rmtree(test_data_dir, ignore_errors=True)
         os.makedirs(test_data_dir, exist_ok=True)
 
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
@@ -227,7 +228,7 @@ class CoreCheckMTest(unittest.TestCase):
         for bc in binned_contigs_list:
             binned_contigs_path = os.path.join(test_data_dir, bc['path'])
             if not os.path.exists(binned_contigs_path) or not os.path.exists(os.path.join(binned_contigs_path, 'out_header.summary')):
-                shutil.rmtree(binned_contigs_path)
+                shutil.rmtree(binned_contigs_path, ignore_errors=True)
                 shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
             saved_object = cls.mu.file_to_binned_contigs({
                 'file_directory': binned_contigs_path,
