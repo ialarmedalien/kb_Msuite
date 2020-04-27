@@ -12,7 +12,7 @@
         content => 'image',
         config  => {
           img_alt => 'CheckM dist plot for bin ' _ bin_id,
-          img_src => 'plots/' _ bin_id _ dist_plot_ext,
+          img_src => 'plots/' _ bin_id _ plot_file_ext,
           caption => '<p>CheckM dist plot for bin ' _ bin_id _ '</p>' _
                      '<p><a href="checkm_results.html">Back to summary</a></p>',
         },

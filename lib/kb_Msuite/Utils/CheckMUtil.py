@@ -152,7 +152,6 @@ class CheckMUtil:
         # 5) build the report and package output
         return self.outputbuilder.build_report(params, filtered_obj_info)
 
-
     def build_checkM_lineage_wf_plots(self):
 
         run_config = self.run_config()
@@ -236,7 +235,6 @@ class CheckMUtil:
             raise ValueError('Error running command: ' + ' '.join(command) + '\n' +
                              'Exit Code: ' + str(exitCode))
 
-
     def _process_universal_options(self, command_list, options):
         if options.get('threads'):
             command_list.append('-t')
@@ -245,6 +243,7 @@ class CheckMUtil:
         if options.get('quiet') and str(options.get('quiet')) == '1':
             command_list.append('--quiet')
 
+        return command_list
 
     def _validate_options(self, options,
                           checkBin=False,
@@ -262,6 +261,7 @@ class CheckMUtil:
         if checkTetraFile and 'tetra_file' not in options:
             raise ValueError('cannot run checkm ' + subcommand + ' without tetra_file option set')
 
+        return True
 
     def _build_command(self, subcommand, options):
 
@@ -298,7 +298,6 @@ class CheckMUtil:
 
         return command
 
-
     def _filter_binned_contigs(self, params):
 
         run_config          = self.run_config()
@@ -307,14 +306,9 @@ class CheckMUtil:
           and params.get('output_filtered_binnedcontigs_obj_name'):
             run_config['results_filtered'] = True
         else:
-            return
+            return None
 
         input_dir           = run_config['input_dir']
-        filtered_bins_dir   = run_config['filtered_bins_dir']
-
-        # prep fs stuff and get bin IDs
-        if not os.path.exists(filtered_bins_dir):
-            os.makedirs(filtered_bins_dir)
 
         bin_fasta_files_by_bin_ID = self.datastagingutils.get_bin_fasta_files(
             input_dir, run_config['fasta_ext']
@@ -324,6 +318,10 @@ class CheckMUtil:
         log(bin_fasta_files_by_bin_ID)
         if not bin_fasta_files_by_bin_ID:
             return None
+
+        filtered_bins_dir   = run_config['filtered_bins_dir']
+        if not os.path.exists(filtered_bins_dir):
+            os.makedirs(filtered_bins_dir)
 
         bin_IDs = []
         for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
@@ -342,7 +340,7 @@ class CheckMUtil:
             test_contamination = True
             contamination_thresh = float(params.get('contamination_perc'))
 
-        bin_stats_obj = dict()
+        bin_stats_data = dict()
         retained_bin_IDs = dict()
         removed_bin_IDs = dict()
 
@@ -352,17 +350,46 @@ class CheckMUtil:
         file_ext = run_config['fasta_ext_binned_contigs']
         some_bins_are_HQ = False
 
+        bin_stats = self.outputbuilder.read_bin_stats_file()
+
+#     def read_bin_stats_file(self):
+#         run_config = self.run_config()
+#         stats_file = run_config['bin_stats_ext_file']
+#
+#         bin_stats = dict()
+#
+#         if not os.path.isfile(stats_file):
+#             log('Warning! no stats file found (looking at: ' + stats_file + ')')
+#             return bin_stats
+#
+#         with open(stats_file) as lf:
+#             for line in lf:
+#                 if not line:
+#                     continue
+#                 if line.startswith('#'):
+#                     continue
+#                 col = line.split('\t')
+#                 bin_id = str(col[0])
+#                 data = ast.literal_eval(col[1])
+#                 bin_stats[bin_id] = data
+#
+#         return bin_stats
+
+
         with open(bin_stats_ext_file, 'r') as bin_stats_ext_handle:
             for bin_stats_line in bin_stats_ext_handle:
                 bin_stats_line.rstrip()
                 [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
-                bin_ID = re.sub('^[^\.]+\.', '', full_bin_ID.replace(run_config['fasta_ext'], ''))
+                bin_ID = self.clean_bin_ID(full_bin_ID, run_config['fasta_ext'])
 
-                bin_stats_json_str = json.dumps(ast.literal_eval(bin_stats_json_str))
-                bin_stats_obj[bin_ID] = json.loads(bin_stats_json_str, parse_float=Decimal)
+#                bin_stats_json_str = json.dumps(ast.literal_eval(bin_stats_json_str))
+                bin_stats_data[bin_ID] = json.loads(
+                    json.dumps(ast.literal_eval(bin_stats_json_str)),
+                    parse_float=Decimal
+                )
 
-                comp = float(bin_stats_obj[bin_ID]['Completeness'])
-                cont = float(bin_stats_obj[bin_ID]['Contamination'])
+                comp = float(bin_stats_data[bin_ID]['Completeness'])
+                cont = float(bin_stats_data[bin_ID]['Contamination'])
 
                 log("Bin " + bin_ID + " CheckM COMPLETENESS:  " + str(comp))
                 log("Bin " + bin_ID + " CheckM CONTAMINATION: " + str(cont))
@@ -389,19 +416,12 @@ class CheckMUtil:
                         bin_basename + '.' + str(bin_ID) + '.' + file_ext)
                     self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
 
-        for bin_ID in bin_IDs:
-            if bin_ID not in bin_stats_obj:
-                raise ValueError("Bin ID " + bin_ID + " not found in bin stats")
+        missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
+        if missing_ids:
+            raise ValueError("The following Bin IDs are missing from the checkM output: "
+                + ", ".join(missing_ids))
 
-#             QC_scores[bin_ID] = dict()
-#             QC_scores[bin_ID]['completeness'] = float(bin_stats_obj[bin_ID]['Completeness'])
-#             QC_scores[bin_ID]['contamination'] = float(bin_stats_obj[bin_ID]['Contamination'])
-
-#        for bin_ID in bin_IDs:
-
-#         for bin_ID in bin_IDs:
-#             if bin_ID not in retained_bin_IDs:
-#                 removed_bin_IDs[bin_ID] = True
+        self.bin_stats_data = bin_stats_data
 
         if not some_bins_are_HQ:
             return None
@@ -409,9 +429,8 @@ class CheckMUtil:
         # create BinnedContig object from filtered bins
         binned_contig_obj = self.datastagingutils.get_obj_from_workspace(params['input_ref'])
 
-        self.outputbuilder.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj)
-        assembly_ref = binned_contig_obj['assembly_ref']
-        new_binned_contigs_info = self.outputbuilder.save_binned_contigs(assembly_ref)
+        self.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj)
+        new_binned_contigs_info = self.save_binned_contigs(params, binned_contig_obj['assembly_ref'])
 
         return {
             'filtered_obj_name': new_binned_contigs_info['obj_name'],
@@ -419,3 +438,76 @@ class CheckMUtil:
             'retained_bin_IDs':  retained_bin_IDs,
             'removed_bin_IDs':   removed_bin_IDs,
         }
+
+    def build_bin_summary_file_from_binnedcontigs_obj(self, binned_contig_obj):
+
+        run_config   = self.run_config()
+        fasta_ext    = run_config['fasta_ext']
+        bin_dir      = run_config['filtered_bins_dir']
+        bin_basename = run_config['bin_basename']
+
+        bin_summary_info = dict()
+        # bid in object is full name of contig fasta file.  want just the number
+        for bin_item in binned_contig_obj['bins']:
+            #print ("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
+            bin_ID = self.clean_bin_ID(bin_item['bid'], fasta_ext)
+
+            #print ("BIN_ID: "+bin_ID)  # DEBUG
+            bin_summary_info[bin_ID] = {
+                'n_contigs':        bin_item['n_contigs'],
+                'gc':               round(100.0 * float(bin_item['gc']), 1),
+                'sum_contig_len':   bin_item['sum_contig_len'],
+                'cov':              round(100.0 * float(bin_item['cov']), 1),
+            }
+
+        dsu = self.datastagingutils
+        bin_fasta_files_by_bin_ID = dsu.get_bin_fasta_files(bin_dir, fasta_ext)
+
+        bin_IDs = []
+        for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
+            bid = self.clean_bin_ID(bin_ID, fasta_ext)
+            bin_IDs.append(bid)
+
+        summary_file_path = run_config['summary_file_path']
+
+
+        # write summary file for just those bins present in bin_dir
+        print("writing filtered binned contigs summary file " + summary_file_path)
+        with open(summary_file_path, 'w') as summary_file_handle:
+
+            header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
+            print("\t".join(header_line))
+
+            summary_file_handle.write("\t".join(header_line)+"\n")
+            for bin_ID in bin_IDs:
+                #print ("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
+                bin_summary_info_line = [
+                    bin_basename + '.' + str(bin_ID) + '.' + fasta_ext,
+                    str(bin_summary_info[bin_ID]['cov'])+'%',
+                    str(bin_summary_info[bin_ID]['sum_contig_len']),
+                    str(bin_summary_info[bin_ID]['gc'])
+                ]
+                print("\t".join(bin_summary_info_line))
+                summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
+
+        return summary_file_path
+
+    def save_binned_contigs(self, params, assembly_ref):
+
+        mgu = self.client('MetagenomeUtils')
+        binned_contigs_ref = mgu.file_to_binned_contigs({
+            'file_directory':       run_config['filtered_bins_dir'],
+            'assembly_ref':         assembly_ref,
+            'binned_contig_name':   params['output_filtered_binnedcontigs_obj_name'],
+            'workspace_name':       params['workspace_name'],
+        })
+
+        return {
+            'obj_name': params['output_filtered_binnedcontigs_obj_name'],
+            'obj_ref':  binned_contigs_ref['binned_contig_obj_ref'],
+        }
+
+
+    def clean_bin_ID(self, bin_id, fasta_ext):
+
+        return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))

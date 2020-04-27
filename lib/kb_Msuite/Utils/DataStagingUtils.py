@@ -21,6 +21,10 @@ class DataStagingUtils(object):
 
         return self.client_util.client(client_name)
 
+    def run_config(self):
+
+        return self.checkMUtil.run_config()
+
     def stage_input(self, input_ref):
         '''
         Stage input based on an input data reference for CheckM
@@ -39,7 +43,7 @@ class DataStagingUtils(object):
         '''
         # config
         #SERVICE_VER = 'dev'
-        run_config = self.checkMUtil.run_config()
+        run_config = self.run_config()
 
         # 1) generate a folder in scratch to hold the input
         suffix          = run_config['suffix']
@@ -265,7 +269,6 @@ class DataStagingUtils(object):
                 os.rename(os.path.join(folder, file),
                           os.path.join(folder, filename + '.' + new_extension))
 
-
     def cat_fasta_files(self, folder, extension, output_fasta_file):
         '''
         Given a folder of fasta files with the specified extension, cat them together
@@ -282,7 +285,6 @@ class DataStagingUtils(object):
             raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
                              'Exit Code: ' + str(exitCode))
 
-
     def get_bin_fasta_files(self, search_dir, fasta_ext):
 
         bin_fasta_files = dict()
@@ -296,18 +298,16 @@ class DataStagingUtils(object):
                     continue
                 if filename.endswith('.' + fasta_ext):
                     fasta_file = filename
-                    bin_ID = re.sub('^[^\.]+\.', '', fasta_file.replace('.' + fasta_ext, ''))
+                    bin_ID = self.checkMUtil.clean_bin_ID(fasta_file, fasta_ext)
                     bin_fasta_files[bin_ID] = os.path.join(search_dir, fasta_file)
                     #bin_fasta_files[bin_ID] = fasta_file
                     #print ("ACCEPTED: "+bin_ID+" FILE:"+fasta_file)  # DEBUG
 
         return bin_fasta_files
 
-
     def _get_workspace_object_info(self, input_ref):
         input_info = self.client('Workspace').get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
         return input_info
-
 
     def get_data_obj_type_by_name(self, input_ref, remove_module=False):
         # 0 obj_id objid - the numerical id of the object.
@@ -331,14 +331,12 @@ class DataStagingUtils(object):
             type_name = type_name.split('.')[1]
         return {obj_name: type_name}
 
-
     def get_data_obj_name(self, input_ref):
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
 
         input_info = self._get_workspace_object_info(input_ref)
         obj_name = input_info[NAME_I]
         return obj_name
-
 
     def get_data_obj_type(self, input_ref, remove_module=False):
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
@@ -348,7 +346,6 @@ class DataStagingUtils(object):
         if remove_module:
             type_name = type_name.split('.')[1]
         return type_name
-
 
     def get_obj_from_workspace(self, object_ref):
 
