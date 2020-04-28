@@ -413,6 +413,8 @@ class CheckMUtil:
                     self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
 
         missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
+        log("missing IDs:")
+        log(missing_ids)
         if missing_ids:
             raise ValueError("The following Bin IDs are missing from the checkM output: "
                 + ", ".join(sorted(missing_ids)))
