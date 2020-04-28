@@ -835,7 +835,7 @@ class CoreCheckMTest(unittest.TestCase):
             run_config = cmu.run_config()
             os.makedirs(run_config['output_dir'])
 
-            shutil.copytree(os.path.join('data', 'many_results'), run_config['output_dir'])
+            shutil.copytree(os.path.join('data', 'many_results'), run_config['base_dir'])
             params = {
                 'workspace_name': self.ws_info[1],
                 'save_plots_dir': 1,
