@@ -824,7 +824,7 @@ class CoreCheckMTest(unittest.TestCase):
                 'workspace_name': self.ws_info[1],
                 'save_plots_dir': 1,
             }
-            report = cmu.build_report(params)
+            report = cmu.outputbuilder.build_report(params)
 
             expected_results = {
                 'file_links': ['full_output'],
@@ -843,7 +843,7 @@ class CoreCheckMTest(unittest.TestCase):
                 'workspace_name': self.ws_info[1],
                 'save_plots_dir': 1,
             }
-            report = cmu.build_report(params)
+            report = cmu.outputbuilder.build_report(params)
 
             expected_results = {
                 'direct_html_link_index': 0,
