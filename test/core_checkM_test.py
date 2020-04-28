@@ -476,7 +476,7 @@ class CoreCheckMTest(unittest.TestCase):
             'summary_window_height': None,
         }
 
-        expected = (**report_data, **expected)
+        expected = ( **report_data, **expected )
 
         # expect the same keys in both
         # self.assertEqual(set(rep.keys()), set(expected.keys()))
