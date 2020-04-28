@@ -866,8 +866,7 @@ class CoreCheckMTest(unittest.TestCase):
             Path(os.path.join(bid_path, 'genes.faa')).touch(exist_ok=True)
 
         missing_ids = ['out_header.000', 'out_header.004']
-        err_str = "The following Bin IDs are missing from the checkM output: "
-                + ", ".join(missing_ids)
+        err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
         with self.assertRaisesRegex(ValueError, err_str):
             cmu._filter_binned_contigs({
                 'input_ref': cls.binned_contigs_ref,
