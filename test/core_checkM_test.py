@@ -357,7 +357,7 @@ class CoreCheckMTest(unittest.TestCase):
         # ensure we can reset the run_config
         base_dir = run_config['base_dir']
         cmu._set_run_configuration({'dir_name': 'last_chance_directory'})
-        self.assertRegex(r'run_last_chance_directory_\d+', cmu.run_config()['base_dir'])
+        self.assertRegex(r'run___last_chance_directory__\d+', cmu.run_config()['base_dir'])
         self.assertNotEqual(base_dir, cmu.run_config()['base_dir'])
 
 #   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
