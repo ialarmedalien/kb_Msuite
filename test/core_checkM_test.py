@@ -820,6 +820,7 @@ class CoreCheckMTest(unittest.TestCase):
         with self.subTest('No checkM output'):
             # no checkM output: no report
             os.makedirs(run_config['output_dir'])
+            Path(os.path.join(run_config['output_dir'], 'checkm.log')).touch(exist_ok=True)
             params = {
                 'workspace_name': self.ws_info[1],
                 'save_plots_dir': 1,
