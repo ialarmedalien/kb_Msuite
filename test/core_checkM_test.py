@@ -363,6 +363,18 @@ class CoreCheckMTest(unittest.TestCase):
 #   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
     def test_00_clean_bin_id(self):
 
+        cmu = CheckMUtil(self.cfg, self.ctx)
+
+        # bin_id = re.sub('^[^\.]+\.', '', bid)
+        bin_ids = [
+            'bin.056.fasta',
+            'assembly.fasta',
+            '../../this.is.fake',
+        ]
+
+        for bid in bin_ids:
+            print(cmu.clean_bin_id(bid, 'fasta'))
+
     def test_00_init_client(self):
 
         ''' check client initialisation '''
