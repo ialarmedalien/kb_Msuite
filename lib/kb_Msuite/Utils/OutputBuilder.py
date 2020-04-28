@@ -155,7 +155,7 @@ class OutputBuilder(Base, LogMixin):
         tmpl_dest_dir   = run_config['template_dest_dir']
 
         for dir in [html_plots_dir, tab_text_dir, tmpl_dest_dir]:
-            os.makedirs(html_plots_dir, exist_ok=True)
+            os.makedirs(dir, exist_ok=True)
 
         # copy over the templates
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:

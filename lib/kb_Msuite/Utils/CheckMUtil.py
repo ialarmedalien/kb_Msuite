@@ -42,6 +42,11 @@ class CheckMUtil(Base, LogMixin):
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
 
+        # init logger
+        logging.basicConfig(level=logging.DEBUG,
+                            format='%(name)s %(levelname)s %(message)s')
+
+
     def client(self, client_name):
         return self.client_util.client(client_name)
 
