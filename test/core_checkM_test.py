@@ -833,9 +833,9 @@ class CoreCheckMTest(unittest.TestCase):
         with self.subTest('lots of checkM output'):
             cmu = CheckMUtil(self.cfg, self.ctx)
             run_config = cmu.run_config()
-            os.makedirs(run_config['output_dir'])
 
-            shutil.copytree(os.path.join('data', 'many_results'), run_config['base_dir'])
+            shutil.rmtree(run_config['base_dir'])
+            shutil.copytree(os.path.join('data', 'many_results'), run_config['base_dir'], exist_ok=True)
             params = {
                 'workspace_name': self.ws_info[1],
                 'save_plots_dir': 1,
