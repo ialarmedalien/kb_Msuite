@@ -76,7 +76,7 @@ class OutputBuilder(object):
         if bin_stats_data:
             # create bin report summary TSV table text file
             log('creating TSV summary table text file')
-            self.build_summary_tsv_file(bin_stats_data, removed_bins)
+            # self.build_summary_tsv_file(bin_stats_data, removed_bins)
 
             html_links = self.build_html_output_for_lineage_wf(bin_stats_data, params, removed_bins)
             report_params['direct_html_link_index'] = 0

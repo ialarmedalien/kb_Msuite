@@ -402,6 +402,10 @@ class CoreCheckMTest(unittest.TestCase):
         else:
             result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
 
+        return check_report(result, expected)
+
+    def check_report(result):
+
         pprint('End to end test result:')
         pprint(result)
 
@@ -416,11 +420,17 @@ class CoreCheckMTest(unittest.TestCase):
         rep = got_object['data'][0]['data']
         print(rep)
 
+        # expect the same keys in both
+        self.assertEqual(set(rep.keys()), set(expected.keys()))
+
         for key in expected.keys():
-            if key == 'file_links' or key == 'html_links':
-                self.check_report_links(rep, type, expected)
-            else:
-                self.assertEqual(rep[key], expected[key])
+            with subTest('checking ' + key):
+                if key == 'file_links' or key == 'html_links':
+                    self.check_report_links(rep, type, expected)
+                else:
+                    self.assertEqual(rep[key], expected[key])
+
+        return True
 
     def check_report_links(self, report_obj, type, expected):
         """
@@ -703,6 +713,13 @@ class CoreCheckMTest(unittest.TestCase):
         print("\n=================================================================")
         print("RUNNING 01_data_staging")
         print("=================================================================\n")
+
+        if not hasattr(self, 'report_ref'):
+            self.prep_report()
+
+        if not hasattr(self, 'binned_contigs_ref'):
+            self.prep_binned_contigs()
+
         # test stage assembly
         cmu = CheckMUtil(self.cfg, self.ctx)
         # init the run_config
@@ -758,37 +775,45 @@ class CoreCheckMTest(unittest.TestCase):
         # init the run_config
         run_config = cmu.run_config()
 
-        # no checkM output: no report
-        os.makedirs(run_config['output_dir'])
-        params = {
-            'workspace_name': self.ws_info[1],
-            'save_plots_dir': 1,
-        }
-        report = cmu.build_report(params)
+        with self.subset('No checkM output'):
+            # no checkM output: no report
+            os.makedirs(run_config['output_dir'])
+            params = {
+                'workspace_name': self.ws_info[1],
+                'save_plots_dir': 1,
+            }
+            report = cmu.build_report(params)
 
-
+            expected_results = {
+                'file_links': ['full_output'],
+                'message': 'CheckM did not produce any output.',
+            }
+            self.check_results(report, expected_results)
 
         # lots of output:
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu.run_config()
-        os.makedirs(run_config['output_dir'])
+        with self.subset('lots of checkM output'):
+            cmu = CheckMUtil(self.cfg, self.ctx)
+            run_config = cmu.run_config()
+            os.makedirs(run_config['output_dir'])
 
-        shutil.copytree(os.path.join('data', 'many_results'), run_config['output_dir'])
-        params = {
-            'workspace_name': self.ws_info[1],
-            'save_plots_dir': 1,
-        }
-        report = cmu.build_report(params)
+            shutil.copytree(os.path.join('data', 'many_results'), run_config['output_dir'])
+            params = {
+                'workspace_name': self.ws_info[1],
+                'save_plots_dir': 1,
+            }
+            report = cmu.build_report(params)
 
-        # expect to get back
-#         returnVal = {
-#             'report_name': report_output['name'],
-#             'report_ref':  report_output['ref'],
-#         }
+            expected_results = {
+                'direct_html_link_index': 0,
+                'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+                'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
+            }
 
-        # rerun with filters
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu.run_config()
+            self.check_report(report, expected_results)
+
+#         rerun with filters
+#         cmu = CheckMUtil(self.cfg, self.ctx)
+#         run_config = cmu.run_config()
 
 
         # empty output dir
@@ -800,28 +825,28 @@ class CoreCheckMTest(unittest.TestCase):
         # all items present and correct
 
 
-        impl = self.getImpl()
-        cmu = CheckMUtil(impl)
-        plots_dir = os.path.join(self.scratch, 'plots_1')
-        html_dir = os.path.join(self.scratch, 'html_1')
-        tetra_file = os.path.join(self.scratch, 'tetra_1.tsv')
-
-        cmu.build_checkM_lineage_wf_plots(self.input_dir, self.output_dir, plots_dir,
-                                          self.all_seq_fasta, tetra_file)
-        self.assertTrue(os.path.isdir(plots_dir))
-#        self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'bin_qa_plot.png')))
-        self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'NewBins.001.ref_dist_plots.png')))
-        self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'NewBins.002.ref_dist_plots.png')))
-        self.assertTrue(os.path.isfile(tetra_file))
-
-        ob = OutputBuilder(self.output_dir, plots_dir, self.scratch, self.callback_url)
-        os.makedirs(html_dir)
-        res = ob.build_html_output_for_lineage_wf(html_dir, 'MyCheckMOutput')
-        self.assertIn('shock_id', res)
-        self.assertIn('name', res)
-        self.assertIn('description', res)
-
-        self.assertEqual(res['html_links'][0]['name'], self.getImpl().run_config['html_file'])
+#         impl = self.getImpl()
+#         cmu = CheckMUtil(impl)
+#         plots_dir = os.path.join(self.scratch, 'plots_1')
+#         html_dir = os.path.join(self.scratch, 'html_1')
+#         tetra_file = os.path.join(self.scratch, 'tetra_1.tsv')
+#
+#         cmu.build_checkM_lineage_wf_plots(self.input_dir, self.output_dir, plots_dir,
+#                                           self.all_seq_fasta, tetra_file)
+#         self.assertTrue(os.path.isdir(plots_dir))
+# #        self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'bin_qa_plot.png')))
+#         self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'NewBins.001.ref_dist_plots.png')))
+#         self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'NewBins.002.ref_dist_plots.png')))
+#         self.assertTrue(os.path.isfile(tetra_file))
+#
+#         ob = OutputBuilder(self.output_dir, plots_dir, self.scratch, self.callback_url)
+#         os.makedirs(html_dir)
+#         res = ob.build_html_output_for_lineage_wf(html_dir, 'MyCheckMOutput')
+#         self.assertIn('shock_id', res)
+#         self.assertIn('name', res)
+#         self.assertIn('description', res)
+#
+#         self.assertEqual(res['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     def test_02_filter_binned_contigs(self):
 
@@ -836,19 +861,19 @@ class CoreCheckMTest(unittest.TestCase):
             self.prep_binned_contigs()
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu._set_run_configuration({'input_ref': cls.report_ref})
+        run_config = cmu._set_run_configuration({'input_ref': self.report_ref})
 
         # wrong type
-        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': cls.report_ref}))
-        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': cls.assembly_dodgy_ref}))
+        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.report_ref}))
+        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.assembly_dodgy_ref}))
 
         # no output_filtered_binnedcontigs_obj_name
-        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': cls.binned_contigs_ref}))
+        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.binned_contigs_ref}))
 
         # empty input dir
         os.makedirs(cmu.run_config()['input_dir'], exist_ok=True)
         self.assertIsNone(cmu._filter_binned_contigs({
-            'input_ref': cls.binned_contigs_ref,
+            'input_ref': self.binned_contigs_ref,
             'output_filtered_binnedcontigs_obj_name': 'Robin',
         }))
 
@@ -869,7 +894,7 @@ class CoreCheckMTest(unittest.TestCase):
         err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
         with self.assertRaisesRegex(ValueError, err_str):
             cmu._filter_binned_contigs({
-                'input_ref': cls.binned_contigs_ref,
+                'input_ref': self.binned_contigs_ref,
                 'output_filtered_binnedcontigs_obj_name': 'Robin',
             })
 
@@ -879,7 +904,7 @@ class CoreCheckMTest(unittest.TestCase):
 
         # no high quality bins
         self.assertIsNone(cmu._filter_binned_contigs({
-            'input_ref': cls.binned_contigs_ref,
+            'input_ref': self.binned_contigs_ref,
             'output_filtered_binnedcontigs_obj_name': 'Robin',
             'completeness_perc': 99.0,
             'contamination_perc': 1.0,
@@ -890,7 +915,7 @@ class CoreCheckMTest(unittest.TestCase):
 
         # 001 and 002 will pass
         contig_filtering_results = cmu._filter_binned_contigs({
-            'input_ref': cls.binned_contigs_ref,
+            'input_ref': self.binned_contigs_ref,
             'output_filtered_binnedcontigs_obj_name': 'Robin',
             'completeness_perc': 95.0,
             'contamination_perc': 1.5,
@@ -913,7 +938,7 @@ class CoreCheckMTest(unittest.TestCase):
         # remove the summary file and re-filter so all pass
         os.remove(run_config['summary_file_path'])
         contig_filtering_results = cmu._filter_binned_contigs({
-            'input_ref': cls.binned_contigs_ref,
+            'input_ref': self.binned_contigs_ref,
             'output_filtered_binnedcontigs_obj_name': 'Octocat',
             'completeness_perc': 95.0,
             'contamination_perc': 2.0,
