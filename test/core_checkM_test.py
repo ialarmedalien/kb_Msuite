@@ -476,7 +476,7 @@ class CoreCheckMTest(unittest.TestCase):
             'summary_window_height': None,
         }
 
-        expected = ( **report_data, **expected )
+        report_data.update(expected)
 
         # expect the same keys in both
         # self.assertEqual(set(rep.keys()), set(expected.keys()))
@@ -484,9 +484,9 @@ class CoreCheckMTest(unittest.TestCase):
         for key in expected.keys():
             with subTest('checking ' + key):
                 if key == 'file_links' or key == 'html_links':
-                    self.check_report_links(rep, type, expected)
+                    self.check_report_links(rep, type, report_data)
                 else:
-                    self.assertEqual(rep[key], expected[key])
+                    self.assertEqual(rep[key], report_data[key])
 
         return True
 
