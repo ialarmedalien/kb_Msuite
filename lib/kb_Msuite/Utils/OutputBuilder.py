@@ -187,50 +187,49 @@ class OutputBuilder(Base, LogMixin):
         results_filtered = 'results_filtered' in run_config
 
         # init the TSV output file
-        tsv_file = open(run_config['tab_text_file', 'w')
-        header = self._generate_row_header(results_filtered)
-        tsv_file.write("\t".join(header)+"\n")
+        with open(run_config['tab_text_file'], 'w') as tsv_file:
+            header = self._generate_row_header(results_filtered)
+            tsv_file.write("\t".join(header)+"\n")
 
-        with open(html_index_file, 'w') as open_fh:
+            # init html_file output
+            with open(html_index_file, 'w') as open_fh:
 
-            for bid in sorted(bin_stats.keys()):
-                # DEBUG
+                for bid in sorted(bin_stats.keys()):
+                    # DEBUG
 
-                bin_id = re.sub('^[^\.]+\.', '', bid)
-                if removed_bins and bin_id in removed_bins:
-                    self.logger.debug("BIN STATS BID " + bid + ": REMOVED")
+                    bin_id = re.sub('^[^\.]+\.', '', bid)
+                    if removed_bins and bin_id in removed_bins:
+                        self.logger.debug("BIN STATS BID " + bid + ": REMOVED")
 
-                    log("BIN STATS BID " + bid + ": REMOVED")
-                else:
-                    self.logger.debug("BIN STATS BID " + bid)
-                    log("BIN STATS BID " + bid)
+                        log("BIN STATS BID " + bid + ": REMOVED")
+                    else:
+                        self.logger.debug("BIN STATS BID " + bid)
+                        log("BIN STATS BID " + bid)
 
-                # create the dist plot page
-                plot_file = os.path.join(plots_dir, str(bid) + self.PLOT_FILE_EXT)
-                has_plot_file = False
-                if os.path.isfile(plot_file):
-                    has_plot_file = True
-                    html_dir_plot_file = os.path.join(html_plots_dir, str(bid) + self.PLOT_FILE_EXT)
-                    # copy it to the html_plot
-                    self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
-                    html_files.append({
-                        'template': {
-                            'template_data_json': json.dumps({
-                                'bin_id': bin_id,
-                                'plot_file_ext': self.PLOT_FILE_EXT,
-                            }),
-                            'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
-                        },
-                        'name': bin_id + '.html',
-                    })
+                    # create the dist plot page
+                    plot_file = os.path.join(plots_dir, str(bid) + self.PLOT_FILE_EXT)
+                    has_plot_file = False
+                    if os.path.isfile(plot_file):
+                        has_plot_file = True
+                        html_dir_plot_file = os.path.join(html_plots_dir, str(bid) + self.PLOT_FILE_EXT)
+                        # copy it to the html_plot
+                        self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
+                        html_files.append({
+                            'template': {
+                                'template_data_json': json.dumps({
+                                    'bin_id': bin_id,
+                                    'plot_file_ext': self.PLOT_FILE_EXT,
+                                }),
+                                'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
+                            },
+                            'name': bin_id + '.html',
+                        })
 
-                row = self._generate_row_data(
-                    bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins
-                )
-                tsv_file.write("\t".join(row) + "\n")
-                open_fh.write("BIN ID: " + bin_id + "\t".join(row) + "\n")
-
-        tsv_file.close()
+                    row = self._generate_row_data(
+                        bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins
+                    )
+                    tsv_file.write("\t".join(row) + "\n")
+                    open_fh.write("BIN ID: " + bin_id + "\t".join(row) + "\n")
 
         return html_files
 
