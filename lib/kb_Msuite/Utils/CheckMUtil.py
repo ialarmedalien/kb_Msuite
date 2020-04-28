@@ -35,7 +35,7 @@ class CheckMUtil:
 
         self.scratch = config['scratch']
         self.threads = config['threads']
-        self.appdir = config['appdir']
+        self.appdir  = config['appdir']
         self.fasta_extension = 'fna'
         self.binned_contigs_builder_fasta_extension = 'fasta'
         if not os.path.exists(self.scratch):
@@ -48,7 +48,7 @@ class CheckMUtil:
         if hasattr(self, '_run_config'):
             return self._run_config
 
-        self._set_run_configuration()
+        return self._set_run_configuration()
 
     def _set_run_configuration(self, params=None):
 

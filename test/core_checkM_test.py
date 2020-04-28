@@ -23,6 +23,7 @@ from kb_Msuite.kb_MsuiteServer import MethodContext
 from kb_Msuite.authclient import KBaseAuth as _KBaseAuth
 
 from kb_Msuite.Utils.CheckMUtil import CheckMUtil
+from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
 
@@ -332,6 +333,32 @@ class CoreCheckMTest(unittest.TestCase):
         for e in error_list:
             self.assertRegex(error_message, e)
 
+    def test_00_module_init(self):
+
+        print("\n=================================================================")
+        print("RUNNING 00_module_init")
+        print("=================================================================\n")
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+
+        # run config not yet initialised
+        self.assertFalse(hasattr(cmu, '_run_config'))
+
+        run_config = cmu.run_config()
+        self.assertIsNotNone(run_config)
+        self.assertTrue(hasattr(cmu, '_run_config'))
+
+        # ensure the other attributes are also populated
+        self.assertTrue(hasattr(cmu, 'datastagingutils'))
+        self.assertIsInstance(cmu.datastagingutils, DataStagingUtils)
+        self.assertTrue(hasattr(cmu, 'outputbuilder'))
+        self.assertIsInstance(cmu.outputbuilder, OutputBuilder)
+
+        # ensure we can reset the run_config
+        base_dir = run_config['base_dir']
+        cmu._set_run_configuration({'dir_name': 'last_chance_directory'})
+        self.assertRegex(r'run_last_chance_directory_' + \d+, cmu.run_config['base_dir'])
+        self.assertNotEqual(base_dir, cmu.run_config['base_dir'])
 
     def test_00_init_client(self):
 
@@ -774,7 +801,7 @@ class CoreCheckMTest(unittest.TestCase):
         cmu = CheckMUtil(self.cfg, self.ctx)
         # init the run_config
         run_config = cmu.run_config()
-        print(run_config)
+        print('run config: ' + run_config)
 
         with self.subTest('No checkM output'):
             # no checkM output: no report
