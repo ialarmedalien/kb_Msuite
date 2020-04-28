@@ -267,9 +267,7 @@ class CoreCheckMTest(unittest.TestCase):
                     ]
                 }]
             })[0]
-        self.genome_set_ref = str(obj_info[WSID_I])
-            + '/' + str(obj_info[OBJID_I])
-            + '/' + str(obj_info[VERSION_I])
+        self.genome_set_ref = str(obj_info[WSID_I]) + '/' + str(obj_info[OBJID_I]) + '/' + str(obj_info[VERSION_I])
 
         return True
 
