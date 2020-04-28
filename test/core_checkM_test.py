@@ -775,7 +775,7 @@ class CoreCheckMTest(unittest.TestCase):
         # init the run_config
         run_config = cmu.run_config()
 
-        with self.subset('No checkM output'):
+        with self.subTest('No checkM output'):
             # no checkM output: no report
             os.makedirs(run_config['output_dir'])
             params = {
@@ -788,10 +788,10 @@ class CoreCheckMTest(unittest.TestCase):
                 'file_links': ['full_output'],
                 'message': 'CheckM did not produce any output.',
             }
-            self.check_results(report, expected_results)
+            self.check_report(report, expected_results)
 
         # lots of output:
-        with self.subset('lots of checkM output'):
+        with self.subTest('lots of checkM output'):
             cmu = CheckMUtil(self.cfg, self.ctx)
             run_config = cmu.run_config()
             os.makedirs(run_config['output_dir'])
