@@ -76,7 +76,7 @@ class OutputBuilder(object):
         if bin_stats_data:
             # create bin report summary TSV table text file
             log('creating TSV summary table text file')
-            # self.build_summary_tsv_file(bin_stats_data, removed_bins)
+            self.build_summary_tsv_file(bin_stats_data, removed_bins)
 
             html_links = self.build_html_output_for_lineage_wf(bin_stats_data, params, removed_bins)
             report_params['direct_html_link_index'] = 0
@@ -394,49 +394,49 @@ class OutputBuilder(object):
 #
 #         return bin_html_file
 #
-#     def build_summary_tsv_file(self, bin_stats, removed_bins=None):
-#
-#         fields = self.get_fields()
-#         run_config = self.run_config()
-#
-#         if not os.path.exists(run_config['tab_text_dir']):
-#             os.makedirs(run_config['tab_text_dir'])
-#
-#         with open(run_config['tab_text_file'], 'w') as out_handle:
-#
-#             out_header = ['Bin Name']
-#             for f in fields:
-#                 out_header.append(f['display'])
-#             if 'results_filtered' in run_config:
-#                 out_header.append('QC Pass')
-#
-#             out_handle.write("\t".join(out_header)+"\n")
-#
-#             # DEBUG
-#             #for bid in sorted(bin_stats.keys()):
-#             #    print ("BIN STATS BID: "+bid)
-#
-#             for bid in sorted(bin_stats.keys()):
-#                 row = []
-#                 row.append(bid)
-#                 for f in fields:
-#                     if f['id'] in bin_stats[bid]:
-#                         value = str(bin_stats[bid][f['id']])
-#                         if f.get('round'):
-#                             value = str(round(bin_stats[bid][f['id']], f['round']))
-#                         row.append(str(value))
-#
-#                 # add a column to indicate whether the bin should be removed
-#                 if 'results_filtered' in run_config:
-#                     if removed_bins:
-#                         bin_id = re.sub('^[^\.]+\.', '', bid)
-#                         if bin_id in removed_bins:
-#                             row.append('false')
-#                         else:
-#                             row.append('true')
-#                     else:
-#                         row.append('true')
-#
-#                 out_handle.write("\t".join(row)+"\n")
-#
-#         return run_config['tab_text_file']
+    def build_summary_tsv_file(self, bin_stats, removed_bins=None):
+
+        fields = self.get_fields()
+        run_config = self.run_config()
+
+        if not os.path.exists(run_config['tab_text_dir']):
+            os.makedirs(run_config['tab_text_dir'])
+
+        with open(run_config['tab_text_file'], 'w') as out_handle:
+
+            out_header = ['Bin Name']
+            for f in fields:
+                out_header.append(f['display'])
+            if 'results_filtered' in run_config:
+                out_header.append('QC Pass')
+
+            out_handle.write("\t".join(out_header)+"\n")
+
+            # DEBUG
+            #for bid in sorted(bin_stats.keys()):
+            #    print ("BIN STATS BID: "+bid)
+
+            for bid in sorted(bin_stats.keys()):
+                row = []
+                row.append(bid)
+                for f in fields:
+                    if f['id'] in bin_stats[bid]:
+                        value = str(bin_stats[bid][f['id']])
+                        if f.get('round'):
+                            value = str(round(bin_stats[bid][f['id']], f['round']))
+                        row.append(str(value))
+
+                # add a column to indicate whether the bin should be removed
+                if 'results_filtered' in run_config:
+                    if removed_bins:
+                        bin_id = re.sub('^[^\.]+\.', '', bid)
+                        if bin_id in removed_bins:
+                            row.append('false')
+                        else:
+                            row.append('true')
+                    else:
+                        row.append('true')
+
+                out_handle.write("\t".join(row)+"\n")
+
+        return run_config['tab_text_file']

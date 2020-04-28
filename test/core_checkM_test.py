@@ -451,7 +451,7 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
-    def test_checkM_lineage_wf_full_app_single_assembly(self):
+    def notest_checkM_lineage_wf_full_app_single_assembly(self):
         print("\n=================================================================")
         print("RUNNING checkM_lineage_wf_full_app_single_assembly")
         print("=================================================================\n")
@@ -483,7 +483,7 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_problem_assembly")
-    def test_checkM_lineage_wf_full_app_single_problem_assembly(self):
+    def notest_checkM_lineage_wf_full_app_single_problem_assembly(self):
         print("\n=================================================================")
         print("RUNNING checkM_lineage_wf_full_app_single_problem_assembly")
         print("=================================================================\n")
@@ -515,7 +515,7 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
-    def test_checkM_lineage_wf_full_app_binned_contigs(self):
+    def notest_checkM_lineage_wf_full_app_binned_contigs(self):
         print("\n=================================================================")
         print("RUNNING checkM_lineage_wf_full_app_binned_contigs")
         print("=================================================================\n")
@@ -550,7 +550,7 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs_EMPTY")
-    def test_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
+    def notest_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
         print("\n=================================================================")
         print("RUNNING checkM_lineage_wf_full_app_binned_contigs_EMPTY")
         print("=================================================================\n")
@@ -574,7 +574,7 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_assemblySet")
-    def test_checkM_lineage_wf_full_app_assemblySet(self):
+    def notest_checkM_lineage_wf_full_app_assemblySet(self):
         print("\n=================================================================")
         print("RUNNING checkM_lineage_wf_full_app_assemblySet")
         print("=================================================================\n")
@@ -606,7 +606,7 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
-    def test_checkM_lineage_wf_full_app_single_genome(self):
+    def notest_checkM_lineage_wf_full_app_single_genome(self):
         print("\n=================================================================")
         print("RUNNING checkM_lineage_wf_full_app_single_genome")
         print("=================================================================\n")
@@ -637,7 +637,7 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_genomeSet")
-    def test_checkM_lineage_wf_full_app_genomeSet(self):
+    def notest_checkM_lineage_wf_full_app_genomeSet(self):
         print("\n=================================================================")
         print("RUNNING checkM_lineage_wf_full_app_genomeSet")
         print("=================================================================\n")
@@ -669,7 +669,7 @@ class CoreCheckMTest(unittest.TestCase):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
-    def test_checkM_lineage_wf_withFilter_binned_contigs(self):
+    def notest_checkM_lineage_wf_withFilter_binned_contigs(self):
         print("\n=================================================================")
         print("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
         print("=================================================================\n")
