@@ -446,7 +446,7 @@ class CoreCheckMTest(unittest.TestCase):
 
         return check_report(result, expected)
 
-    def check_report(result):
+    def check_report(self, result, expected):
 
         pprint('End to end test result:')
         pprint(result)
