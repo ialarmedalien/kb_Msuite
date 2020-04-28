@@ -13,6 +13,7 @@ from decimal import Decimal
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
+from kb_Msuite.Utils.Logger import Base, LogMixin
 
 
 def log(message, prefix_newline=False):
@@ -20,7 +21,7 @@ def log(message, prefix_newline=False):
     print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
     sys.stdout.flush()
 
-class CheckMUtil:
+class CheckMUtil(Base, LogMixin):
 
     def __init__(self, config, ctx):
         self.config = config
@@ -102,6 +103,8 @@ class CheckMUtil:
         self.datastagingutils   = DataStagingUtils(self)
         self.outputbuilder      = OutputBuilder(self)
 
+        self.logger.debug(run_config)
+
         return run_config
 
     def run_checkM_lineage_wf(self, params):
@@ -124,6 +127,7 @@ class CheckMUtil:
         # 1) stage input data
         self.datastagingutils.stage_input(params['input_ref'])
         log('Staged input directory: ' + run_config['input_dir'])
+        self.logger.info('Staged input directory: ' + run_config['input_dir'])
 
         # 2) run the lineage workflow
         lineage_wf_options = {
@@ -140,6 +144,7 @@ class CheckMUtil:
         # check whether it was successful
         if not os.path.exists(run_config['storage']):
             log("WARNING: NO RESULTS FOUND!")
+            self.logger.warning('WARNING: no results found!')
             return self.outputbuilder.build_report(params)
 
         # 3) optionally filter bins by quality scores and save object

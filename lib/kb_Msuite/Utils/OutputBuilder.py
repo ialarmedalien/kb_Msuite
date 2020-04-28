@@ -7,13 +7,15 @@ import time
 import json
 import csv
 
+from kb_Msuite.Utils.Logger import Base, LogMixin
+
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
     print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
     sys.stdout.flush()
 
 
-class OutputBuilder(object):
+class OutputBuilder(Base, LogMixin):
     '''
     Constructs the output HTML report and artifacts based on a CheckM lineage_wf
     run.  This includes running any necssary plotting utilities of CheckM.
@@ -67,43 +69,40 @@ class OutputBuilder(object):
             'workspace_name': params['workspace_name'],
         }
 
+
+        log('Packaging output directory')
+        self.logger.info('Packaging output directory')
+        output_packages = [{
+            'name': 'full_output',
+            'path': run_config['output_dir'],
+            'description': 'Full output of CheckM',
+        }]
+
         if hasattr(self.checkMUtil, 'bin_stats_data'):
             bin_stats_data = self.checkMUtil.bin_stats_data
         else:
             bin_stats_data = self.read_bin_stats_file()
-        output_packages = []
 
         if bin_stats_data:
             # create bin report summary TSV table text file
             log('creating TSV summary table text file')
-            self.build_summary_tsv_file(bin_stats_data, removed_bins)
+            # self.build_summary_tsv_file(bin_stats_data, removed_bins)
 
             html_links = self.build_html_output_for_lineage_wf(bin_stats_data, params, removed_bins)
             report_params['direct_html_link_index'] = 0
             report_params['html_links'] = html_links
-
-            log('packaging full output directory')
-            output_dir_zipped = self.package_folder(
-                run_config['output_dir'],
-                'full_output.zip',
-                'Full output of CheckM, compressed'
-            )
 
 #         else:  # ADD LATER?
 #             log('not packaging full output directory, selecting specific files')
 #             crit_out_dir = os.path.join(self.scratch,
 #                 'critical_output_' + os.path.basename(input_dir))
 #             os.makedirs(crit_out_dir)
-#             zipped_output_file = self.package_folder(self.output_dir,
-#                 'selected_output.zip',
-#                 'Selected output from the CheckM analysis')
-#             output_packages.append(zipped_output_file)
 
-            output_packages = [output_dir_zipped, {
+            output_packages.append({
                 'name': run_config['tab_text_file_name'],
                 'path': run_config['tab_text_file'],
                 'description': 'TSV Summary Table from CheckM',
-            }]
+            })
 
             if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
                 log('packaging output plots directory')
@@ -112,11 +111,6 @@ class OutputBuilder(object):
                     'path': run_config['plots_dir'],
                     'description': 'Output plots from CheckM',
                 })
-                plots_dir_zipped = self.package_folder(
-                    run_config['plots_dir'],
-                    'plots.zip',
-                    'Output plots from CheckM, compressed')
-                output_packages.append(plots_dir_zipped)
             else:
                 log('not packaging output plots directory')
 
@@ -128,13 +122,8 @@ class OutputBuilder(object):
 
         else:
             log("WARNING: No output produced!")
+            self.logger.warning('WARNING: checkM produced no output!')
             report_params['message'] = 'CheckM did not produce any output.'
-
-        output_packages.append({
-            'name': 'full_output',
-            'path': run_config['output_dir'],
-            'description': 'Full output of CheckM',
-        })
 
         report_params['file_links'] = output_packages
 
@@ -150,25 +139,6 @@ class OutputBuilder(object):
             returnVal.update({'binned_contig_obj_ref': binned_contig_obj_ref})
 
         return returnVal
-
-    def package_folder(self, folder_path, zip_file_name, zip_file_description):
-        ''' Simple utility for packaging a folder and saving to shock '''
-        if folder_path == self.scratch:
-            raise ValueError("cannot package folder that is not a subfolder of scratch")
-        if not os.path.exists(folder_path):
-            raise ValueError("cannot package folder that doesn't exist: " + folder_path)
-
-        dfu = self.client('DataFileUtil')
-        output = dfu.file_to_shock({
-            'file_path': folder_path,
-            'make_handle': 0,
-            'pack': 'zip'
-        })
-        return {
-            'shock_id': output['shock_id'],
-            'name': zip_file_name,
-            'description': zip_file_description,
-        }
 
     # requires the stats file - self.output_dir, 'storage', 'bin_stats_ext.tsv'
     def build_html_output_for_lineage_wf(self, bin_stats, params, removed_bins=None):
@@ -228,8 +198,11 @@ class OutputBuilder(object):
 
                 bin_id = re.sub('^[^\.]+\.', '', bid)
                 if removed_bins and bin_id in removed_bins:
+                    self.logger.debug("BIN STATS BID " + bid + ": REMOVED")
+
                     log("BIN STATS BID " + bid + ": REMOVED")
                 else:
+                    self.logger.debug("BIN STATS BID " + bid)
                     log("BIN STATS BID " + bid)
 
                 # create the dist plot page
@@ -240,12 +213,6 @@ class OutputBuilder(object):
                     html_dir_plot_file = os.path.join(html_plots_dir, str(bid) + self.PLOT_FILE_EXT)
                     # copy it to the html_plot
                     self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
-#                    bin_html_file = self._write_dist_html_page(html_dir, bin_id)
-#                     html_files.append({
-#                         'name': bin_id + '.html',
-#                         'path': bin_html_file,
-#                     })
-
                     html_files.append({
                         'template': {
                             'template_data_json': json.dumps({
@@ -395,49 +362,49 @@ class OutputBuilder(object):
 #
 #         return bin_html_file
 #
-    def build_summary_tsv_file(self, bin_stats, removed_bins=None):
-
-        fields = self.get_fields()
-        run_config = self.run_config()
-
-        if not os.path.exists(run_config['tab_text_dir']):
-            os.makedirs(run_config['tab_text_dir'])
-
-        with open(run_config['tab_text_file'], 'w') as out_handle:
-
-            out_header = ['Bin Name']
-            for f in fields:
-                out_header.append(f['display'])
-            if 'results_filtered' in run_config:
-                out_header.append('QC Pass')
-
-            out_handle.write("\t".join(out_header)+"\n")
-
-            # DEBUG
-            #for bid in sorted(bin_stats.keys()):
-            #    log("BIN STATS BID: "+bid)
-
-            for bid in sorted(bin_stats.keys()):
-                row = []
-                row.append(bid)
-                for f in fields:
-                    if f['id'] in bin_stats[bid]:
-                        value = str(bin_stats[bid][f['id']])
-                        if f.get('round'):
-                            value = str(round(bin_stats[bid][f['id']], f['round']))
-                        row.append(str(value))
-
-                # add a column to indicate whether the bin should be removed
-                if 'results_filtered' in run_config:
-                    if removed_bins:
-                        bin_id = re.sub('^[^\.]+\.', '', bid)
-                        if bin_id in removed_bins:
-                            row.append('false')
-                        else:
-                            row.append('true')
-                    else:
-                        row.append('true')
-
-                out_handle.write("\t".join(row)+"\n")
-
-        return run_config['tab_text_file']
+#     def build_summary_tsv_file(self, bin_stats, removed_bins=None):
+#
+#         fields = self.get_fields()
+#         run_config = self.run_config()
+#
+#         if not os.path.exists(run_config['tab_text_dir']):
+#             os.makedirs(run_config['tab_text_dir'])
+#
+#         with open(run_config['tab_text_file'], 'w') as out_handle:
+#
+#             out_header = ['Bin Name']
+#             for f in fields:
+#                 out_header.append(f['display'])
+#             if 'results_filtered' in run_config:
+#                 out_header.append('QC Pass')
+#
+#             out_handle.write("\t".join(out_header)+"\n")
+#
+#             # DEBUG
+#             #for bid in sorted(bin_stats.keys()):
+#             #    log("BIN STATS BID: "+bid)
+#
+#             for bid in sorted(bin_stats.keys()):
+#                 row = []
+#                 row.append(bid)
+#                 for f in fields:
+#                     if f['id'] in bin_stats[bid]:
+#                         value = str(bin_stats[bid][f['id']])
+#                         if f.get('round'):
+#                             value = str(round(bin_stats[bid][f['id']], f['round']))
+#                         row.append(str(value))
+#
+#                 # add a column to indicate whether the bin should be removed
+#                 if 'results_filtered' in run_config:
+#                     if removed_bins:
+#                         bin_id = re.sub('^[^\.]+\.', '', bid)
+#                         if bin_id in removed_bins:
+#                             row.append('false')
+#                         else:
+#                             row.append('true')
+#                     else:
+#                         row.append('true')
+#
+#                 out_handle.write("\t".join(row)+"\n")
+#
+#         return run_config['tab_text_file']
