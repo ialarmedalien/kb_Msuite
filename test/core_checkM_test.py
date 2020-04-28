@@ -408,18 +408,6 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertIn('report_name', result)
         self.assertIn('report_ref', result)
 
-#         self.assertEqual(self.getImpl().status(self.getContext())[0]['state'], 'OK')
-#         self.assertTrue(len(result['name']))
-#         self.assertTrue(len(result['ref']))
-#         report_object = self.dfu.get_objects({'object_refs': [result['report_ref']]})
-#         return report_object['data'][0]['data']
-
-
-'''
-    # unsuccessful:
-        # report_params['message'] = 'CheckM did not produce any output.'
-'''
-
         # make sure the report was created and includes the HTML report and download links
         got_object = self.getWsClient().get_objects2({
             'objects': [{'ref': result['report_ref']}]
