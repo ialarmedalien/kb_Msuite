@@ -774,6 +774,7 @@ class CoreCheckMTest(unittest.TestCase):
         cmu = CheckMUtil(self.cfg, self.ctx)
         # init the run_config
         run_config = cmu.run_config()
+        print(run_config)
 
         with self.subTest('No checkM output'):
             # no checkM output: no report

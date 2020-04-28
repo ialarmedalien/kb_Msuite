@@ -20,7 +20,6 @@ def log(message, prefix_newline=False):
     print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
     sys.stdout.flush()
 
-
 class CheckMUtil:
 
     def __init__(self, config, ctx):
@@ -205,8 +204,8 @@ class CheckMUtil:
 
             current_tree = subprocess.run(['tree', run_config['base_dir']],
                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-            print(current_tree.stdout, file=log_output_file)
-            print("\n\n", file=log_output_file)
+            log_output_file.write(current_tree.stdout)
+            log_output_file.write("\n\n\n")
 
             p = subprocess.Popen(command, cwd=self.scratch, shell=False,
                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
@@ -215,10 +214,10 @@ class CheckMUtil:
 
             exitCode = p.wait()
 
-            print("\n\n", file=log_output_file)
             current_tree = subprocess.run(['tree', run_config['base_dir']],
                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-            print(current_tree.stdout, file=log_output_file)
+            log_output_file.write("\n\n\n")
+            log_output_file.write(current_tree.stdout)
 
 #         if log_output_file:
 #             log_output_file.close()
@@ -447,10 +446,10 @@ class CheckMUtil:
         bin_summary_info = dict()
         # bid in object is full name of contig fasta file.  want just the number
         for bin_item in binned_contig_obj['bins']:
-            #print ("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
+            #log("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
             bin_ID = self.clean_bin_ID(bin_item['bid'], fasta_ext)
 
-            #print ("BIN_ID: "+bin_ID)  # DEBUG
+            #log("BIN_ID: "+bin_ID)  # DEBUG
             bin_summary_info[bin_ID] = {
                 'n_contigs':        bin_item['n_contigs'],
                 'gc':               round(100.0 * float(bin_item['gc']), 1),
@@ -467,22 +466,21 @@ class CheckMUtil:
 
 
         # write summary file for just those bins present in bin_dir
-        print("writing filtered binned contigs summary file " + summary_file_path)
+        log("writing filtered binned contigs summary file " + summary_file_path)
         with open(summary_file_path, 'w') as summary_file_handle:
 
             header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
-            print("\t".join(header_line))
 
             summary_file_handle.write("\t".join(header_line)+"\n")
             for bin_ID in bin_IDs:
-                #print ("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
+                #log("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
                 bin_summary_info_line = [
                     bin_basename + '.' + str(bin_ID) + '.' + fasta_ext,
                     str(bin_summary_info[bin_ID]['cov'])+'%',
                     str(bin_summary_info[bin_ID]['sum_contig_len']),
                     str(bin_summary_info[bin_ID]['gc'])
                 ]
-                print("\t".join(bin_summary_info_line))
+                log("\t".join(bin_summary_info_line))
                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
 
         return summary_file_path

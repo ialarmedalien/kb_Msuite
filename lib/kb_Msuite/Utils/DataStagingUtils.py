@@ -126,15 +126,15 @@ class DataStagingUtils(object):
             assembly_refs.append(this_assembly_ref)
             assembly_names.append(this_assembly_name)
 
-        print(assembly_refs)
-        print(assembly_names)
+        log(assembly_refs)
+        log(assembly_names)
 
         # create file data (name for file is what's reported in results)
         for ass_i, assembly_ref in enumerate(assembly_refs):
             this_name = assembly_names[ass_i]
             filename = os.path.join(input_dir, this_name + '.' + fasta_ext)
             auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
-            print('ass ref: ' + assembly_ref + '; filename: ' + filename)
+            log('ass ref: ' + assembly_ref + '; filename: ' + filename)
 
             if not os.path.isfile(filename):
                 raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
@@ -213,11 +213,11 @@ class DataStagingUtils(object):
                 continue
             elif 'assembly_ref' in genome_obj and genome_obj['assembly_ref'] is not None:
                 msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" USING assembly_ref: "+str(genome_obj['assembly_ref'])
-                print(msg)
+                log(msg)
                 genome_assembly_refs.append(genome_obj['assembly_ref'])
             elif 'contigset_ref' in genome_obj and genome_obj['contigset_ref'] is not None:
                 msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" USING contigset_ref: "+str(genome_obj['contigset_ref'])
-                print(msg)
+                log(msg)
                 genome_assembly_refs.append(genome_obj['contigset_ref'])
 
         # create file data (name for file is what's reported in results)
@@ -290,9 +290,9 @@ class DataStagingUtils(object):
         bin_fasta_files = dict()
         for (dirpath, dirnames, filenames) in os.walk(search_dir):
             # DEBUG
-            #print ("DIRPATH: "+dirpath)
-            #print ("DIRNAMES: "+", ".join(dirnames))
-            #print ("FILENAMES: "+", ".join(filenames))
+            #log("DIRPATH: "+dirpath)
+            #log("DIRNAMES: "+", ".join(dirnames))
+            #log("FILENAMES: "+", ".join(filenames))
             for filename in filenames:
                 if not os.path.isfile(os.path.join(search_dir, filename)):
                     continue
@@ -301,7 +301,7 @@ class DataStagingUtils(object):
                     bin_ID = self.checkMUtil.clean_bin_ID(fasta_file, fasta_ext)
                     bin_fasta_files[bin_ID] = os.path.join(search_dir, fasta_file)
                     #bin_fasta_files[bin_ID] = fasta_file
-                    #print ("ACCEPTED: "+bin_ID+" FILE:"+fasta_file)  # DEBUG
+                    #log("ACCEPTED: "+bin_ID+" FILE:"+fasta_file)  # DEBUG
 
         return bin_fasta_files
 

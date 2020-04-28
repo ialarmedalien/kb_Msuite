@@ -228,9 +228,9 @@ class OutputBuilder(object):
 
                 bin_id = re.sub('^[^\.]+\.', '', bid)
                 if removed_bins and bin_id in removed_bins:
-                    print("BIN STATS BID " + bid + ": REMOVED")
+                    log("BIN STATS BID " + bid + ": REMOVED")
                 else:
-                    print("BIN STATS BID " + bid)
+                    log("BIN STATS BID " + bid)
 
                 # create the dist plot page
                 plot_file = os.path.join(plots_dir, str(bid) + self.PLOT_FILE_EXT)
@@ -415,7 +415,7 @@ class OutputBuilder(object):
 
             # DEBUG
             #for bid in sorted(bin_stats.keys()):
-            #    print ("BIN STATS BID: "+bid)
+            #    log("BIN STATS BID: "+bid)
 
             for bid in sorted(bin_stats.keys()):
                 row = []
