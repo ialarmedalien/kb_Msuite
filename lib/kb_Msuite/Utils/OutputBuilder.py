@@ -172,22 +172,22 @@ class OutputBuilder(Base, LogMixin):
 #                     'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
 #                     'template_data_json': {'params':params,}
 #                 },
-                'path': html_index_file,
                 'name': 'checkm_results.html',
                 'description': 'Summarized report from CheckM',
+                'path': html_index_file,
             },{
-                'path': run_config['tab_text_file'] + '-extra',
                 'name': run_config['tab_text_file_name'],
+                'path': run_config['tab_text_file'],
             },{
-                'path': html_plots_dir,
                 'name': 'plots',
+                'path': html_plots_dir,
             }
         ]
 
         results_filtered = 'results_filtered' in run_config
 
         # init the TSV output file
-        tsv_file = open(run_config['tab_text_file'] + '-extra', 'w')
+        tsv_file = open(run_config['tab_text_file', 'w')
         header = self._generate_row_header(results_filtered)
         tsv_file.write("\t".join(header)+"\n")
 

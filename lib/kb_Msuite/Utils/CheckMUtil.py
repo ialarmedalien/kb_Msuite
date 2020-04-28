@@ -43,8 +43,10 @@ class CheckMUtil(Base, LogMixin):
             os.makedirs(self.scratch)
 
         # init logger
-        logging.basicConfig(level=logging.DEBUG,
-                            format='%(name)s %(levelname)s %(message)s')
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(name)s %(levelname)s %(message)s'
+        )
 
 
     def client(self, client_name):
