@@ -322,10 +322,7 @@ class CheckMUtil:
         if not os.path.exists(filtered_bins_dir):
             os.makedirs(filtered_bins_dir)
 
-        bin_IDs = []
-        for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
-            bin_IDs.append(bin_ID)
-            log("Contigs Fasta file found for Bin ID: " + bin_ID)
+        bin_IDs = sorted(bin_fasta_files_by_bin_ID.keys())
 
         # read CheckM stats to get completeness and contamination scores
         test_completeness = False

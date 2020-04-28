@@ -796,38 +796,6 @@ class CoreCheckMTest(unittest.TestCase):
 #             log('Warning! no stats file found (looking at: ' + stats_file + ')')
 #             return bin_stats
 
-'''
-        expected = {
-
-
-        }
-
-
-    # successful runs have run_config['tab_text_file_name']
-        'name': run_config['tab_text_file_name'],
-        'description': 'TSV Summary Table from CheckM',
-
-    # params['plots'] == 1:
-        'name': 'plots',
-        'description': 'Output plots from CheckM',
-
-            'name': 'plots.zip',
-            'description': 'Output plots from CheckM, compressed',
-
-
-        run_config['plots_dir'],
-        'Output plots from CheckM, compressed')
-                output_packages.append(plots_dir_zipped)
-
-    # html_files:
-
-        'name': 'checkm_results.html',
-        'name': run_config['tab_text_file_name'],
-        'name': 'plots',
-    # plus for each plot:
-        # 'name': bin_id + '.html',
-
-'''
 
         # all items present and correct
 
