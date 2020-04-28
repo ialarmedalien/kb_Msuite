@@ -835,7 +835,8 @@ class CoreCheckMTest(unittest.TestCase):
             run_config = cmu.run_config()
             shutil.rmtree(run_config['base_dir'], ignore_errors=True)
             os.makedirs(run_config['base_dir'], exist_ok=True)
-            shutil.copytree(os.path.join('data', 'many_results'), run_config['base_dir']) #, dirs_exist_ok=True)
+            for dir in ['bins', 'output', 'plots']:
+                shutil.copytree(os.path.join('data', 'many_results', dir), run_config['base_dir']) #, dirs_exist_ok=True)
 
             params = {
                 'workspace_name': self.ws_info[1],
