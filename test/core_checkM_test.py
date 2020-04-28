@@ -829,29 +829,6 @@ class CoreCheckMTest(unittest.TestCase):
         print("RUNNING 05_outputbuilder")
         print("=================================================================\n")
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        # init the run_config
-        run_config = cmu.run_config()
-
-        with self.subTest('No checkM output'):
-            # no checkM output: no report
-            os.makedirs(run_config['output_dir'])
-            Path(os.path.join(run_config['output_dir'], 'checkm.log')).touch(exist_ok=True)
-            params = {
-                'workspace_name': self.ws_info[1],
-                'save_plots_dir': 1,
-            }
-            report = cmu.outputbuilder.build_report(params)
-
-            expected_results = {
-                'file_links': ['full_output'],
-                'text_message': 'CheckM did not produce any output.',
-                'html_links': None,
-                'direct_html_link_index': None,
-                'objects_created': [],
-            }
-            self.check_report(report, expected_results)
-
         # lots of output:
         with self.subTest('lots of checkM output'):
             cmu = CheckMUtil(self.cfg, self.ctx)
@@ -872,6 +849,30 @@ class CoreCheckMTest(unittest.TestCase):
             }
 
             self.check_report(report, expected_results)
+            shutil.rmtree(run_config['base_dir'])
+
+        with self.subTest('No checkM output'):
+            cmu = CheckMUtil(self.cfg, self.ctx)
+            # init the run_config
+            run_config = cmu.run_config()
+            # no checkM output: no report
+            os.makedirs(run_config['output_dir'])
+            Path(os.path.join(run_config['output_dir'], 'checkm.log')).touch(exist_ok=True)
+            params = {
+                'workspace_name': self.ws_info[1],
+                'save_plots_dir': 1,
+            }
+            report = cmu.outputbuilder.build_report(params)
+
+            expected_results = {
+                'file_links': ['full_output'],
+                'text_message': 'CheckM did not produce any output.',
+                'html_links': None,
+                'direct_html_link_index': None,
+                'objects_created': [],
+            }
+            self.check_report(report, expected_results)
+            shutil.rmtree(run_config['base_dir'])
 
 #         rerun with filters
 #         cmu = CheckMUtil(self.cfg, self.ctx)
