@@ -708,7 +708,7 @@ class CoreCheckMTest(unittest.TestCase):
     # @unittest.skip("skipped test_data_staging")
     # missing test data for this custom test
     # note that the DataStagingUtils interface has not been updated below since the test is skipped
-    def test_01_data_staging(self):
+    def notest_01_data_staging(self):
 
         print("\n=================================================================")
         print("RUNNING 01_data_staging")
@@ -848,7 +848,7 @@ class CoreCheckMTest(unittest.TestCase):
 #
 #         self.assertEqual(res['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
-    def test_02_filter_binned_contigs(self):
+    def notest_02_filter_binned_contigs(self):
 
         print("\n=================================================================")
         print("RUNNING 02_filter_binned_contigs")

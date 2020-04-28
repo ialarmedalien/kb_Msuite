@@ -68,7 +68,7 @@ class OutputBuilder(object):
         }
 
         if hasattr(self.checkMUtil, 'bin_stats_data'):
-            bin_stats_data = getattr(self.checkMUtil, 'bin_stats_data')
+            bin_stats_data = self.checkMUtil.bin_stats_data
         else:
             bin_stats_data = self.read_bin_stats_file()
         output_packages = []
@@ -180,10 +180,12 @@ class OutputBuilder(object):
         html_dir        = run_config['html_dir']
         plots_dir       = run_config['plots_dir']
         html_plots_dir  = os.path.join(html_dir, 'plots')
+        tab_text_dir    = run_config['tab_text_dir']
         tmpl_src_dir    = run_config['template_src_dir']
         tmpl_dest_dir   = run_config['template_dest_dir']
 
-        os.makedirs(html_plots_dir)
+        for dir in [html_plots_dir, tab_text_dir, tmpl_dest_dir]:
+            os.makedirs(html_plots_dir, exist_ok=True)
 
         # copy over the templates
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
@@ -259,7 +261,6 @@ class OutputBuilder(object):
                     bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins
                 )
                 tsv_file.write("\t".join(row) + "\n")
-
                 open_fh.write("BIN ID: " + bin_id + "\t".join(row) + "\n")
 
         tsv_file.close()
