@@ -360,6 +360,9 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertRegex(r'run_last_chance_directory_' + \d+, cmu.run_config['base_dir'])
         self.assertNotEqual(base_dir, cmu.run_config['base_dir'])
 
+#   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
+    def test_00_clean_bin_id(self):
+
     def test_00_init_client(self):
 
         ''' check client initialisation '''
