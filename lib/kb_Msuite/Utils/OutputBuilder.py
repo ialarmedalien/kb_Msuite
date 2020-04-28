@@ -67,8 +67,8 @@ class OutputBuilder(object):
             'workspace_name': params['workspace_name'],
         }
 
-        if has_attr(self.checkMUtil, 'bin_stats_data'):
-            bin_stats_data = get_attr(self.checkMUtil, 'bin_stats_data')
+        if hasattr(self.checkMUtil, 'bin_stats_data'):
+            bin_stats_data = getattr(self.checkMUtil, 'bin_stats_data')
         else:
             bin_stats_data = self.read_bin_stats_file()
         output_packages = []

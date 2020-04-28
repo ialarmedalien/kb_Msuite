@@ -300,7 +300,7 @@ class CheckMUtil:
 
     def _filter_binned_contigs(self, params):
 
-        run_config          = self.run_config()
+        run_config = self.run_config()
 
         if self.datastagingutils.get_data_obj_type(params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
           and params.get('output_filtered_binnedcontigs_obj_name'):
@@ -308,18 +308,17 @@ class CheckMUtil:
         else:
             return None
 
-        input_dir           = run_config['input_dir']
-
         bin_fasta_files_by_bin_ID = self.datastagingutils.get_bin_fasta_files(
-            input_dir, run_config['fasta_ext']
+            run_config['input_dir'], run_config['fasta_ext']
         )
 
-        log("DEBUG: bin_fasta_files_by_bin_ID: ")
-        log(bin_fasta_files_by_bin_ID)
         if not bin_fasta_files_by_bin_ID:
             return None
 
-        filtered_bins_dir   = run_config['filtered_bins_dir']
+        log("DEBUG: bin_fasta_files_by_bin_ID: ")
+        log(bin_fasta_files_by_bin_ID)
+
+        filtered_bins_dir = run_config['filtered_bins_dir']
         if not os.path.exists(filtered_bins_dir):
             os.makedirs(filtered_bins_dir)
 
@@ -419,7 +418,7 @@ class CheckMUtil:
         missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
         if missing_ids:
             raise ValueError("The following Bin IDs are missing from the checkM output: "
-                + ", ".join(missing_ids))
+                + ", ".join(sorted(missing_ids)))
 
         self.bin_stats_data = bin_stats_data
 
@@ -461,12 +460,9 @@ class CheckMUtil:
             }
 
         dsu = self.datastagingutils
-        bin_fasta_files_by_bin_ID = dsu.get_bin_fasta_files(bin_dir, fasta_ext)
+        bin_fasta_files_by_bin_ID = dsu.get_bin_fasta_files(run_config['filtered_bins_dir'], fasta_ext)
 
-        bin_IDs = []
-        for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys()):
-            bid = self.clean_bin_ID(bin_ID, fasta_ext)
-            bin_IDs.append(bid)
+        bin_IDs = [self.clean_bin_ID(bin_ID, fasta_ext) for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys())]
 
         summary_file_path = run_config['summary_file_path']
 
@@ -494,6 +490,7 @@ class CheckMUtil:
 
     def save_binned_contigs(self, params, assembly_ref):
 
+        run_config   = self.run_config()
         mgu = self.client('MetagenomeUtils')
         binned_contigs_ref = mgu.file_to_binned_contigs({
             'file_directory':       run_config['filtered_bins_dir'],
