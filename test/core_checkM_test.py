@@ -500,7 +500,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info(report_output)
         # {'ref': '49674/1/1', 'name': 'Super_Cool_Extended_Report'}
 
-        ws_obj_info = cmu.workspacehelper.get_workspace_object_info(report_output['ref'])
+        ws_obj_info = cmu.workspacehelper.get_ws_obj_info(report_output['ref'])
         self.logger.debug(ws_obj_info)
 
         with self.subTest('get_object_property'):
@@ -514,22 +514,39 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with self.assertRaisesRegex(KeyError, err_str):
                 cmu.workspacehelper.get_object_property(ws_obj_info, 'personality')
 
-        with self.subTest('get_data_obj type and name'):
-            obj_name = cmu.workspacehelper.get_data_obj_name(report_output['ref'])
+        with self.subTest('get_ws_obj type and name'):
+            obj_name = cmu.workspacehelper.get_ws_obj_name(report_output['ref'])
             self.assertEqual(obj_name, report_object_name)
 
-            obj_type = cmu.workspacehelper.get_data_obj_type(report_output['ref'], True)
-            self.assertEqual(obj_type, 'Report')
+            obj_type = cmu.workspacehelper.get_ws_obj_name(object_info=ws_obj_info)
+            self.assertEqual(obj_type, report_object_name)
 
-            obj_type = cmu.workspacehelper.get_data_obj_type(report_output['ref'])
+            err_str = "Must supply either ref or object info to get_ws_obj_name"
+            with self.assertRaisesRegex(ValueError, err_str)):
+                cmu.workspacehelper.get_ws_obj_name(remove_module=True)
+
+            err_str = "Must supply either ref or object info to get_ws_obj_type"
+            with self.assertRaisesRegex(ValueError, err_str)):
+                cmu.workspacehelper.get_ws_obj_type(remove_module=True)
+
+            obj_type = cmu.workspacehelper.get_ws_obj_type(report_output['ref'])
             self.assertEqual(obj_type, 'KBaseReport.Report')
 
-        with self.subTest('get_data_obj_type_by_name'):
-            result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'])
-            self.assertEqual(result, {report_object_name: 'KBaseReport.Report'})
+            obj_type = cmu.workspacehelper.get_ws_obj_type(object_info=ws_obj_info, remove_module=False)
+            self.assertEqual(obj_type, 'KBaseReport.Report')
 
-            result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'], True)
-            self.assertEqual(result, {report_object_name: 'Report'})
+            obj_type = cmu.workspacehelper.get_ws_obj_type(ref=report_output['ref'], remove_module=True)
+            self.assertEqual(obj_type, 'Report')
+
+            obj_type = cmu.workspacehelper.get_ws_obj_type(object_info=ws_obj_info, remove_module=True)
+            self.assertEqual(obj_type, 'Report')
+
+#         with self.subTest('get_data_obj_type_by_name'):
+#             result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'])
+#             self.assertEqual(result, {report_object_name: 'KBaseReport.Report'})
+#
+#             result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'], True)
+#             self.assertEqual(result, {report_object_name: 'Report'})
 
         with self.subTest('get obj from workspace'):
             ws_obj = cmu.workspacehelper.get_obj_from_workspace(report_output['ref'])

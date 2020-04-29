@@ -55,10 +55,6 @@ class DataStagingUtils(Base, LogMixin):
         if not os.path.exists(input_dir):
             os.makedirs(input_dir)
 
-#         input_info = self._get_workspace_object_info(input_ref)
-#         obj_name = input_info[1]
-#         obj_type = input_info[2].split('-')[0]
-
         obj_info = self.workspacehelper.get_ws_obj_info(input_ref)
         obj_name = self.workspacehelper.get_ws_obj_name(object_info=obj_info)
         obj_type = self.workspacehelper.get_ws_obj_type(object_info=obj_info)

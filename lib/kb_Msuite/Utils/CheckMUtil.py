@@ -314,7 +314,7 @@ class CheckMUtil(Base, LogMixin):
 #             'obj_type': obj_type,
 #         }
 
-        obj_type = self.workspacehelper.get_data_obj_type(params['input_ref'])
+        obj_type = self.workspacehelper.get_ws_obj_type(params['input_ref'])
 
         self.logger.debug('obj_type: ' + obj_type)
 

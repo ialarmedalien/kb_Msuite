@@ -42,19 +42,19 @@ class WorkspaceHelper(Base, LogMixin):
 
         return object_info[obj_property[prop]]
 
-    def get_ws_obj_type_by_name(self, ref, remove_module=False):
-
-        object_info = self.get_ws_obj_info(ref)
-
-        obj_name = self.get_ws_obj_name(object_info=object_info)
-        obj_type = self.get_ws_obj_type(object_info=object_info, remove_module)
-        return {obj_name: obj_type}
+#     def get_ws_obj_type_by_name(self, ref, remove_module=False):
+#
+#         object_info = self.get_ws_obj_info(ref)
+#
+#         obj_name = self.get_ws_obj_name(object_info=object_info)
+#         obj_type = self.get_ws_obj_type(object_info=object_info, remove_module=remove_module)
+#         return {obj_name: obj_type}
 
     def get_ws_obj_name(self, ref=None, object_info=None):
 
         if not object_info:
             if not ref:
-                raise ValueError("Must supply either ref or object info to get_data_obj_name")
+                raise ValueError("Must supply either ref or object_info to get_ws_obj_name")
             object_info = self.get_ws_obj_info(ref)
 
         return self.get_object_property(object_info, 'name')
@@ -63,7 +63,7 @@ class WorkspaceHelper(Base, LogMixin):
 
         if not object_info:
             if not ref:
-                raise ValueError("Must supply either ref or object info to get_data_obj_type")
+                raise ValueError("Must supply either ref or object_info to get_ws_obj_type")
             object_info = self.get_ws_obj_info(ref)
 
         raw_type = self.get_object_property(object_info, 'type')
@@ -73,7 +73,7 @@ class WorkspaceHelper(Base, LogMixin):
         return obj_type
 
     def get_obj_from_workspace(self, object_ref):
-
+        ''' Thin wrapper with error handling around getting a WS object '''
         try:
             workspace_object = self.client('Workspace').get_objects2({'objects': [{'ref': object_ref}]})['data'][0]['data']
         except Exception as e:
