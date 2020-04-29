@@ -7,7 +7,6 @@ import shutil
 
 from os import environ
 from configparser import ConfigParser
-from pprint import pprint  # noqa: F401
 
 from pathlib import Path
 
@@ -33,9 +32,9 @@ def print_method_name(method):
     def wrapper(*args, **kwargs):
         method_name = method.__name__
         method_name.replace("test_", "")
-        print("\n=================================================================")
-        print(("RUNNING " + method_name + "()"))
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info(("RUNNING " + method_name + "()"))
+        self.logger.info("=================================================================\n")
         return method(*args, **kwargs)
     return wrapper
 
@@ -103,13 +102,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         shutil.copy(os.path.join('data', 'example_out', 'all_seq.fna'), cls.all_seq_fasta)
         """
         end_time_stamp = time.time()
-        print("set up time: " + str(end_time_stamp - init_time_stamp))
+        self.logger.info("set up time: " + str(end_time_stamp - init_time_stamp))
 
     @classmethod
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
-            print(('Test workspace ' + cls.wsName + ' was deleted'))
+            self.logger.info('Test workspace ' + cls.wsName + ' was deleted')
         pass
 
     def getWsClient(self):
@@ -152,7 +151,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'assembly_name': assembly['name'],
             })
             setattr(self, assembly['attr'], saved_assembly)
-            pprint('Saved Assembly: ' + getattr(self, assembly['attr']))
+            self.logger.info('Saved Assembly:')
+            self.logger.info(getattr(self, assembly['attr']))
 
         # create an AssemblySet
         assembly_items = [
@@ -167,7 +167,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'items': assembly_items,
             },
         })['set_ref']
-        pprint('Saved AssemblySet: ' + getattr(self, 'assembly_set_ref'))
+        self.logger.info('Saved AssemblySet:')
+        self.logger.info(getattr(self, 'assembly_set_ref'))
 
         return True
 
@@ -202,7 +203,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             })
 
             setattr(self, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
-            pprint('Saved BinnedContigs: ' + getattr(self, bc['path'] + '_ref'))
+            self.logger.info('Saved BinnedContigs:')
+            self.logger.info(getattr(self, bc['path'] + '_ref'))
 
         return True
 
@@ -274,7 +276,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 old_loc = os.path.join(self.appdir, "templates", tmpl)
                 shutil.copy(old_loc, tmpl_file)
                 if not os.path.isfile(tmpl_file):
-                    print("Crap! file " + tmpl_file + " can't be found")
+                    self.logger.error("Crap! file " + tmpl_file + " can't be found")
 
         tmpl_arr = [
             {
@@ -306,19 +308,19 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def run_and_check_report(self, params, expected=None, with_filters=False):
 
-        print("Running run_and_check_report")
+        self.logger.info("Running run_and_check_report")
 
         if (with_filters):
             result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
         else:
             result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
 
+        self.logger.info('End to end test result:')
+        self.logger.info(result)
+
         return check_report(result, expected)
 
     def check_report(self, result, expected):
-
-        pprint('End to end test result:')
-        pprint(result)
 
         self.assertIn('report_name', result)
         self.assertIn('report_ref', result)
@@ -327,11 +329,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         got_object = self.getWsClient().get_objects2({
             'objects': [{'ref': result['report_ref']}]
         })
-        print(got_object)
+        self.logger.info(got_object)
         rep = got_object['data'][0]['data']
-        print("\n\nreport data:")
-        print(rep)
-        print("\n\n")
+        self.logger.info("\n\nreport data:")
+        self.logger.info(rep)
+        self.logger.info("\n\n")
 
         report_data = {
             'text_message': None,
@@ -393,9 +395,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def test_00_module_init(self):
 
-        print("\n=================================================================")
-        print("RUNNING 00_module_init")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 00_module_init")
+        self.logger.info("=================================================================\n")
 
         cmu = CheckMUtil(self.cfg, self.ctx)
 
@@ -424,9 +426,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
 #   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
     def test_00_clean_bin_id(self):
-        print("\n=================================================================")
-        print("RUNNING 00_clean_bin_id")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 00_clean_bin_id")
+        self.logger.info("=================================================================\n")
 
         cmu = CheckMUtil(self.cfg, self.ctx)
 
@@ -442,11 +444,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def test_00_workspace_helper(self):
 
-        self.logger.info("\n=================================================================")
+        self.logger.info("=================================================================")
         self.logger.info("RUNNING 00_workspace_helper")
         self.logger.info("=================================================================\n")
 
         cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
 
         # create a report
         report_object_name = 'Super_Cool_Extended_Report'
@@ -460,7 +463,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # self.report_ref = report_output['ref']
 
         ws_obj_info = cmu.workspacehelper.get_workspace_object_info(report_output['ref'])
-        print(ws_obj_info)
+        self.logger.debug(ws_obj_info)
         obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type')
         self.assertEqual(obj_type, 'KBaseReport.Report')
         obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type', remove_module=True)
@@ -490,9 +493,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     def test_00_init_client(self):
 
         ''' check client initialisation '''
-        print("\n=================================================================")
-        print("RUNNING 00_init_client")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 00_init_client")
+        self.logger.info("=================================================================\n")
 
         # attr_list = ['callback_url', 'service_wizard_url', 'token', 'workspace_url']
 
@@ -554,9 +557,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # note that the DataStagingUtils interface has not been updated below since the test is skipped
     def notest_01_data_staging(self):
 
-        print("\n=================================================================")
-        print("RUNNING 01_data_staging")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_data_staging")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'report_ref'):
             self.prep_report()
@@ -576,7 +579,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         # test stage binned contigs
         staged_input = dsu.stage_input(self.binned_contigs_ref)
-        pprint(staged_input)
+        self.logger.info(staged_input)
 
         self.assertTrue(os.path.isdir(staged_input['input_dir']))
         self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
@@ -594,7 +597,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cmu._set_run_config()
         dsu = cmu.datastagingutils
         staged_input = dsu.stage_input(self.assembly_OK_ref)
-        pprint(staged_input)
+        self.logger.info(staged_input)
         self.assertTrue(os.path.isdir(staged_input['input_dir']))
         self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
         self.assertIn('folder_suffix', staged_input)
@@ -611,9 +614,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # note that the OutputBuilder interface has not been updated below since the test is skipped
     def test_05_outputbuilder(self):
 
-        print("\n=================================================================")
-        print("RUNNING 05_outputbuilder")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 05_outputbuilder")
+        self.logger.info("=================================================================\n")
 
         # lots of output:
         with self.subTest('lots of checkM output'):
@@ -704,9 +707,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def notest_02_filter_binned_contigs(self):
 
-        print("\n=================================================================")
-        print("RUNNING 02_filter_binned_contigs")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'report_ref'):
             self.prep_report()
@@ -822,9 +825,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
     def notest_checkM_lineage_wf_full_app_single_assembly(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_single_assembly")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_lineage_wf_full_app_single_assembly")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'assembly_OK_ref'):
             self.prep_assemblies()
@@ -854,9 +857,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_problem_assembly")
     def notest_checkM_lineage_wf_full_app_single_problem_assembly(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_single_problem_assembly")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_lineage_wf_full_app_single_problem_assembly")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'assembly_OK_ref'):
             self.prep_assemblies()
@@ -886,9 +889,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
     def notest_checkM_lineage_wf_full_app_binned_contigs(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_binned_contigs")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_lineage_wf_full_app_binned_contigs")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'binned_contigs_ref'):
             self.prep_binned_contigs()
@@ -921,9 +924,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs_EMPTY")
     def notest_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_binned_contigs_EMPTY")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_lineage_wf_full_app_binned_contigs_EMPTY")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'binned_contigs_ref'):
             self.prep_binned_contigs()
@@ -945,9 +948,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_assemblySet")
     def notest_checkM_lineage_wf_full_app_assemblySet(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_assemblySet")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_lineage_wf_full_app_assemblySet")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'assembly_set_ref'):
             self.prep_assemblies()
@@ -977,9 +980,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
     def notest_checkM_lineage_wf_full_app_single_genome(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_single_genome")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_lineage_wf_full_app_single_genome")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'genome_refs'):
             self.prep_genomes()
@@ -1008,9 +1011,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_genomeSet")
     def notest_checkM_lineage_wf_full_app_genomeSet(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_genomeSet")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_lineage_wf_full_app_genomeSet")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'genome_set_ref'):
             self.prep_genomes()
@@ -1040,9 +1043,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
     def notest_checkM_lineage_wf_withFilter_binned_contigs(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
+        self.logger.info("=================================================================\n")
 
         if not hasattr(self, 'binned_contigs_ref'):
             self.prep_binned_contigs()
@@ -1104,9 +1107,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_local_method()")
     def test_03_local_method(self):
-        print("\n=================================================================")
-        print("RUNNING 03_local_method")
-        print("=================================================================\n")
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 03_local_method")
+        self.logger.info("=================================================================\n")
 
         """
         Test a successful run of the .lineage_wf local method
