@@ -9,12 +9,6 @@ import csv
 
 from kb_Msuite.Utils.Logger import Base, LogMixin
 
-def log(message, prefix_newline=False):
-    """Logging function, provides a hook to suppress or redirect log messages."""
-    print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
-    sys.stdout.flush()
-
-
 class OutputBuilder(Base, LogMixin):
     '''
     Constructs the output HTML report and artifacts based on a CheckM lineage_wf
@@ -27,7 +21,6 @@ class OutputBuilder(Base, LogMixin):
         self.client_util    = checkMUtil_obj.client_util
         self.scratch        = checkMUtil_obj.scratch
         self.PLOT_FILE_EXT  = '.ref_dist_plots.png'
-
 
     def client(self, client_name):
 
@@ -70,7 +63,6 @@ class OutputBuilder(Base, LogMixin):
         }
 
 
-        log('Packaging output directory')
         self.logger.info('Packaging output directory')
         output_packages = [{
             'name': 'full_output',
@@ -85,7 +77,7 @@ class OutputBuilder(Base, LogMixin):
 
         if bin_stats_data:
             # create bin report summary TSV table text file
-            log('creating TSV summary table text file')
+            self.logger.info('creating TSV summary table text file')
             # self.build_summary_tsv_file(bin_stats_data, removed_bins)
 
             html_links = self.build_html_output_for_lineage_wf(bin_stats_data, params, removed_bins)
@@ -105,14 +97,14 @@ class OutputBuilder(Base, LogMixin):
             })
 
             if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
-                log('packaging output plots directory')
+                self.logger.info('packaging output plots directory')
                 output_packages.append({
                     'name': 'plots',
                     'path': run_config['plots_dir'],
                     'description': 'Output plots from CheckM',
                 })
             else:
-                log('not packaging output plots directory')
+                self.logger.info('not packaging output plots directory')
 
             if binned_contig_obj_ref:
                 report_params['objects_created'] = [{
@@ -121,7 +113,6 @@ class OutputBuilder(Base, LogMixin):
                 }]
 
         else:
-            log("WARNING: No output produced!")
             self.logger.warning('CheckM produced no output!')
             report_params['message'] = 'CheckM did not produce any output.'
 
@@ -201,10 +192,8 @@ class OutputBuilder(Base, LogMixin):
                     # bin_id = re.sub('^[^\.]+\.', '', bid)
                     if removed_bins and bin_id in removed_bins:
                         self.logger.debug("bin stats BID " + bid + ", bin_id " + bin_id + ": REMOVED")
-                        log("BIN STATS BID " + bid + ": REMOVED")
                     else:
                         self.logger.debug("bin stats BID " + bid + ", bin_id " + bin_id)
-                        log("BIN STATS BID " + bid)
 
                     # create the dist plot page
                     plot_file = os.path.join(plots_dir, str(bid) + self.PLOT_FILE_EXT)
@@ -281,7 +270,6 @@ class OutputBuilder(Base, LogMixin):
         bin_stats = dict()
 
         if not os.path.isfile(stats_file):
-            log('Warning! no stats file found (looking at: ' + stats_file + ')')
             self.logger.warning('No stats file found (looking at: ' + stats_file + ')')
             return bin_stats
 
@@ -307,13 +295,13 @@ class OutputBuilder(Base, LogMixin):
         return self._copy_file_new_name_ignore_errors(src, dest)
 
     def _copy_file_new_name_ignore_errors(self, source_path, destination_path):
-        # log('copying ' + source_path + ' to ' + destination_path)
+        # self.logger.debug('copying ' + source_path + ' to ' + destination_path)
         try:
             shutil.copy(source_path, destination_path)
         except Exception as e:
             # TODO: add error message reporting
-            log('copy failed')
-            log(e)
+            self.logger.error('copy failed')
+            self.logger.error(e)
 
 #     def build_critical_output(self, critical_out_dir):
 #

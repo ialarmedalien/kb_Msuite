@@ -16,12 +16,6 @@ from kb_Msuite.Utils.ClientUtil import ClientUtil
 from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 from kb_Msuite.Utils.Logger import Base, LogMixin
 
-
-def log(message, prefix_newline=False):
-    """Logging function, provides a hook to suppress or redirect log messages."""
-    print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
-    sys.stdout.flush()
-
 class CheckMUtil(Base, LogMixin):
 
     def __init__(self, config, ctx):
@@ -134,7 +128,6 @@ class CheckMUtil(Base, LogMixin):
 
         # 1) stage input data
         obj_info = self.datastagingutils.stage_input(params['input_ref'])
-        log('Staged input directory: ' + run_config['input_dir'])
         self.logger.info('Staged input directory: ' + run_config['input_dir'])
         self.logger.info('input object info:')
         self.logger.info(obj_info)
@@ -152,7 +145,6 @@ class CheckMUtil(Base, LogMixin):
 
         # check whether it was successful
         if not os.path.exists(run_config['storage']):
-            log("WARNING: NO RESULTS FOUND!")
             self.logger.warning('WARNING: no results found!')
             return self.outputbuilder.build_report(params)
 
@@ -169,7 +161,7 @@ class CheckMUtil(Base, LogMixin):
 
         run_config = self.run_config()
         # compute tetranucleotide frequencies based on the concatenated fasta file
-        log('Computing tetranucleotide distributions...')
+        self.logger.info('Computing tetranucleotide distributions...')
         tetra_options = {
             'seq_file':    run_config['all_seq_fasta'],
             'tetra_file':  run_config['tetra_file'],
@@ -179,7 +171,7 @@ class CheckMUtil(Base, LogMixin):
         self.run_checkM('tetra', tetra_options) #, dropOutput=True)
 
         # plot distributions for each bin
-        log('Creating distribution plots per bin...')
+        self.logger.info('Creating distribution plots per bin...')
         dist_plot_options = {
             'bin_folder':   run_config['input_dir'],
             'out_folder':   run_config['output_dir'],
@@ -204,7 +196,7 @@ class CheckMUtil(Base, LogMixin):
                 dist_value
         '''
         command = self._build_command(subcommand, options)
-        log('\n\ncheckMUtil.run_checkM: Running: ' + ' '.join(command) + '\n\n')
+        self.logger.debug('\n\ncheckMUtil.run_checkM: Running: ' + ' '.join(command) + '\n\n')
         run_config = self.run_config()
 
 #         log_output_file = None
@@ -213,7 +205,7 @@ class CheckMUtil(Base, LogMixin):
 
         log_output_filename = os.path.join(run_config['base_dir'], subcommand + '.log')
 
-        log('sending log output to ' + log_output_filename)
+        self.logger.debug('sending log output to ' + log_output_filename)
         with open(log_output_filename, 'w') as log_output_file:
 
             current_tree = subprocess.run(['tree', run_config['base_dir']],
@@ -237,13 +229,13 @@ class CheckMUtil(Base, LogMixin):
 #             log_output_file.close()
 
         if (exitCode == 0):
-            log('Executed command: ' + ' '.join(command) + '\n' +
+            self.logger.info('Executed command: ' + ' '.join(command) + '\n' +
                 'Exit Code: ' + str(exitCode))
         else:
-            log('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
+            self.logger.error('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
             with open(log_output_filename, 'r') as log_output_file:
                 for line in log_output_file:
-                    log(line)
+                    self.logger.error(line)
 
             raise ValueError('Error running command: ' + ' '.join(command) + '\n' +
                              'Exit Code: ' + str(exitCode))
@@ -328,8 +320,8 @@ class CheckMUtil(Base, LogMixin):
         if not bin_fasta_files_by_bin_ID:
             return None
 
-        log("DEBUG: bin_fasta_files_by_bin_ID: ")
-        log(bin_fasta_files_by_bin_ID)
+        self.logger.debug("bin_fasta_files_by_bin_ID: ")
+        self.logger.debug(bin_fasta_files_by_bin_ID)
 
         filtered_bins_dir = run_config['filtered_bins_dir']
         if not os.path.exists(filtered_bins_dir):
@@ -400,22 +392,22 @@ class CheckMUtil(Base, LogMixin):
                 comp = float(bin_stats_data[bin_ID]['Completeness'])
                 cont = float(bin_stats_data[bin_ID]['Contamination'])
 
-                log("Bin " + bin_ID + " CheckM COMPLETENESS:  " + str(comp))
-                log("Bin " + bin_ID + " CheckM CONTAMINATION: " + str(cont))
+                self.logger.debug("Bin " + bin_ID + " CheckM COMPLETENESS:  " + str(comp))
+                self.logger.debug("Bin " + bin_ID + " CheckM CONTAMINATION: " + str(cont))
 
                 bin_is_HQ = True
                 if test_completeness and comp < completeness_thresh:
                     bin_is_HQ = False
-                    log("Bin " + bin_ID + " Completeness of " + str(comp) + " below thresh " + str(completeness_thresh))
+                    self.logger.info("Bin " + bin_ID + " Completeness of " + str(comp) + " below thresh " + str(completeness_thresh))
                 if test_contamination and cont > contamination_thresh:
                     bin_is_HQ = False
-                    log("Bin " + bin_ID + " Contamination of " + str(cont) + " above thresh " + str(contamination_thresh))
+                    self.logger.info("Bin " + bin_ID + " Contamination of " + str(cont) + " above thresh " + str(contamination_thresh))
 
                 if not bin_is_HQ:
-                    log("Bin " + bin_ID + " didn't pass QC filters.  Skipping.")
+                    self.logger.info("Bin " + bin_ID + " didn't pass QC filters.  Skipping.")
                     removed_bin_IDs[bin_ID] = True
                 else:
-                    log("Bin " + bin_ID + " passed QC filters.  Adding to new BinnedContigs")
+                    self.logger.info("Bin " + bin_ID + " passed QC filters.  Adding to new BinnedContigs")
                     some_bins_are_HQ = True
                     retained_bin_IDs[bin_ID] = True
 
@@ -426,8 +418,8 @@ class CheckMUtil(Base, LogMixin):
                     self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
 
         missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
-        log("missing IDs:")
-        log(missing_ids)
+        self.logger.info("missing IDs:")
+        self.logger.info(missing_ids)
         if missing_ids:
             raise ValueError("The following Bin IDs are missing from the checkM output: "
                 + ", ".join(sorted(missing_ids)))
@@ -460,10 +452,10 @@ class CheckMUtil(Base, LogMixin):
         bin_summary_info = dict()
         # bid in object is full name of contig fasta file.  want just the number
         for bin_item in binned_contig_obj['bins']:
-            #log("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
+            #self.logger.debug("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
             bin_ID = self.clean_bin_ID(bin_item['bid'], fasta_ext)
 
-            #log("BIN_ID: "+bin_ID)  # DEBUG
+            #self.logger.debug("BIN_ID: "+bin_ID)  # DEBUG
             bin_summary_info[bin_ID] = {
                 'n_contigs':        bin_item['n_contigs'],
                 'gc':               round(100.0 * float(bin_item['gc']), 1),
@@ -480,21 +472,20 @@ class CheckMUtil(Base, LogMixin):
 
 
         # write summary file for just those bins present in bin_dir
-        log("writing filtered binned contigs summary file " + summary_file_path)
+        self.logger.info("writing filtered binned contigs summary file " + summary_file_path)
         with open(summary_file_path, 'w') as summary_file_handle:
 
             header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
 
             summary_file_handle.write("\t".join(header_line)+"\n")
             for bin_ID in bin_IDs:
-                #log("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
+                #self.logger.debug("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
                 bin_summary_info_line = [
                     bin_basename + '.' + str(bin_ID) + '.' + fasta_ext,
                     str(bin_summary_info[bin_ID]['cov'])+'%',
                     str(bin_summary_info[bin_ID]['sum_contig_len']),
                     str(bin_summary_info[bin_ID]['gc'])
                 ]
-                log("\t".join(bin_summary_info_line))
                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
 
         return summary_file_path
