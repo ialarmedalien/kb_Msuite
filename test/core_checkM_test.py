@@ -148,8 +148,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'assembly_name': assembly['name'],
             })
             setattr(self, assembly['attr'], saved_assembly)
-            self.logger.info('Saved Assembly:')
-            self.logger.info(getattr(self, assembly['attr']))
+            self.logger.info({'assembly_attr': assembly['attr'], 'Saved Assembly': saved_assembly})
 
         # create an AssemblySet
         assembly_items = [
@@ -199,6 +198,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'binned_contig_name': bc['name'],
             })
 
+            self.logger.debug({'saved_object': saved_object})
             setattr(self, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
             self.logger.info('Saved BinnedContigs:')
             self.logger.info(getattr(self, bc['path'] + '_ref'))
@@ -577,45 +577,50 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         if not hasattr(self, 'binned_contigs_ref'):
             self.prep_binned_contigs()
 
-        # test stage assembly
         cmu = CheckMUtil(self.cfg, self.ctx)
         # init the run_config
         cmu.run_config()
         dsu = cmu.datastagingutils
 
-        err_msg = 'Cannot stage fasta file input directory from type: '
-        with self.assertRaisesRegex(ValueError, err_msg):
-            dsu.stage_input(self.report_ref)
+        with self.subTest('erroneous report object staging'):
+            err_msg = 'Cannot stage fasta file input directory from type: '
+            with self.assertRaisesRegex(ValueError, err_msg):
+                dsu.stage_input(self.report_ref)
 
         with self.subTest('binned contig staging'):
             # test stage binned contigs
             staged_input = dsu.stage_input(self.binned_contigs_ref)
+            run_config = dsu.run_config()
+            # expect to get back {'obj_name': name, 'obj_type': type}
             self.logger.info(staged_input)
 
-            self.assertTrue(os.path.isdir(staged_input['input_dir']))
-            self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
-            self.assertIn('folder_suffix', staged_input)
+            self.assertEqual(staged_input,{'obj_name': , 'obj_type': })
+            self.assertTrue(os.path.isdir(run_config['input_dir']))
+            self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
 
-            self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
+            self.assertTrue(os.path.isfile(os.path.join(run_config['input_dir'],
                                                         'out_header.001.fna')))
-            self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
+            self.assertTrue(os.path.isfile(os.path.join(run_config['input_dir'],
                                                         'out_header.002.fna')))
-            self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
+            self.assertTrue(os.path.isfile(os.path.join(run_config['input_dir'],
                                                         'out_header.003.fna')))
+
+        rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
 
         with self.subTest('strange fasta extension'):
             cmu.fasta_extension = 'strange_fasta_extension'
             # reset the run_config
-            cmu._set_run_config()
+            new_run_config = cmu._set_run_config()
             dsu = cmu.datastagingutils
             staged_input = dsu.stage_input(self.assembly_OK_ref)
             self.logger.info(staged_input)
-            self.assertTrue(os.path.isdir(staged_input['input_dir']))
-            self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
-            self.assertIn('folder_suffix', staged_input)
+            self.assertTrue(os.path.isdir(new_run_config['input_dir']))
+            self.assertTrue(os.path.isfile(new_run_config['all_seq_fasta']))
+            self.assertTrue(os.path.isfile(os.path.join(
+                new_run_config['input_dir'], 'Test.Assembly.strange_fasta_extension')
+            ))
 
-            self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
-                                                        'Test.Assembly.strange_fasta_extension')))
+        rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
 
     def test_02_filter_binned_contigs(self):
 
@@ -1150,3 +1155,5 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         shutil.rmtree(input_dir)
         shutil.rmtree(output_dir)
 
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
