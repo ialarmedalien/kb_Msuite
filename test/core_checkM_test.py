@@ -89,9 +89,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         cls.refdata_wsName = 'test_kb_Msuite_refdata_1588183380977'
         cls.refdata_ws_info = [49697, 'test_kb_Msuite_refdata_1588183380977', 'ialarmedalien', '2020-04-29T18:03:01+0000', 0, 'a', 'n', 'unlocked', {}]
-
         print({'refdata_ws_info': cls.refdata_ws_info})
-        cls.prep_ref_data()
 
         cls.au      = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
         cls.gfu     = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
