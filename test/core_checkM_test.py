@@ -101,9 +101,6 @@ class CoreCheckMTest(unittest.TestCase):
         shutil.copytree(os.path.join('data', 'example_out', 'output'), cls.output_dir)
         shutil.copy(os.path.join('data', 'example_out', 'all_seq.fna'), cls.all_seq_fasta)
         """
-
-        # prepare WS data
-        # cls.prepare_data()
         end_time_stamp = time.time()
         print("set up time: " + str(end_time_stamp - init_time_stamp))
 
@@ -349,14 +346,18 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertTrue(hasattr(cmu, '_run_config'))
 
         # ensure the other attributes are also populated
-        self.assertTrue(hasattr(cmu, 'datastagingutils'))
-        self.assertIsInstance(cmu.datastagingutils, DataStagingUtils)
-        self.assertTrue(hasattr(cmu, 'outputbuilder'))
-        self.assertIsInstance(cmu.outputbuilder, OutputBuilder)
+        obj_name_to_type = {
+            'datastagingutils': DataStagingUtils,
+            'outputbuilder': OutputBuilder,
+            'workspacehelper': WorkspaceHelper,
+        }
+        for attr, type in obj_name_to_type.items():
+            self.assertTrue(hasattr(cmu, attr))
+            self.assertIsInstance(cmu[attr], type)
 
         # ensure we can reset the run_config
         base_dir = run_config['base_dir']
-        cmu._set_run_configuration({'dir_name': 'last_chance_directory'})
+        cmu._set_run_config({'dir_name': 'last_chance_directory'})
         self.assertRegex(cmu.run_config()['base_dir'], r'run___last_chance_directory__\d+')
         self.assertNotEqual(base_dir, cmu.run_config()['base_dir'])
 
@@ -374,6 +375,48 @@ class CoreCheckMTest(unittest.TestCase):
 
         for bid in bin_ids:
             print(cmu.clean_bin_ID(bid, 'fasta'))
+
+    def test_00_workspace_helper(self):
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+
+        # create a report
+        report_object_name = 'Super Cool Extended Report'
+        report_output = self.kr.create_extended_report({
+            'workspace_name': self.wsName,
+            'report_object_name': report_object_name,
+            'message': 'This is the best report in the world',
+        })
+        print(report_output)
+        # self.report_ref = report_output['ref']
+
+        ws_obj_info = cmu.workspacehelper.get_workspace_object_info(report_output['ref'])
+        print(ws_obj_info)
+        obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type')
+        self.assertEqual(obj_type, 'KBaseReport.Report')
+        obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type', remove_module=True)
+        self.assertEqual(obj_type, 'Report')
+
+        err_str = 'personality is not a valid workspace object property'
+        with self.assertRaisesRegex(KeyError, err_str):
+            cmu.workspacehelper.get_object_property(ws_obj_info, 'personality')
+
+        obj_name = cmu.workspacehelper.get_object_property(ws_obj_info, 'name')
+        self.assertEqual(obj_name, report_object_name)
+
+        result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'])
+        self.assertEqual(result, {report_object_name: 'KBaseReport.Report'})
+
+        result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'], True)
+        self.assertEqual(result, {report_object_name: 'Report'})
+
+        ws_obj = cmu.workspacehelper.get_obj_from_workspace(report_output['ref'])
+        print(ws_obj)
+        self.assertEqual(ws_obj.text_message, 'This is the best report in the world')
+
+        err_str = 'Unable to fetch ROTFLMAO object from workspace:'
+        with self.assertRaisesRegex(ValueError, err_str):
+            cmu.workspacehelper.get_obj_from_workspace('ROTFLMAO')
 
     def test_00_init_client(self):
 
@@ -481,12 +524,12 @@ class CoreCheckMTest(unittest.TestCase):
         # expect the same keys in both
         # self.assertEqual(set(rep.keys()), set(expected.keys()))
 
-#         for key in expected.keys():
-#             with subTest('checking ' + key):
-#                 if key == 'file_links' or key == 'html_links':
-#                     self.check_report_links(rep, type, report_data)
-#                 else:
-#                     self.assertEqual(rep[key], report_data[key])
+        for key in expected.keys():
+            with subTest('checking ' + key):
+                if key == 'file_links' or key == 'html_links':
+                    self.check_report_links(rep, type, report_data)
+                else:
+                    self.assertEqual(rep[key], report_data[key])
 
         return True
 
@@ -805,7 +848,7 @@ class CoreCheckMTest(unittest.TestCase):
 
         cmu.fasta_extension = 'strange_fasta_extension'
         # reset the run_config
-        cmu._set_run_configuration()
+        cmu._set_run_config()
         dsu = cmu.datastagingutils
         staged_input = dsu.stage_input(self.assembly_OK_ref)
         pprint(staged_input)
@@ -839,7 +882,7 @@ class CoreCheckMTest(unittest.TestCase):
                 shutil.copytree(
                     os.path.join('data', 'many_results', dir),
                     os.path.join(run_config['base_dir'], dir)
-                ) #, dirs_exist_ok=True)
+                )
 
             params = {
                 'workspace_name': self.ws_info[1],
@@ -849,7 +892,7 @@ class CoreCheckMTest(unittest.TestCase):
 
             expected_results = {
                 'direct_html_link_index': 0,
-                'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+                'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
                 'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
             }
 
@@ -929,7 +972,7 @@ class CoreCheckMTest(unittest.TestCase):
             self.prep_binned_contigs()
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu._set_run_configuration({'input_ref': self.report_ref})
+        run_config = cmu._set_run_config({'input_ref': self.report_ref})
 
         # wrong type
         self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.report_ref}))

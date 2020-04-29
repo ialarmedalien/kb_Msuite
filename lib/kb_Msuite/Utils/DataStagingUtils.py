@@ -58,6 +58,10 @@ class DataStagingUtils(object):
         obj_name = input_info[1]
         obj_type = input_info[2].split('-')[0]
 
+#         input_info = self.ws_helper.get_workspace_object_info(input_ref)
+#         obj_name = self.ws_helper.get_object_property(input_info, 'name')
+#         obj_type = self.ws_helper.get_object_property(input_info, 'type')
+
         type_to_method = {
 
             # Standard Single Assembly
@@ -81,9 +85,8 @@ class DataStagingUtils(object):
         self.cat_fasta_files(input_dir, fasta_ext, all_seq_fasta)
 
         return {
-            'input_dir': input_dir,
-            'folder_suffix': suffix,
-            'all_seq_fasta': all_seq_fasta,
+            'obj_name': obj_name,
+            'obj_type': obj_type,
         }
 
     def process_assembly_contigset(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):

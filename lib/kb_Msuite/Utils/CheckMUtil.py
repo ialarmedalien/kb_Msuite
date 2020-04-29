@@ -13,6 +13,7 @@ from decimal import Decimal
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
+from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 from kb_Msuite.Utils.Logger import Base, LogMixin
 
 
@@ -56,9 +57,9 @@ class CheckMUtil(Base, LogMixin):
         if hasattr(self, '_run_config'):
             return self._run_config
 
-        return self._set_run_configuration()
+        return self._set_run_config()
 
-    def _set_run_configuration(self, params=None):
+    def _set_run_config(self, params=None):
 
         suffix = str(int(time.time() * 1000))
         if params and 'dir_name' in params:
@@ -109,6 +110,7 @@ class CheckMUtil(Base, LogMixin):
         self._run_config = run_config
         self.datastagingutils   = DataStagingUtils(self)
         self.outputbuilder      = OutputBuilder(self)
+        self.workspacehelper    = WorkspaceHelper(self)
 
         self.logger.debug(run_config)
 
@@ -129,7 +131,7 @@ class CheckMUtil(Base, LogMixin):
             if params['reduced_tree'] is None or not int(params['reduced_tree']) == 1:
                 del params['reduced_tree']
 
-        run_config = self._set_run_configuration(params)
+        run_config = self._set_run_config(params)
 
         # 1) stage input data
         self.datastagingutils.stage_input(params['input_ref'])
