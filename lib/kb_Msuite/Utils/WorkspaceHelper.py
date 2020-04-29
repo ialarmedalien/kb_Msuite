@@ -14,7 +14,7 @@ class WorkspaceHelper(Base, LogMixin):
 
         return self.checkMUtil.run_config()
 
-    def get_workspace_object_info(self, ref):
+    def get_ws_obj_info(self, ref):
         return self.client('Workspace').get_object_info3({'objects': [{'ref': ref}]})['infos'][0]
 
     def get_object_property(self, object_info, prop):
@@ -42,24 +42,30 @@ class WorkspaceHelper(Base, LogMixin):
 
         return object_info[obj_property[prop]]
 
-    def get_data_obj_type_by_name(self, ref, remove_module=False):
+    def get_ws_obj_type_by_name(self, ref, remove_module=False):
 
-        object_info = self.get_workspace_object_info(ref)
-        obj_name = self.get_object_property(object_info, 'name')
-        raw_type = self.get_object_property(object_info, 'type')
-        obj_type = raw_type.split('-')[0]
-        if remove_module:
-            obj_type = obj_type.split('.')[1]
+        object_info = self.get_ws_obj_info(ref)
+
+        obj_name = self.get_ws_obj_name(object_info=object_info)
+        obj_type = self.get_ws_obj_type(object_info=object_info, remove_module)
         return {obj_name: obj_type}
 
-    def get_data_obj_name(self, ref):
+    def get_ws_obj_name(self, ref=None, object_info=None):
 
-        object_info = self.get_workspace_object_info(ref)
+        if not object_info:
+            if not ref:
+                raise ValueError("Must supply either ref or object info to get_data_obj_name")
+            object_info = self.get_ws_obj_info(ref)
+
         return self.get_object_property(object_info, 'name')
 
-    def get_data_obj_type(self, ref, remove_module=False):
+    def get_ws_obj_type(self, ref=None, object_info=None, remove_module=False):
 
-        object_info = self.get_workspace_object_info(ref)
+        if not object_info:
+            if not ref:
+                raise ValueError("Must supply either ref or object info to get_data_obj_type")
+            object_info = self.get_ws_obj_info(ref)
+
         raw_type = self.get_object_property(object_info, 'type')
         obj_type = raw_type.split('-')[0]
         if remove_module:

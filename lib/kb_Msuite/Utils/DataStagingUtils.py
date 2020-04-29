@@ -59,9 +59,9 @@ class DataStagingUtils(Base, LogMixin):
 #         obj_name = input_info[1]
 #         obj_type = input_info[2].split('-')[0]
 
-        obj_info = self.workspacehelper.get_workspace_object_info(input_ref)
-        obj_name = self.workspacehelper.get_object_property(obj_info, 'name')
-        obj_type = self.workspacehelper.get_object_property(obj_info, 'type')
+        obj_info = self.workspacehelper.get_ws_obj_info(input_ref)
+        obj_name = self.workspacehelper.get_ws_obj_name(object_info=obj_info)
+        obj_type = self.workspacehelper.get_ws_obj_type(object_info=obj_info)
 
         type_to_method = {
 
