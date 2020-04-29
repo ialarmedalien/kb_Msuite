@@ -101,9 +101,9 @@ class CheckMUtil(Base, LogMixin):
         )
 
         self._run_config = run_config
+        self.workspacehelper    = WorkspaceHelper(self)
         self.datastagingutils   = DataStagingUtils(self)
         self.outputbuilder      = OutputBuilder(self)
-        self.workspacehelper    = WorkspaceHelper(self)
 
         # self.logger.debug(run_config)
 

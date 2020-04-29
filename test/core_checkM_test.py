@@ -87,14 +87,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
         print({'ws_info': cls.ws_info})
 
-        cls.refdata_wsName = "test_kb_Msuite_refdata_" + str(cls.suffix)
-        cls.refdata_ws_info = cls.wsClient.create_workspace({'workspace': cls.refdata_wsName})
+        cls.refdata_wsName = 'test_kb_Msuite_refdata_1588183380977'
+        cls.refdata_ws_info = [49697, 'test_kb_Msuite_refdata_1588183380977', 'ialarmedalien', '2020-04-29T18:03:01+0000', 0, 'a', 'n', 'unlocked', {}]
+
         print({'refdata_ws_info': cls.refdata_ws_info})
+        cls.prep_ref_data()
+
         cls.au      = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
         cls.gfu     = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
         cls.mu      = MetagenomeUtils(os.environ['SDK_CALLBACK_URL'])
         cls.setAPI  = SetAPI(url=cls.cfg['srv-wiz-url'], token=cls.ctx['token'])
         cls.kr      = KBaseReport(os.environ['SDK_CALLBACK_URL'])
+
 
         # stage an input and output directory
         """
@@ -113,10 +117,24 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             print('Test workspace ' + cls.wsName + ' was deleted')
         pass
 
+    def require_data(self, *args):
+        return self.prep_ref_data()
+
     def prep_ref_data(self):
-        self.prep_binned_contigs()
-        self.prep_report()
-        self.prep_genomes()
+
+        saved_refs = {
+            'assembly_OK_ref': '49697/1/1',
+            'assembly_dodgy_ref': '49697/2/1',
+            'assembly_set_ref': '49697/3/1',
+            'binned_contigs_ref': '49697/4/1',
+            'binned_contigs_empty_ref': '49697/5/1',
+            'report_ref': '49697/6/1',
+            'genome_refs': ['49697/8/1', '49697/10/1'],
+            'genome_set_ref': '49697/11/1',
+        }
+
+        for key, value in saved_refs.items():
+            setattr(self, key, value)
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -595,11 +613,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING 01_data_staging")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'report_ref'):
-            self.prep_report()
-
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
+        self.require_data('binned_contigs_ref', 'report_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         # init the run_config
@@ -656,11 +670,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING 02_filter_binned_contigs")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'report_ref'):
-            self.prep_report()
-
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
+        self.require_data('binned_contigs_ref', 'report_ref')
 
         self.logger.critical('Data loaded. Starting tests!')
 
@@ -878,9 +888,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING checkM_lineage_wf_full_app_single_assembly")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'assembly_OK_ref'):
-            self.prep_assemblies()
-
+        self.require_data('assembly_OK_ref')
         # run checkM lineage_wf app on a single assembly
         input_ref = self.assembly_OK_ref
         params = {
@@ -910,9 +918,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING checkM_lineage_wf_full_app_single_problem_assembly")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'assembly_OK_ref'):
-            self.prep_assemblies()
-
+        self.require_data('assembly_dodgy_ref')
         # run checkM lineage_wf app on a single assembly
         input_ref = self.assembly_dodgy_ref
         params = {
@@ -942,12 +948,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING checkM_lineage_wf_full_app_binned_contigs")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
-
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
 
+        self.require_data('binned_contigs_ref')
         # run checkM lineage_wf app on BinnedContigs
         input_ref = self.binned_contigs_ref
         params = {
@@ -977,9 +981,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING checkM_lineage_wf_full_app_binned_contigs_EMPTY")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
-
+        self.require_data('binned_contigs_empty_ref')
         # run checkM lineage_wf app on EMPTY BinnedContigs
         input_ref = self.binned_contigs_empty_ref
         params = {
@@ -1001,9 +1003,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING checkM_lineage_wf_full_app_assemblySet")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'assembly_set_ref'):
-            self.prep_assemblies()
-
+        self.require_data('assembly_set_ref')
         # run checkM lineage_wf app on an assembly set
         input_ref = self.assembly_set_ref
         params = {
@@ -1033,9 +1033,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING checkM_lineage_wf_full_app_single_genome")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'genome_refs'):
-            self.prep_genomes()
-
+        self.require_data('genome_refs')
         # run checkM lineage_wf app on a single genome
         input_ref = self.genome_refs[0]
         params = {
@@ -1064,9 +1062,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING checkM_lineage_wf_full_app_genomeSet")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'genome_set_ref'):
-            self.prep_genomes()
-
+        self.require_data('genome_set_ref')
         # run checkM lineage_wf app on a genome set
         input_ref = self.genome_set_ref
         params = {
@@ -1096,8 +1092,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
         self.logger.info("=================================================================\n")
 
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
+        self.require_data('binned_contigs_ref')
 
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
