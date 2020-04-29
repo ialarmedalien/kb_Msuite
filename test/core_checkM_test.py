@@ -658,7 +658,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self.assertTrue(os.path.isfile(os.path.join(run_config['input_dir'],
                                                         'out_header.003.fna')))
 
-        rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
+        shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
 
         with self.subTest('strange fasta extension'):
             cmu.fasta_extension = 'strange_fasta_extension'
@@ -677,7 +677,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
             )
 
-        rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
+        shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
 
     def test_02_filter_binned_contigs(self):
 
@@ -734,7 +734,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
             # delete the two interloper directories
             for bid in missing_ids:
-                os.rmtree(os.path.join(output_dir, 'bins', bid), exist_ok=True)
+                shutil.rmtree(os.path.join(output_dir, 'bins', bid), exist_ok=True)
 
             # no high quality bins
             self.assertIsNone(cmu._filter_binned_contigs({
