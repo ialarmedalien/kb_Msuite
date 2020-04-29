@@ -132,6 +132,7 @@ class CheckMUtil(Base, LogMixin):
         self.logger.info('Staged input directory: ' + run_config['input_dir'])
         self.logger.info('input object info:')
         self.logger.info(obj_info)
+
         # 2) run the lineage workflow
         lineage_wf_options = {
             'bin_folder': run_config['input_dir'],
@@ -304,7 +305,7 @@ class CheckMUtil(Base, LogMixin):
 
         return command
 
-    def _filter_binned_contigs(self, params, obj_info):
+    def _filter_binned_contigs(self, params):
 
         run_config = self.run_config()
 

@@ -186,7 +186,6 @@ class OutputBuilder(Base, LogMixin):
             with open(html_index_file, 'w') as open_fh:
 
                 for bid in sorted(bin_stats.keys()):
-                    self._process_bin_item( )
                     bin_id = self.checkMUtil.clean_bin_ID(bid)
                     # bin_id = re.sub('^[^\.]+\.', '', bid)
                     if removed_bins and bin_id in removed_bins:
