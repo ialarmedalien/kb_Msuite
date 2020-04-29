@@ -85,6 +85,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         cls.wsName  = "test_kb_Msuite_" + str(cls.suffix)
         cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
+
+        cls.refdata_wsName = "test_kb_Msuite_refdata"
+        cls.refdata_ws_info = cls.wsClient.create_workspace({'workspace': cls.refdata_wsName})
+
         cls.au      = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
         cls.gfu     = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
         cls.mu      = MetagenomeUtils(os.environ['SDK_CALLBACK_URL'])

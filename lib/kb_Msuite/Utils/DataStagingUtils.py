@@ -13,6 +13,7 @@ class DataStagingUtils(Base, LogMixin):
         self.client_util = checkMUtil_obj.client_util
         config = checkMUtil_obj.config
         self.scratch = os.path.abspath(config['scratch'])
+        self.workspacehelper = self.checkMUtil.workspacehelper
 
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
@@ -182,11 +183,7 @@ class DataStagingUtils(Base, LogMixin):
             genomeSet_refs = [input_ref]
         else:  # get genomeSet_refs from GenomeSet object
             genomeSet_refs = []
-            try:
-                genomeSet_object = self.client('Workspace').get_objects2({'objects': [{'ref': input_ref}]})['data'][0]['data']
-            except Exception as e:
-                raise ValueError('Unable to fetch ' + str(input_ref) + ' object from workspace: ' + str(e))
-                #to get the full stack trace: traceback.format_exc()
+            genomeSet_object = self.workspacehelper.get_obj_from_workspace(input_ref)
 
             # iterate through genomeSet members
             for genome_id in list(genomeSet_object['elements'].keys()):
@@ -199,14 +196,11 @@ class DataStagingUtils(Base, LogMixin):
 
         # genome obj data
         for i, this_input_ref in enumerate(genomeSet_refs):
-            try:
-                objects = self.client('Workspace').get_objects2({'objects': [{'ref': this_input_ref}]})['data']
-                genome_obj = objects[0]['data']
-                genome_obj_info = objects[0]['info']
-                genome_obj_names.append(genome_obj_info[1])
-                genome_sci_names.append(genome_obj['scientific_name'])
-            except:
-                raise ValueError("unable to fetch genome: " + this_input_ref)
+            objects = self.workspacehelper.get_obj_from_workspace(this_input_ref)
+            genome_obj = objects[0]['data']
+            genome_obj_info = objects[0]['info']
+            genome_obj_names.append(genome_obj_info[1])
+            genome_sci_names.append(genome_obj['scientific_name'])
 
             # Get genome_assembly_ref
             if ('contigset_ref' not in genome_obj or genome_obj['contigset_ref'] is None) \
@@ -307,54 +301,3 @@ class DataStagingUtils(Base, LogMixin):
                     #self.logger.debug("ACCEPTED: "+bin_ID+" FILE:"+fasta_file)  # DEBUG
 
         return bin_fasta_files
-
-    def _get_workspace_object_info(self, input_ref):
-        input_info = self.client('Workspace').get_object_info3({'objects': [{'ref': input_ref}]})['infos'][0]
-        return input_info
-
-    def get_data_obj_type_by_name(self, input_ref, remove_module=False):
-        # 0 obj_id objid - the numerical id of the object.
-        # 1 obj_name name - the name of the object.
-        # 2 type_string type - the type of the object.
-        # 3 timestamp save_date - the save date of the object.
-        # 4 obj_ver ver - the version of the object.
-        # 5 username saved_by - the user that saved or copied the object.
-        # 6 ws_id wsid - the workspace containing the object.
-        # 7 ws_name workspace - the workspace containing the object.
-        # 8 string chsum - the md5 checksum of the object.
-        # 9 int size - the size of the object in bytes.
-        # 10 usermeta meta - arbitrary user-supplied metadata about
-        #     the object.
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
-
-        input_info = self._get_workspace_object_info(input_ref)
-        obj_name = input_info[NAME_I]
-        type_name = input_info[TYPE_I].split('-')[0]
-        if remove_module:
-            type_name = type_name.split('.')[1]
-        return {obj_name: type_name}
-
-    def get_data_obj_name(self, input_ref):
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
-
-        input_info = self._get_workspace_object_info(input_ref)
-        obj_name = input_info[NAME_I]
-        return obj_name
-
-    def get_data_obj_type(self, input_ref, remove_module=False):
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
-
-        input_info = self._get_workspace_object_info(input_ref)
-        type_name = input_info[TYPE_I].split('-')[0]
-        if remove_module:
-            type_name = type_name.split('.')[1]
-        return type_name
-
-    def get_obj_from_workspace(self, object_ref):
-
-        try:
-            workspace_object = self.client('Workspace').get_objects2({'objects': [{'ref': object_ref}]})['data'][0]['data']
-        except Exception as e:
-            raise ValueError('Unable to fetch '+str(object_ref)+' object from workspace: ' + str(e))
-            # to get the full stack trace: traceback.format_exc()
-        return workspace_object
