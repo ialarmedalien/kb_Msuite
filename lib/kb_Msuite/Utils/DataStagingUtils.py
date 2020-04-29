@@ -273,7 +273,6 @@ class DataStagingUtils(Base, LogMixin):
         '''
         files = glob.glob(os.path.join(folder, '*.' + extension))
         cat_cmd = ['cat'] + files
-        with
         fasta_file_handle = open(output_fasta_file, 'w')
         p = subprocess.Popen(cat_cmd, cwd=self.scratch, stdout=fasta_file_handle, shell=False)
         exitCode = p.wait()
