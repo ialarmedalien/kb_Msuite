@@ -88,9 +88,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         print({'ws_info': cls.ws_info})
 
         cls.refdata_wsName = "test_kb_Msuite_refdata"
+        cls.wsClient.delete_workspace({'workspace': cls.refdata_wsName})
         cls.refdata_ws_info = cls.wsClient.create_workspace({'workspace': cls.refdata_wsName})
         print({'refdata_ws_info': cls.refdata_ws_info})
-
         cls.au      = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
         cls.gfu     = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
         cls.mu      = MetagenomeUtils(os.environ['SDK_CALLBACK_URL'])
@@ -177,7 +177,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'items': assembly_items,
             },
         })
-        self.assembly_set_ref = saved_assembly_set_ref['set_ref']
+        self.assembly_set_ref = saved_assembly_set['set_ref']
         self.logger.info({
             'assembly_set_ref': self.assembly_set_ref,
             'Saved AssemblySet': saved_assembly_set,
@@ -319,7 +319,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         # add a kbasereport object
         report_output = self.kr.create_extended_report({
-            'workspace_name': self.refdata_wsName,
+            'workspace_name': self.refdata_ws_info[1],
             'report_object_name': 'my_report',
             'direct_html_link_index': 0,
             'html_links': tmpl_arr,
@@ -478,7 +478,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         report_object_name = 'Super_Cool_Extended_Report'
         text_message = 'This is the best report in the world'
         report_output = self.kr.create_extended_report({
-            'workspace_name': self.wsName,
+            'workspace_name': self.ws_info[1],
             'report_object_name': report_object_name,
             'message': text_message,
         })
