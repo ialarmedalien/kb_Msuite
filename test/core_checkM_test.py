@@ -26,7 +26,8 @@ from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
-
+from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
+from kb_Msuite.Utils.Logger import LogMixin
 
 def print_method_name(method):
     def wrapper(*args, **kwargs):
@@ -38,7 +39,7 @@ def print_method_name(method):
         return method(*args, **kwargs)
     return wrapper
 
-class CoreCheckMTest(unittest.TestCase):
+class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     @classmethod
     def setUpClass(cls):
@@ -122,16 +123,6 @@ class CoreCheckMTest(unittest.TestCase):
 
     def getConfig(self):
         return self.__class__.serviceImpl.config
-
-    @classmethod
-    def prepare_data(cls):
-
-        self.prep_report()
-
-        self.prep_binned_contigs()
-
-        self.prep_genomes()
-
 
     def prep_assemblies(self):
         ''' prepare the assemblies and assembly set '''
@@ -313,6 +304,76 @@ class CoreCheckMTest(unittest.TestCase):
         })
         self.report_ref = report_output['ref']
 
+    def run_and_check_report(self, params, expected=None, with_filters=False):
+
+        print("Running run_and_check_report")
+
+        if (with_filters):
+            result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
+        else:
+            result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+
+        return check_report(result, expected)
+
+    def check_report(self, result, expected):
+
+        pprint('End to end test result:')
+        pprint(result)
+
+        self.assertIn('report_name', result)
+        self.assertIn('report_ref', result)
+
+        # make sure the report was created and includes the HTML report and download links
+        got_object = self.getWsClient().get_objects2({
+            'objects': [{'ref': result['report_ref']}]
+        })
+        print(got_object)
+        rep = got_object['data'][0]['data']
+        print("\n\nreport data:")
+        print(rep)
+        print("\n\n")
+
+        report_data = {
+            'text_message': None,
+            'file_links': [],
+            'html_links': [],
+            'warnings': [],
+            'direct_html': None,
+            'direct_html_link_index': None,
+            'objects_created': [],
+            'html_window_height': None,
+            'summary_window_height': None,
+        }
+
+        report_data.update(expected)
+
+        # expect the same keys in both
+        # self.assertEqual(set(rep.keys()), set(expected.keys()))
+
+        for key in expected.keys():
+            with self.subTest('checking ' + key):
+                if key == 'file_links' or key == 'html_links':
+                    self.check_report_links(rep, type, report_data)
+                else:
+                    self.assertEqual(rep[key], report_data[key])
+
+        return True
+
+    def check_report_links(self, report_obj, type, expected):
+        """
+        Test utility: check the file upload results for an extended report
+        Args:
+          report_obj    - result dictionary from running .create_extended_report
+          type          - one of "html_links" or "file_links"
+          file_names    - names of the files for us to check against
+        """
+        file_links = report_obj[type]
+        self.assertEqual(len(file_links), len(expected[type]))
+        # Test that all the filenames listed in the report object map correctly
+        saved_names = set([str(f['name']) for f in file_links])
+        self.assertEqual(saved_names, set(expected[type]))
+        return True
+
     def check_validation_errors(self, params, error_list):
 
         """
@@ -363,6 +424,9 @@ class CoreCheckMTest(unittest.TestCase):
 
 #   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
     def test_00_clean_bin_id(self):
+        print("\n=================================================================")
+        print("RUNNING 00_clean_bin_id")
+        print("=================================================================\n")
 
         cmu = CheckMUtil(self.cfg, self.ctx)
 
@@ -374,20 +438,25 @@ class CoreCheckMTest(unittest.TestCase):
         ]
 
         for bid in bin_ids:
-            print(cmu.clean_bin_ID(bid, 'fasta'))
+            self.logger.info(cmu.clean_bin_ID(bid, 'fasta'))
 
     def test_00_workspace_helper(self):
+
+        self.logger.info("\n=================================================================")
+        self.logger.info("RUNNING 00_workspace_helper")
+        self.logger.info("=================================================================\n")
 
         cmu = CheckMUtil(self.cfg, self.ctx)
 
         # create a report
-        report_object_name = 'Super Cool Extended Report'
+        report_object_name = 'Super_Cool_Extended_Report'
+        text_message = 'This is the best report in the world'
         report_output = self.kr.create_extended_report({
             'workspace_name': self.wsName,
             'report_object_name': report_object_name,
-            'message': 'This is the best report in the world',
+            'message': text_message,
         })
-        print(report_output)
+        self.logger.info(report_output)
         # self.report_ref = report_output['ref']
 
         ws_obj_info = cmu.workspacehelper.get_workspace_object_info(report_output['ref'])
@@ -411,8 +480,8 @@ class CoreCheckMTest(unittest.TestCase):
         self.assertEqual(result, {report_object_name: 'Report'})
 
         ws_obj = cmu.workspacehelper.get_obj_from_workspace(report_output['ref'])
-        print(ws_obj)
-        self.assertEqual(ws_obj.text_message, 'This is the best report in the world')
+        self.logger.info(ws_obj)
+        self.assertEqual(ws_obj.text_message, text_message)
 
         err_str = 'Unable to fetch ROTFLMAO object from workspace:'
         with self.assertRaisesRegex(ValueError, err_str):
@@ -476,332 +545,6 @@ class CoreCheckMTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.client(client)
             self.assertFalse(hasattr(cmu.client_util, '_' + client))
-
-
-    def run_and_check_report(self, params, expected=None, with_filters=False):
-
-        print("Running run_and_check_report")
-
-        if (with_filters):
-            result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
-        else:
-            result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-
-        return check_report(result, expected)
-
-    def check_report(self, result, expected):
-
-        pprint('End to end test result:')
-        pprint(result)
-
-        self.assertIn('report_name', result)
-        self.assertIn('report_ref', result)
-
-        # make sure the report was created and includes the HTML report and download links
-        got_object = self.getWsClient().get_objects2({
-            'objects': [{'ref': result['report_ref']}]
-        })
-        print(got_object)
-        rep = got_object['data'][0]['data']
-        print("\n\nreport data:")
-        print(rep)
-        print("\n\n")
-
-        report_data = {
-            'text_message': None,
-            'file_links': [],
-            'html_links': [],
-            'warnings': [],
-            'direct_html': None,
-            'direct_html_link_index': None,
-            'objects_created': [],
-            'html_window_height': None,
-            'summary_window_height': None,
-        }
-
-        report_data.update(expected)
-
-        # expect the same keys in both
-        # self.assertEqual(set(rep.keys()), set(expected.keys()))
-
-        for key in expected.keys():
-            with subTest('checking ' + key):
-                if key == 'file_links' or key == 'html_links':
-                    self.check_report_links(rep, type, report_data)
-                else:
-                    self.assertEqual(rep[key], report_data[key])
-
-        return True
-
-    def check_report_links(self, report_obj, type, expected):
-        """
-        Test utility: check the file upload results for an extended report
-        Args:
-          report_obj    - result dictionary from running .create_extended_report
-          type          - one of "html_links" or "file_links"
-          file_names    - names of the files for us to check against
-        """
-        file_links = report_obj[type]
-        self.assertEqual(len(file_links), len(expected[type]))
-        # Test that all the filenames listed in the report object map correctly
-        saved_names = set([str(f['name']) for f in file_links])
-        self.assertEqual(saved_names, set(expected[type]))
-        return True
-
-    # Test 1: single assembly
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
-    def notest_checkM_lineage_wf_full_app_single_assembly(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_single_assembly")
-        print("=================================================================\n")
-
-        if not hasattr(self, 'assembly_OK_ref'):
-            self.prep_assemblies()
-
-        # run checkM lineage_wf app on a single assembly
-        input_ref = self.assembly_OK_ref
-        params = {
-            'dir_name': 'single_assembly',
-            'workspace_name': self.ws_info[1],
-            'input_ref': input_ref,
-            'reduced_tree': 0,
-            'save_output_dir': 1,
-            'save_plots_dir': 1,
-            'threads': 4
-        }
-
-        expected_results = {
-            'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'something.html'],
-        }
-
-        self.run_and_check_report(params, expected_results)
-
-    # Test 2: Regression test (CheckM <= v1.0.7) for single problem assembly
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_problem_assembly")
-    def notest_checkM_lineage_wf_full_app_single_problem_assembly(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_single_problem_assembly")
-        print("=================================================================\n")
-
-        if not hasattr(self, 'assembly_OK_ref'):
-            self.prep_assemblies()
-
-        # run checkM lineage_wf app on a single assembly
-        input_ref = self.assembly_dodgy_ref
-        params = {
-            'dir_name': 'dodgy_assembly',
-            'workspace_name': self.ws_info[1],
-            'input_ref': input_ref,
-            'reduced_tree': 1,  # this must be 1 to regression test with --reduced_tree
-            'save_output_dir': 1,
-            'save_plots_dir': 1,
-            'threads': 4
-        }
-
-        expected_results = {
-            'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'something.html'],
-        }
-
-        self.run_and_check_report(params, expected_results)
-
-    # Test 3: binned contigs
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
-    def notest_checkM_lineage_wf_full_app_binned_contigs(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_binned_contigs")
-        print("=================================================================\n")
-
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
-
-        # Even with the reduced_tree option, this will take a long time and crash if your
-        # machine has less than ~16gb memory
-
-        # run checkM lineage_wf app on BinnedContigs
-        input_ref = self.binned_contigs_ref
-        params = {
-            'dir_name': 'binned_contigs',
-            'workspace_name': self.ws_info[1],
-            'input_ref': input_ref,
-            'reduced_tree': 1,
-            'save_output_dir': 1,
-            'save_plots_dir': 1,
-            'threads': 4
-        }
-
-        expected_results = {
-            'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
-        }
-
-        self.run_and_check_report(params, expected_results)
-
-    # Test 4: Regression test for empty binned contigs object
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs_EMPTY")
-    def notest_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_binned_contigs_EMPTY")
-        print("=================================================================\n")
-
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
-
-        # run checkM lineage_wf app on EMPTY BinnedContigs
-        input_ref = self.binned_contigs_empty_ref
-        params = {
-            'dir_name': 'binned_contigs_empty',
-            'workspace_name': self.ws_info[1],
-            'reduced_tree': 1,
-            'input_ref': input_ref
-        }
-        with self.assertRaises(ValueError) as exception_context:
-            self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
-        self.assertTrue('Binned Assembly is empty' in str(exception_context.exception))
-
-    # Test 5: Assembly Set
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_assemblySet")
-    def notest_checkM_lineage_wf_full_app_assemblySet(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_assemblySet")
-        print("=================================================================\n")
-
-        if not hasattr(self, 'assembly_set_ref'):
-            self.prep_assemblies()
-
-        # run checkM lineage_wf app on an assembly set
-        input_ref = self.assembly_set_ref
-        params = {
-            'dir_name': 'assembly_set',
-            'workspace_name': self.ws_info[1],
-            'input_ref': input_ref,
-            'reduced_tree': 1,
-            'save_output_dir': 1,
-            'save_plots_dir': 1,
-            'threads': 4
-        }
-
-        expected_results = {
-            'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'assembly_1.html', 'assembly_2.html'],
-        }
-
-        self.run_and_check_report(params, expected_results)
-
-    # Test 6: Single Genome
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
-    def notest_checkM_lineage_wf_full_app_single_genome(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_single_genome")
-        print("=================================================================\n")
-
-        if not hasattr(self, 'genome_refs'):
-            self.prep_genomes()
-
-        # run checkM lineage_wf app on a single genome
-        input_ref = self.genome_refs[0]
-        params = {
-            'dir_name': 'single_genome',
-            'workspace_name': self.ws_info[1],
-            'input_ref': input_ref,
-            'reduced_tree': 1,
-            'save_output_dir': 1,
-            'save_plots_dir': 1,
-            'threads': 4
-        }
-        expected_results = {
-            'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome.html'],
-        }
-
-        self.run_and_check_report(params, expected_results)
-
-    # Test 7: Genome Set
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_genomeSet")
-    def notest_checkM_lineage_wf_full_app_genomeSet(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_full_app_genomeSet")
-        print("=================================================================\n")
-
-        if not hasattr(self, 'genome_set_ref'):
-            self.prep_genomes()
-
-        # run checkM lineage_wf app on a genome set
-        input_ref = self.genome_set_ref
-        params = {
-            'dir_name': 'genome_set',
-            'workspace_name': self.ws_info[1],
-            'input_ref': input_ref,
-            'reduced_tree': 1,
-            'save_output_dir': 1,
-            'save_plots_dir': 1,
-            'threads': 4
-        }
-        # two genomes in the genome set
-        expected_results = {
-            'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome_1.html', 'genome_2.html'],
-        }
-
-        self.run_and_check_report(params, expected_results)
-
-    # Test 11: filter binned contigs to HQ binned contigs
-    #
-    # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
-    def notest_checkM_lineage_wf_withFilter_binned_contigs(self):
-        print("\n=================================================================")
-        print("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
-        print("=================================================================\n")
-
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
-
-        # Even with the reduced_tree option, this will take a long time and crash if your
-        # machine has less than ~16gb memory
-        # run checkM lineage_wf app on BinnedContigs
-        input_ref = self.binned_contigs_ref
-        params = {
-            'dir_name': 'binned_contigs_filter',
-            'workspace_name': self.ws_info[1],
-            'input_ref': input_ref,
-            'reduced_tree': 1,
-            'save_output_dir': 1,
-            'save_plots_dir': 1,
-            'completeness_perc': 95.0,
-            'contamination_perc': 1.5,
-            'output_filtered_binnedcontigs_obj_name': 'filter.BinnedContigs',
-            'threads': 4
-        }
-
-        expected_results = {
-            'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
-        }
-
-        self.run_and_check_report(params, expected_results, True)
 
     # Test 8: Data staging (intended data not checked into git repo: SKIP)
     #
@@ -1073,6 +816,261 @@ class CoreCheckMTest(unittest.TestCase):
             self.assertTrue(os.path.exists(run_config['summary_file_path']))
             self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
+
+    # Test 1: single assembly
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
+    def notest_checkM_lineage_wf_full_app_single_assembly(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_single_assembly")
+        print("=================================================================\n")
+
+        if not hasattr(self, 'assembly_OK_ref'):
+            self.prep_assemblies()
+
+        # run checkM lineage_wf app on a single assembly
+        input_ref = self.assembly_OK_ref
+        params = {
+            'dir_name': 'single_assembly',
+            'workspace_name': self.ws_info[1],
+            'input_ref': input_ref,
+            'reduced_tree': 0,
+            'save_output_dir': 1,
+            'save_plots_dir': 1,
+            'threads': 4
+        }
+
+        expected_results = {
+            'direct_html_link_index': 0,
+            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'something.html'],
+        }
+
+        self.run_and_check_report(params, expected_results)
+
+    # Test 2: Regression test (CheckM <= v1.0.7) for single problem assembly
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_problem_assembly")
+    def notest_checkM_lineage_wf_full_app_single_problem_assembly(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_single_problem_assembly")
+        print("=================================================================\n")
+
+        if not hasattr(self, 'assembly_OK_ref'):
+            self.prep_assemblies()
+
+        # run checkM lineage_wf app on a single assembly
+        input_ref = self.assembly_dodgy_ref
+        params = {
+            'dir_name': 'dodgy_assembly',
+            'workspace_name': self.ws_info[1],
+            'input_ref': input_ref,
+            'reduced_tree': 1,  # this must be 1 to regression test with --reduced_tree
+            'save_output_dir': 1,
+            'save_plots_dir': 1,
+            'threads': 4
+        }
+
+        expected_results = {
+            'direct_html_link_index': 0,
+            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'something.html'],
+        }
+
+        self.run_and_check_report(params, expected_results)
+
+    # Test 3: binned contigs
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
+    def notest_checkM_lineage_wf_full_app_binned_contigs(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_binned_contigs")
+        print("=================================================================\n")
+
+        if not hasattr(self, 'binned_contigs_ref'):
+            self.prep_binned_contigs()
+
+        # Even with the reduced_tree option, this will take a long time and crash if your
+        # machine has less than ~16gb memory
+
+        # run checkM lineage_wf app on BinnedContigs
+        input_ref = self.binned_contigs_ref
+        params = {
+            'dir_name': 'binned_contigs',
+            'workspace_name': self.ws_info[1],
+            'input_ref': input_ref,
+            'reduced_tree': 1,
+            'save_output_dir': 1,
+            'save_plots_dir': 1,
+            'threads': 4
+        }
+
+        expected_results = {
+            'direct_html_link_index': 0,
+            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
+        }
+
+        self.run_and_check_report(params, expected_results)
+
+    # Test 4: Regression test for empty binned contigs object
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs_EMPTY")
+    def notest_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_binned_contigs_EMPTY")
+        print("=================================================================\n")
+
+        if not hasattr(self, 'binned_contigs_ref'):
+            self.prep_binned_contigs()
+
+        # run checkM lineage_wf app on EMPTY BinnedContigs
+        input_ref = self.binned_contigs_empty_ref
+        params = {
+            'dir_name': 'binned_contigs_empty',
+            'workspace_name': self.ws_info[1],
+            'reduced_tree': 1,
+            'input_ref': input_ref
+        }
+        with self.assertRaises(ValueError) as exception_context:
+            self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
+        self.assertTrue('Binned Assembly is empty' in str(exception_context.exception))
+
+    # Test 5: Assembly Set
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_assemblySet")
+    def notest_checkM_lineage_wf_full_app_assemblySet(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_assemblySet")
+        print("=================================================================\n")
+
+        if not hasattr(self, 'assembly_set_ref'):
+            self.prep_assemblies()
+
+        # run checkM lineage_wf app on an assembly set
+        input_ref = self.assembly_set_ref
+        params = {
+            'dir_name': 'assembly_set',
+            'workspace_name': self.ws_info[1],
+            'input_ref': input_ref,
+            'reduced_tree': 1,
+            'save_output_dir': 1,
+            'save_plots_dir': 1,
+            'threads': 4
+        }
+
+        expected_results = {
+            'direct_html_link_index': 0,
+            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'assembly_1.html', 'assembly_2.html'],
+        }
+
+        self.run_and_check_report(params, expected_results)
+
+    # Test 6: Single Genome
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
+    def notest_checkM_lineage_wf_full_app_single_genome(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_single_genome")
+        print("=================================================================\n")
+
+        if not hasattr(self, 'genome_refs'):
+            self.prep_genomes()
+
+        # run checkM lineage_wf app on a single genome
+        input_ref = self.genome_refs[0]
+        params = {
+            'dir_name': 'single_genome',
+            'workspace_name': self.ws_info[1],
+            'input_ref': input_ref,
+            'reduced_tree': 1,
+            'save_output_dir': 1,
+            'save_plots_dir': 1,
+            'threads': 4
+        }
+        expected_results = {
+            'direct_html_link_index': 0,
+            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome.html'],
+        }
+
+        self.run_and_check_report(params, expected_results)
+
+    # Test 7: Genome Set
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_genomeSet")
+    def notest_checkM_lineage_wf_full_app_genomeSet(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_full_app_genomeSet")
+        print("=================================================================\n")
+
+        if not hasattr(self, 'genome_set_ref'):
+            self.prep_genomes()
+
+        # run checkM lineage_wf app on a genome set
+        input_ref = self.genome_set_ref
+        params = {
+            'dir_name': 'genome_set',
+            'workspace_name': self.ws_info[1],
+            'input_ref': input_ref,
+            'reduced_tree': 1,
+            'save_output_dir': 1,
+            'save_plots_dir': 1,
+            'threads': 4
+        }
+        # two genomes in the genome set
+        expected_results = {
+            'direct_html_link_index': 0,
+            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome_1.html', 'genome_2.html'],
+        }
+
+        self.run_and_check_report(params, expected_results)
+
+    # Test 11: filter binned contigs to HQ binned contigs
+    #
+    # Uncomment to skip this test
+    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
+    def notest_checkM_lineage_wf_withFilter_binned_contigs(self):
+        print("\n=================================================================")
+        print("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
+        print("=================================================================\n")
+
+        if not hasattr(self, 'binned_contigs_ref'):
+            self.prep_binned_contigs()
+
+        # Even with the reduced_tree option, this will take a long time and crash if your
+        # machine has less than ~16gb memory
+        # run checkM lineage_wf app on BinnedContigs
+        input_ref = self.binned_contigs_ref
+        params = {
+            'dir_name': 'binned_contigs_filter',
+            'workspace_name': self.ws_info[1],
+            'input_ref': input_ref,
+            'reduced_tree': 1,
+            'save_output_dir': 1,
+            'save_plots_dir': 1,
+            'completeness_perc': 95.0,
+            'contamination_perc': 1.5,
+            'output_filtered_binnedcontigs_obj_name': 'filter.BinnedContigs',
+            'threads': 4
+        }
+
+        expected_results = {
+            'direct_html_link_index': 0,
+            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
+        }
+
+        self.run_and_check_report(params, expected_results, True)
 
     # Test 10: tetra wiring (intended data not checked into git repo: SKIP)
     #

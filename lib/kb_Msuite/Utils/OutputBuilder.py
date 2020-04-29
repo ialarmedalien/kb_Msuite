@@ -122,7 +122,7 @@ class OutputBuilder(Base, LogMixin):
 
         else:
             log("WARNING: No output produced!")
-            self.logger.warning('WARNING: checkM produced no output!')
+            self.logger.warning('CheckM produced no output!')
             report_params['message'] = 'CheckM did not produce any output.'
 
         report_params['file_links'] = output_packages
@@ -199,11 +199,10 @@ class OutputBuilder(Base, LogMixin):
 
                     bin_id = re.sub('^[^\.]+\.', '', bid)
                     if removed_bins and bin_id in removed_bins:
-                        self.logger.debug("BIN STATS BID " + bid + ": REMOVED")
-
+                        self.logger.debug("bin stats BID " + bid + ", bin_id " + bin_id + ": REMOVED")
                         log("BIN STATS BID " + bid + ": REMOVED")
                     else:
-                        self.logger.debug("BIN STATS BID " + bid)
+                        self.logger.debug("bin stats BID " + bid + ", bin_id " + bin_id)
                         log("BIN STATS BID " + bid)
 
                     # create the dist plot page
@@ -281,6 +280,7 @@ class OutputBuilder(Base, LogMixin):
 
         if not os.path.isfile(stats_file):
             log('Warning! no stats file found (looking at: ' + stats_file + ')')
+            self.logger.warning('No stats file found (looking at: ' + stats_file + ')')
             return bin_stats
 
         with open(stats_file) as lf:
@@ -305,7 +305,7 @@ class OutputBuilder(Base, LogMixin):
         return self._copy_file_new_name_ignore_errors(src, dest)
 
     def _copy_file_new_name_ignore_errors(self, source_path, destination_path):
-        log('copying ' + source_path + ' to ' + destination_path)
+        # log('copying ' + source_path + ' to ' + destination_path)
         try:
             shutil.copy(source_path, destination_path)
         except Exception as e:
