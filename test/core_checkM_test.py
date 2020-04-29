@@ -102,7 +102,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         shutil.copy(os.path.join('data', 'example_out', 'all_seq.fna'), cls.all_seq_fasta)
         """
         end_time_stamp = time.time()
-        self.logger.info("set up time: " + str(end_time_stamp - init_time_stamp))
+        print("set up time: " + str(end_time_stamp - init_time_stamp))
 
     @classmethod
     def tearDownClass(cls):
