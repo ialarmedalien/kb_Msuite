@@ -346,11 +346,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         got_object = self.getWsClient().get_objects2({
             'objects': [{'ref': result['report_ref']}]
         })
-        self.logger.info(got_object)
         rep = got_object['data'][0]['data']
-        self.logger.info("\n\nreport data:")
-        self.logger.info(rep)
-        self.logger.info("\n\n")
+        self.logger.info({'report data': rep})
 
         report_data = {
             'text_message': None,
