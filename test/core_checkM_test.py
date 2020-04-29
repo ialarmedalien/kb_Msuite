@@ -114,6 +114,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             print('Test workspace ' + cls.wsName + ' was deleted')
         pass
 
+    def prep_ref_data(self):
+        self.prep_binned_contigs()
+        self.prep_report()
+        self.prep_genomes()
+
     def getWsClient(self):
         return self.__class__.wsClient
 
@@ -321,6 +326,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         })
         self.report_ref = report_output['ref']
         self.logger.info({'report_ref': self.report_ref})
+
         return True
 
     def run_and_check_report(self, params, expected=None, with_filters=False):
@@ -412,6 +418,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 00_module_init")
         self.logger.info("=================================================================\n")
+
+        self.prep_ref_data()
 
         cmu = CheckMUtil(self.cfg, self.ctx)
 
@@ -602,7 +610,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         with self.subTest('erroneous report object staging'):
             err_msg = 'Cannot stage fasta file input directory from type: '
             with self.assertRaisesRegex(ValueError, err_msg):
-                dsu.stage_input(self.report_ref)
+                cmu.datastagingutils.stage_input(self.report_ref)
 
         with self.subTest('binned contig staging'):
             # test stage binned contigs
