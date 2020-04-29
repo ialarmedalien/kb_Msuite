@@ -42,7 +42,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     @classmethod
     def setUpClass(cls):
-        init_time_stamp = time.time()
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         test_time_stamp = int(time.time() * 1000)
@@ -101,8 +100,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         shutil.copytree(os.path.join('data', 'example_out', 'output'), cls.output_dir)
         shutil.copy(os.path.join('data', 'example_out', 'all_seq.fna'), cls.all_seq_fasta)
         """
-        end_time_stamp = time.time()
-        print("set up time: " + str(end_time_stamp - init_time_stamp))
 
     @classmethod
     def tearDownClass(cls):
@@ -460,17 +457,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'message': text_message,
         })
         self.logger.info(report_output)
-        # self.report_ref = report_output['ref']
+        # {'ref': '49674/1/1', 'name': 'Super_Cool_Extended_Report'}
 
         ws_obj_info = cmu.workspacehelper.get_workspace_object_info(report_output['ref'])
         self.logger.debug(ws_obj_info)
 
+        # [1, 'Super_Cool_Extended_Report', 'KBaseReport.Report-3.0', '2020-04-29T06:29:59+0000', 1, 'ialarmedalien', 49674, 'test_kb_Msuite_1588141790596', '72c0c1862c986bfd8e9dc44d003be88a', 226, None]
         with self.subTest('get_object_property'):
-            obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type')
-            self.assertEqual(obj_type, 'KBaseReport.Report')
-
             obj_name = cmu.workspacehelper.get_object_property(ws_obj_info, 'name')
             self.assertEqual(obj_name, report_object_name)
+
+            obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type')
+            self.assertEqual(obj_type, 'KBaseReport.Report-3.0')
 
             err_str = 'personality is not a valid workspace object property'
             with self.assertRaisesRegex(KeyError, err_str):
@@ -651,7 +649,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             expected_results = {
                 'direct_html_link_index': 0,
                 'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-                'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
+                'html_links': [
+                    'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+                    '002.html', '005.html', '006.html', '009.html', '014.html', '033.html'
+                ],
             }
 
             self.check_report(report, expected_results)

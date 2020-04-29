@@ -81,7 +81,6 @@ class CheckMUtil(Base, LogMixin):
         for type in ['filtered_bins', 'output', 'plots', 'html']:
             run_config[type + '_dir'] = os.path.join(base_dir, type)
 
-#        tab_text_dir = os.path.join(run_config['output_dir'], 'tab_text')
         tab_text_dir = os.path.join(base_dir, 'tab_text')
         run_config['tab_text_dir'] = tab_text_dir
         run_config['bin_basename'] = 'Bin'
@@ -112,7 +111,7 @@ class CheckMUtil(Base, LogMixin):
         self.outputbuilder      = OutputBuilder(self)
         self.workspacehelper    = WorkspaceHelper(self)
 
-        self.logger.debug(run_config)
+        # self.logger.debug(run_config)
 
         return run_config
 
@@ -134,10 +133,11 @@ class CheckMUtil(Base, LogMixin):
         run_config = self._set_run_config(params)
 
         # 1) stage input data
-        self.datastagingutils.stage_input(params['input_ref'])
+        obj_info = self.datastagingutils.stage_input(params['input_ref'])
         log('Staged input directory: ' + run_config['input_dir'])
         self.logger.info('Staged input directory: ' + run_config['input_dir'])
-
+        self.logger.info('input object info:')
+        self.logger.info(obj_info)
         # 2) run the lineage workflow
         lineage_wf_options = {
             'bin_folder': run_config['input_dir'],
@@ -514,7 +514,6 @@ class CheckMUtil(Base, LogMixin):
             'obj_name': params['output_filtered_binnedcontigs_obj_name'],
             'obj_ref':  binned_contigs_ref['binned_contig_obj_ref'],
         }
-
 
     def clean_bin_ID(self, bin_id, fasta_ext):
 
