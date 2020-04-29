@@ -594,7 +594,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             # expect to get back {'obj_name': name, 'obj_type': type}
             self.logger.info(staged_input)
 
-            self.assertEqual(staged_input,{'obj_name': , 'obj_type': })
+            self.assertEqual(staged_input,{'obj_name': 'Binned_Contigs', 'obj_type': 'KBaseMetagenomes.BinnedContigs'})
             self.assertTrue(os.path.isdir(run_config['input_dir']))
             self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
 
@@ -619,6 +619,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self.assertTrue(os.path.isfile(os.path.join(
                 new_run_config['input_dir'], 'Test.Assembly.strange_fasta_extension')
             ))
+            self.assertEqual(
+                staged_input,
+                {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
+            )
 
         rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
 
