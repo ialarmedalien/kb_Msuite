@@ -40,12 +40,12 @@ class WorkspaceHelper(Base, LogMixin):
         if prop not in obj_property:
             raise KeyError(prop + ' is not a valid workspace object property')
 
-        return object_info[obj_property[val]]
+        return object_info[obj_property[prop]]
 
     def get_data_obj_type_by_name(self, ref, remove_module=False):
 
         object_info = self.get_workspace_object_info(ref)
-        obj_name  = self.get_object_property(object_info, 'name')
+        obj_name = self.get_object_property(object_info, 'name')
         obj_type = self.get_object_property(object_info, 'type').split('-')[0]
         if remove_module:
             obj_type = obj_type.split('.')[1]

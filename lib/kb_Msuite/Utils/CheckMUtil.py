@@ -46,7 +46,7 @@ class CheckMUtil(Base, LogMixin):
         # init logger
         logging.basicConfig(
             level=logging.DEBUG,
-            format='%(name)s %(levelname)s %(message)s\n'
+            format='%(name)s %(levelname)s %(message)s'
         )
 
 

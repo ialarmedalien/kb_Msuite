@@ -10,11 +10,11 @@ class LogMixin(object):
 class Base(object):
     pass
 
-if __name__ == '__main__':
-    # Configure only in your main program clause
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(name)s %(levelname)s %(message)s\n')
-
-    main()
+# if __name__ == '__main__':
+#     # Configure only in your main program clause
+#     logging.basicConfig(
+#         level=logging.DEBUG,
+#         format='%(name)s %(levelname)s %(message)s\n')
+#
+#     main()
 

@@ -108,7 +108,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
-            self.logger.info('Test workspace ' + cls.wsName + ' was deleted')
+            print('Test workspace ' + cls.wsName + ' was deleted')
         pass
 
     def getWsClient(self):
@@ -355,7 +355,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         for key in expected.keys():
             with self.subTest('checking ' + key):
                 if key == 'file_links' or key == 'html_links':
-                    self.check_report_links(rep, type, report_data)
+                    self.check_report_links(rep, key, report_data)
                 else:
                     self.assertEqual(rep[key], report_data[key])
 
@@ -416,7 +416,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         }
         for attr, type in obj_name_to_type.items():
             self.assertTrue(hasattr(cmu, attr))
-            self.assertIsInstance(cmu[attr], type)
+            self.assertIsInstance(getattr(cmu, attr), type)
 
         # ensure we can reset the run_config
         base_dir = run_config['base_dir']
