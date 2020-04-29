@@ -87,8 +87,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
         print({'ws_info': cls.ws_info})
 
-        cls.refdata_wsName = "test_kb_Msuite_refdata" + str(cls.suffix)
-        cls.wsClient.delete_workspace({'workspace': cls.refdata_wsName})
+        cls.refdata_wsName = "test_kb_Msuite_refdata_" + str(cls.suffix)
         cls.refdata_ws_info = cls.wsClient.create_workspace({'workspace': cls.refdata_wsName})
         print({'refdata_ws_info': cls.refdata_ws_info})
         cls.au      = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
