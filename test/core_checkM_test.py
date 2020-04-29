@@ -464,31 +464,43 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         ws_obj_info = cmu.workspacehelper.get_workspace_object_info(report_output['ref'])
         self.logger.debug(ws_obj_info)
-        obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type')
-        self.assertEqual(obj_type, 'KBaseReport.Report')
-        obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type', remove_module=True)
-        self.assertEqual(obj_type, 'Report')
 
-        err_str = 'personality is not a valid workspace object property'
-        with self.assertRaisesRegex(KeyError, err_str):
-            cmu.workspacehelper.get_object_property(ws_obj_info, 'personality')
+        with self.subTest('get_object_property'):
+            obj_type = cmu.workspacehelper.get_object_property(ws_obj_info, 'type')
+            self.assertEqual(obj_type, 'KBaseReport.Report')
 
-        obj_name = cmu.workspacehelper.get_object_property(ws_obj_info, 'name')
-        self.assertEqual(obj_name, report_object_name)
+            obj_name = cmu.workspacehelper.get_object_property(ws_obj_info, 'name')
+            self.assertEqual(obj_name, report_object_name)
 
-        result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'])
-        self.assertEqual(result, {report_object_name: 'KBaseReport.Report'})
+            err_str = 'personality is not a valid workspace object property'
+            with self.assertRaisesRegex(KeyError, err_str):
+                cmu.workspacehelper.get_object_property(ws_obj_info, 'personality')
 
-        result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'], True)
-        self.assertEqual(result, {report_object_name: 'Report'})
+        with self.subTest('get_data_obj type and name'):
+            obj_name = cmu.workspacehelper.get_data_obj_anme(report_output['ref'])
+            self.assertEqual(obj_name, report_object_name)
 
-        ws_obj = cmu.workspacehelper.get_obj_from_workspace(report_output['ref'])
-        self.logger.info(ws_obj)
-        self.assertEqual(ws_obj.text_message, text_message)
+            obj_type = cmu.workspacehelper.get_data_obj_type(report_output['ref'], True)
+            self.assertEqual(obj_type, 'Report')
 
-        err_str = 'Unable to fetch ROTFLMAO object from workspace:'
-        with self.assertRaisesRegex(ValueError, err_str):
-            cmu.workspacehelper.get_obj_from_workspace('ROTFLMAO')
+            obj_type = cmu.workspacehelper.get_data_obj_type(report_output['ref'])
+            self.assertEqual(obj_type, 'KBaseReport.Report')
+
+        with self.subTest('get_data_obj_type_by_name'):
+            result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'])
+            self.assertEqual(result, {report_object_name: 'KBaseReport.Report'})
+
+            result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'], True)
+            self.assertEqual(result, {report_object_name: 'Report'})
+
+        with self.subTest('get obj from workspace'):
+            ws_obj = cmu.workspacehelper.get_obj_from_workspace(report_output['ref'])
+            self.logger.info(ws_obj)
+            self.assertEqual(ws_obj.text_message, text_message)
+
+            err_str = 'Unable to fetch ROTFLMAO object from workspace:'
+            with self.assertRaisesRegex(ValueError, err_str):
+                cmu.workspacehelper.get_obj_from_workspace('ROTFLMAO')
 
     def test_00_init_client(self):
 
@@ -661,9 +673,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             expected_results = {
                 'file_links': ['full_output'],
                 'text_message': 'CheckM did not produce any output.',
-                'html_links': None,
-                'direct_html_link_index': None,
-                'objects_created': [],
             }
             self.check_report(report, expected_results)
             shutil.rmtree(run_config['base_dir'])

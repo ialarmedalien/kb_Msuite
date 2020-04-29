@@ -46,7 +46,8 @@ class WorkspaceHelper(Base, LogMixin):
 
         object_info = self.get_workspace_object_info(ref)
         obj_name = self.get_object_property(object_info, 'name')
-        obj_type = self.get_object_property(object_info, 'type').split('-')[0]
+        raw_type = self.get_object_property(object_info, 'type')
+        obj_type = raw_type.split('-')[0]
         if remove_module:
             obj_type = obj_type.split('.')[1]
         return {obj_name: obj_type}
@@ -59,7 +60,8 @@ class WorkspaceHelper(Base, LogMixin):
     def get_data_obj_type(self, ref, remove_module=False):
 
         object_info = self.get_workspace_object_info(ref)
-        obj_type = self.get_object_property(object_info, 'type').split('-')[0]
+        raw_type = self.get_object_property(object_info, 'type')
+        obj_type = raw_type.split('-')[0]
         if remove_module:
             obj_type = obj_type.split('.')[1]
         return obj_type
