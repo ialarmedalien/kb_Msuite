@@ -523,7 +523,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
             err_str = "Must supply either ref or object info to get_ws_obj_name"
             with self.assertRaisesRegex(ValueError, err_str):
-                cmu.workspacehelper.get_ws_obj_name(remove_module=True)
+                cmu.workspacehelper.get_ws_obj_name()
 
             err_str = "Must supply either ref or object info to get_ws_obj_type"
             with self.assertRaisesRegex(ValueError, err_str):
