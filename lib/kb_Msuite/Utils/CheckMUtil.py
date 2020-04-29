@@ -210,11 +210,11 @@ class CheckMUtil(Base, LogMixin):
         self.logger.debug('sending log output to ' + log_output_filename)
         with open(log_output_filename, 'w') as log_output_file:
 
-            current_tree = subprocess.run(['tree', run_config['base_dir']],
-                stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-            log_output_file.write(current_tree.stdout)
-            log_output_file.write("\n\n\n")
-
+#             current_tree = subprocess.run(['tree', run_config['base_dir']],
+#                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
+#             log_output_file.write(current_tree.stdout)
+#             log_output_file.write("\n\n\n")
+#
             p = subprocess.Popen(command, cwd=self.scratch, shell=False,
                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
     #         else:
@@ -222,10 +222,10 @@ class CheckMUtil(Base, LogMixin):
 
             exitCode = p.wait()
 
-            current_tree = subprocess.run(['tree', run_config['base_dir']],
-                stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-            log_output_file.write("\n\n\n")
-            log_output_file.write(current_tree.stdout)
+#             current_tree = subprocess.run(['tree', run_config['base_dir']],
+#                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
+#             log_output_file.write("\n\n\n")
+#             log_output_file.write(current_tree.stdout)
 
 #         if log_output_file:
 #             log_output_file.close()
