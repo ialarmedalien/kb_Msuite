@@ -319,7 +319,7 @@ class CheckMUtil(Base, LogMixin):
         self.logger.debug('obj_type: ' + obj_type)
 
         if obj_type == 'KBaseMetagenomes.BinnedContigs' \
-          and params.get('output_filtered_binnedcontigs_obj_name'):
+          and 'output_filtered_binnedcontigs_obj_name' in params:
             run_config['results_filtered'] = True
         else:
             return None
@@ -327,6 +327,7 @@ class CheckMUtil(Base, LogMixin):
         bin_fasta_files_by_bin_ID = self.datastagingutils.get_bin_fasta_files(
             run_config['input_dir'], run_config['fasta_ext']
         )
+        self.logger.debug({"bin_fasta_files_by_bin_ID": bin_fasta_files_by_bin_ID})
 
         if not bin_fasta_files_by_bin_ID:
             return None

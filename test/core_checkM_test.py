@@ -565,7 +565,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # @unittest.skip("skipped test_data_staging")
     # missing test data for this custom test
     # note that the DataStagingUtils interface has not been updated below since the test is skipped
-    def notest_01_data_staging(self):
+    def test_01_data_staging(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging")
@@ -587,33 +587,153 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         with self.assertRaisesRegex(ValueError, err_msg):
             dsu.stage_input(self.report_ref)
 
-        # test stage binned contigs
-        staged_input = dsu.stage_input(self.binned_contigs_ref)
-        self.logger.info(staged_input)
+        with self.subTest('binned contig staging'):
+            # test stage binned contigs
+            staged_input = dsu.stage_input(self.binned_contigs_ref)
+            self.logger.info(staged_input)
 
-        self.assertTrue(os.path.isdir(staged_input['input_dir']))
-        self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
-        self.assertIn('folder_suffix', staged_input)
+            self.assertTrue(os.path.isdir(staged_input['input_dir']))
+            self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
+            self.assertIn('folder_suffix', staged_input)
 
-        self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
-                                                    'out_header.001.fna')))
-        self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
-                                                    'out_header.002.fna')))
-        self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
-                                                    'out_header.003.fna')))
+            self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
+                                                        'out_header.001.fna')))
+            self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
+                                                        'out_header.002.fna')))
+            self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
+                                                        'out_header.003.fna')))
 
-        cmu.fasta_extension = 'strange_fasta_extension'
-        # reset the run_config
-        cmu._set_run_config()
-        dsu = cmu.datastagingutils
-        staged_input = dsu.stage_input(self.assembly_OK_ref)
-        self.logger.info(staged_input)
-        self.assertTrue(os.path.isdir(staged_input['input_dir']))
-        self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
-        self.assertIn('folder_suffix', staged_input)
+        with self.subTest('strange fasta extension'):
+            cmu.fasta_extension = 'strange_fasta_extension'
+            # reset the run_config
+            cmu._set_run_config()
+            dsu = cmu.datastagingutils
+            staged_input = dsu.stage_input(self.assembly_OK_ref)
+            self.logger.info(staged_input)
+            self.assertTrue(os.path.isdir(staged_input['input_dir']))
+            self.assertTrue(os.path.isfile(staged_input['all_seq_fasta']))
+            self.assertIn('folder_suffix', staged_input)
 
-        self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
-                                                    'Test.Assembly.strange_fasta_extension')))
+            self.assertTrue(os.path.isfile(os.path.join(staged_input['input_dir'],
+                                                        'Test.Assembly.strange_fasta_extension')))
+
+    def test_02_filter_binned_contigs(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs")
+        self.logger.info("=================================================================\n")
+
+        if not hasattr(self, 'report_ref'):
+            self.prep_report()
+
+        if not hasattr(self, 'binned_contigs_ref'):
+            self.prep_binned_contigs()
+
+        self.logger.critical('Data loaded. Starting tests!')
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
+
+        with self.subTest('input errors'):
+            # wrong type
+            self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.report_ref}))
+            self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.assembly_dodgy_ref}))
+
+            # no output_filtered_binnedcontigs_obj_name
+            self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.binned_contigs_ref}))
+
+            # empty input dir
+            os.makedirs(cmu.run_config()['input_dir'], exist_ok=True)
+            self.assertIsNone(cmu._filter_binned_contigs({
+                'input_ref': self.binned_contigs_ref,
+                'output_filtered_binnedcontigs_obj_name': 'Robin',
+            }))
+
+        with self.subTest('missing IDs in checkM output'):
+            output_dir = cmu.run_config()['output_dir']
+            os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
+
+            # copy over a results file
+            shutil.copy(
+                os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
+                os.path.join(output_dir, 'storage', 'bin_stats_ext.tsv')
+            )
+
+            for bid in list(range(5)):
+                bid_path = os.path.join(output_dir, 'bins', 'out_header.00' + str(bid))
+                os.makedirs(bid_path, exist_ok=True)
+                Path(os.path.join(bid_path, 'genes.faa')).touch(exist_ok=True)
+
+            missing_ids = ['out_header.000', 'out_header.004']
+            err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
+            with self.assertRaisesRegex(ValueError, err_str):
+                cmu._filter_binned_contigs({
+                    'input_ref': self.binned_contigs_ref,
+                    'output_filtered_binnedcontigs_obj_name': 'Robin',
+                })
+
+        with self.subTest('No HQ bins'):
+
+            # delete the two interloper directories
+            for bid in missing_ids:
+                os.rmtree(os.path.join(output_dir, 'bins', bid), exist_ok=True)
+
+            # no high quality bins
+            self.assertIsNone(cmu._filter_binned_contigs({
+                'input_ref': self.binned_contigs_ref,
+                'output_filtered_binnedcontigs_obj_name': 'Robin',
+                'completeness_perc': 99.0,
+                'contamination_perc': 1.0,
+            }))
+            # no summary file
+            self.assertFalse(os.path.exists(run_config['summary_file_path']))
+            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+
+        with self.subTest('some HQ bins'):
+            # 001 and 002 will pass
+            contig_filtering_results = cmu._filter_binned_contigs({
+                'input_ref': self.binned_contigs_ref,
+                'output_filtered_binnedcontigs_obj_name': 'Robin',
+                'completeness_perc': 95.0,
+                'contamination_perc': 1.5,
+            })
+
+            self.assertEqual(contig_filtering_results['filtered_object_name'], 'Robin')
+            self.assertEqual(
+                sorted(contig_filtering_results['retained_bin_IDs'].keys()),
+                ['out_header.001', 'out_header.002']
+            )
+            self.assertEqual(
+                sorted(contig_filtering_results['removed_bin_IDs'].keys()),
+                ['out_header.003']
+            )
+            self.assertTrue('filtered_obj_ref' in contig_filtering_results)
+            # summary file has been created
+            self.assertTrue(os.path.exists(run_config['summary_file_path']))
+            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+
+        with self.subTest('All HQ bins'):
+            # remove the summary file and re-filter so all pass
+            os.remove(run_config['summary_file_path'])
+            contig_filtering_results = cmu._filter_binned_contigs({
+                'input_ref': self.binned_contigs_ref,
+                'output_filtered_binnedcontigs_obj_name': 'Octocat',
+                'completeness_perc': 95.0,
+                'contamination_perc': 2.0,
+            })
+            self.assertEqual(contig_filtering_results['filtered_object_name'], 'Octocat')
+            self.assertEqual(
+                sorted(contig_filtering_results['retained_bin_IDs'].keys()),
+                ['out_header.001', 'out_header.002', 'out_header.003']
+            )
+            self.assertEqual(
+                sorted(contig_filtering_results['removed_bin_IDs'].keys()),
+                []
+            )
+            self.assertTrue('filtered_obj_ref' in contig_filtering_results)
+            # summary file has been created
+            self.assertTrue(os.path.exists(run_config['summary_file_path']))
+            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
 
     # Test 9: Plotting (intended data not checked into git repo: SKIP)
@@ -715,122 +835,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #         self.assertIn('description', res)
 #
 #         self.assertEqual(res['html_links'][0]['name'], self.getImpl().run_config['html_file'])
-
-    def test_02_filter_binned_contigs(self):
-
-        self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs")
-        self.logger.info("=================================================================\n")
-
-        if not hasattr(self, 'report_ref'):
-            self.prep_report()
-
-        if not hasattr(self, 'binned_contigs_ref'):
-            self.prep_binned_contigs()
-
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        cmu.run_config()
-
-        # wrong type
-        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.report_ref}))
-        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.assembly_dodgy_ref}))
-
-        # no output_filtered_binnedcontigs_obj_name
-        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.binned_contigs_ref}))
-
-        # empty input dir
-        os.makedirs(cmu.run_config()['input_dir'], exist_ok=True)
-        self.assertIsNone(cmu._filter_binned_contigs({
-            'input_ref': self.binned_contigs_ref,
-            'output_filtered_binnedcontigs_obj_name': 'Robin',
-        }))
-
-        with self.subTest('missing IDs in checkM output'):
-            output_dir = cmu.run_config()['output_dir']
-            os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
-
-            # copy over a results file
-            shutil.copy(
-                os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
-                os.path.join(output_dir, 'storage', 'bin_stats_ext.tsv')
-            )
-
-            for bid in list(range(5)):
-                bid_path = os.path.join(output_dir, 'bins', 'out_header.00' + str(bid))
-                os.makedirs(bid_path, exist_ok=True)
-                Path(os.path.join(bid_path, 'genes.faa')).touch(exist_ok=True)
-
-            missing_ids = ['out_header.000', 'out_header.004']
-            err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
-            with self.assertRaisesRegex(ValueError, err_str):
-                cmu._filter_binned_contigs({
-                    'input_ref': self.binned_contigs_ref,
-                    'output_filtered_binnedcontigs_obj_name': 'Robin',
-                })
-
-        with self.subTest('No HQ bins'):
-
-            # delete the two interloper directories
-            for bid in missing_ids:
-                os.rmtree(os.path.join(output_dir, 'bins', bid), exist_ok=True)
-
-            # no high quality bins
-            self.assertIsNone(cmu._filter_binned_contigs({
-                'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Robin',
-                'completeness_perc': 99.0,
-                'contamination_perc': 1.0,
-            }))
-            # no summary file
-            self.assertFalse(os.path.exists(run_config['summary_file_path']))
-            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
-
-        with self.subTest('some HQ bins'):
-            # 001 and 002 will pass
-            contig_filtering_results = cmu._filter_binned_contigs({
-                'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Robin',
-                'completeness_perc': 95.0,
-                'contamination_perc': 1.5,
-            })
-
-            self.assertEqual(contig_filtering_results['filtered_object_name'], 'Robin')
-            self.assertEqual(
-                sorted(contig_filtering_results['retained_bin_IDs'].keys()),
-                ['out_header.001', 'out_header.002']
-            )
-            self.assertEqual(
-                sorted(contig_filtering_results['removed_bin_IDs'].keys()),
-                ['out_header.003']
-            )
-            self.assertTrue('filtered_obj_ref' in contig_filtering_results)
-            # summary file has been created
-            self.assertTrue(os.path.exists(run_config['summary_file_path']))
-            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
-
-        with self.subTest('All HQ bins'):
-            # remove the summary file and re-filter so all pass
-            os.remove(run_config['summary_file_path'])
-            contig_filtering_results = cmu._filter_binned_contigs({
-                'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Octocat',
-                'completeness_perc': 95.0,
-                'contamination_perc': 2.0,
-            })
-            self.assertEqual(contig_filtering_results['filtered_object_name'], 'Octocat')
-            self.assertEqual(
-                sorted(contig_filtering_results['retained_bin_IDs'].keys()),
-                ['out_header.001', 'out_header.002', 'out_header.003']
-            )
-            self.assertEqual(
-                sorted(contig_filtering_results['removed_bin_IDs'].keys()),
-                []
-            )
-            self.assertTrue('filtered_obj_ref' in contig_filtering_results)
-            # summary file has been created
-            self.assertTrue(os.path.exists(run_config['summary_file_path']))
-            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
-
 
     # Test 1: single assembly
     #
