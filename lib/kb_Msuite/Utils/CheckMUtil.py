@@ -120,18 +120,18 @@ class CheckMUtil(Base, LogMixin):
         if 'workspace_name' not in params:
             raise ValueError('workspace_name field was not set in params for run_checkM_lineage_wf')
 
-        # normalize params
-        if 'reduced_tree' in params:
-            if params['reduced_tree'] is None or not int(params['reduced_tree']) == 1:
-                del params['reduced_tree']
+        # normalize boolean params
+        for p in ['reduced_tree', 'save_plots_dir', 'save_output_dir']:
+            if p in params:
+                if params[p] is None or not int(params[p]) == 1:
+                    del params[p]
 
         run_config = self._set_run_config(params)
 
         # 1) stage input data
         obj_info = self.datastagingutils.stage_input(params['input_ref'])
         self.logger.info('Staged input directory: ' + run_config['input_dir'])
-        self.logger.info('input object info:')
-        self.logger.info(obj_info)
+        self.logger.info({'input object info': obj_info})
 
         # 2) run the lineage workflow
         lineage_wf_options = {
@@ -139,7 +139,7 @@ class CheckMUtil(Base, LogMixin):
             'out_folder': run_config['output_dir'],
             'threads':    self.threads,
         }
-        if ('reduced_tree' in params):
+        if 'reduced_tree' in params:
             lineage_wf_options['reduced_tree'] = params['reduced_tree']
 
         # dump out the current dir structure
@@ -316,6 +316,8 @@ class CheckMUtil(Base, LogMixin):
 
         obj_type = self.workspacehelper.get_data_obj_type(params['input_ref'])
 
+        self.logger.debug('obj_type: ' + obj_type)
+
         if obj_type == 'KBaseMetagenomes.BinnedContigs' \
           and params.get('output_filtered_binnedcontigs_obj_name'):
             run_config['results_filtered'] = True
@@ -329,14 +331,13 @@ class CheckMUtil(Base, LogMixin):
         if not bin_fasta_files_by_bin_ID:
             return None
 
-        self.logger.debug("bin_fasta_files_by_bin_ID: ")
-        self.logger.debug(bin_fasta_files_by_bin_ID)
+        bin_IDs = sorted(bin_fasta_files_by_bin_ID.keys())
+
+        self.logger.debug({"bin_IDs": bin_IDs})
 
         filtered_bins_dir = run_config['filtered_bins_dir']
         if not os.path.exists(filtered_bins_dir):
             os.makedirs(filtered_bins_dir)
-
-        bin_IDs = sorted(bin_fasta_files_by_bin_ID.keys())
 
         # read CheckM stats to get completeness and contamination scores
         test_completeness = False
@@ -427,8 +428,7 @@ class CheckMUtil(Base, LogMixin):
                     self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
 
         missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
-        self.logger.info("missing IDs:")
-        self.logger.info(missing_ids)
+        self.logger.info({"missing IDs:": missing_ids})
         if missing_ids:
             raise ValueError("The following Bin IDs are missing from the checkM output: "
                 + ", ".join(sorted(missing_ids)))

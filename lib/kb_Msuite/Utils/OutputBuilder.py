@@ -76,10 +76,7 @@ class OutputBuilder(Base, LogMixin):
             bin_stats_data = self.read_bin_stats_file()
 
         if bin_stats_data:
-            # create bin report summary TSV table text file
-            self.logger.info('creating TSV summary table text file')
-            # self.build_summary_tsv_file(bin_stats_data, removed_bins)
-
+            self.logger.info('creating HTML and TSV summary tables')
             html_links = self.build_html_output_for_lineage_wf(bin_stats_data, params, removed_bins)
             report_params['direct_html_link_index'] = 0
             report_params['html_links'] = html_links
@@ -96,7 +93,7 @@ class OutputBuilder(Base, LogMixin):
                 'description': 'TSV Summary Table from CheckM',
             })
 
-            if 'save_plots_dir' in params and str(params['save_plots_dir']) == '1':
+            if 'save_plots_dir' in params:
                 self.logger.info('packaging output plots directory')
                 output_packages.append({
                     'name': 'plots',

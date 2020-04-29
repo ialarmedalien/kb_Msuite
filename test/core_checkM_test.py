@@ -750,7 +750,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
 
             # copy over a results file
-            shutil.copy(os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
+            shutil.copy(
+                os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
                 os.path.join(output_dir, 'storage', 'bin_stats_ext.tsv')
             )
 
