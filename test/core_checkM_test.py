@@ -494,7 +494,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         with self.subTest('get obj from workspace'):
             ws_obj = cmu.workspacehelper.get_obj_from_workspace(report_output['ref'])
             self.logger.info(ws_obj)
-            self.assertEqual(ws_obj.text_message, text_message)
+            self.assertEqual(ws_obj['text_message'], text_message)
 
             err_str = 'Unable to fetch ROTFLMAO object from workspace:'
             with self.assertRaisesRegex(ValueError, err_str):
@@ -651,7 +651,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
                 'html_links': [
                     'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                    '002.html', '005.html', '006.html', '009.html', '014.html', '033.html'
+                    'bin002.html', 'bin005.html', 'bin006.html',
+                    'bin009.html', 'bin014.html', 'bin033.html',
                 ],
             }
 
