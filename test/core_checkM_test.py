@@ -85,9 +85,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         cls.wsName  = "test_kb_Msuite_" + str(cls.suffix)
         cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
+        print({'ws_info': cls.ws_info})
 
         cls.refdata_wsName = "test_kb_Msuite_refdata"
         cls.refdata_ws_info = cls.wsClient.create_workspace({'workspace': cls.refdata_wsName})
+        print({'refdata_ws_info': cls.refdata_ws_info})
 
         cls.au      = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
         cls.gfu     = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
@@ -148,27 +150,33 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
             saved_assembly = self.au.save_assembly_from_fasta({
                 'file': {'path': assembly_file_path},
-                'workspace_name': self.ws_info[1],
+                'workspace_name': self.refdata_ws_info[1],
                 'assembly_name': assembly['name'],
             })
             setattr(self, assembly['attr'], saved_assembly)
-            self.logger.info({'assembly_attr': assembly['attr'], 'Saved Assembly': saved_assembly})
+            self.logger.info({
+                'assembly_attr': assembly['attr'],
+                'Saved Assembly': saved_assembly,
+            })
 
         # create an AssemblySet
         assembly_items = [
             {'ref': self.assembly_OK_ref, 'label': 'assembly_1'},
             {'ref': self.assembly_dodgy_ref, 'label': 'assembly_2'}
         ]
-        self.assembly_set_ref = self.setAPI.save_assembly_set_v1({
-            'workspace_name': self.ws_info[1],
+        saved_assembly_set = self.setAPI.save_assembly_set_v1({
+            'workspace_name': self.refdata_ws_info[1],
             'output_object_name': 'TEST_ASSEMBLY_SET',
             'data': {
                 'description': 'test assembly set',
                 'items': assembly_items,
             },
-        })['set_ref']
-        self.logger.info('Saved AssemblySet:')
-        self.logger.info(getattr(self, 'assembly_set_ref'))
+        })
+        self.assembly_set_ref = saved_assembly_set_ref['set_ref']
+        self.logger.info({
+            'assembly_set_ref': self.assembly_set_ref,
+            'Saved AssemblySet': saved_assembly_set,
+        })
 
         return True
 
@@ -197,15 +205,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
             saved_object = self.mu.file_to_binned_contigs({
                 'file_directory': binned_contigs_path,
-                'workspace_name': self.ws_info[1],
+                'workspace_name': self.refdata_ws_info[1],
                 'assembly_ref': self.assembly_OK_ref,
                 'binned_contig_name': bc['name'],
             })
 
-            self.logger.debug({'saved_object': saved_object})
             setattr(self, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
-            self.logger.info('Saved BinnedContigs:')
-            self.logger.info(getattr(self, bc['path'] + '_ref'))
+            self.logger.info({
+                'Saved BinnedContigs': saved_object,
+                bc['path'] + '_ref': getattr(self, bc['path'] + '_ref')
+            })
 
         return True
 
@@ -224,12 +233,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             if not os.path.exists(genome_file_path):
                 shutil.copy(os.path.join("data", "genomes", genome_filename), genome_file_path)
 
-            self.genome_refs.append(self.gfu.genbank_to_genome({
-                    'file': {'path': genome_file_path},
-                    'workspace_name': self.ws_info[1],
-                    'genome_name': genome_filename,
-                    'generate_ids_if_needed': 1,
-                })['genome_ref'])
+            genome_data = self.gfu.genbank_to_genome({
+                'file': {'path': genome_file_path},
+                'workspace_name': self.refdata_ws_info[1],
+                'genome_name': genome_filename,
+                'generate_ids_if_needed': 1,
+            })
+            self.genome_refs.append(genome_data['genome_ref'])
+            self.logger.info({'Saved Genome': genome_data})
+
+        self.logger.info({'genome_refs': self.genome_refs})
 
         # create a genomeSet
         genome_scinames = dict()
@@ -244,7 +257,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             testGS['elements'][genome_scinames[genome_ref]] = {'ref': genome_ref}
 
         obj_info = self.wsClient.save_objects({
-            'workspace': self.ws_info[1],
+            'workspace': self.refdata_ws_info[1],
             'objects': [
                 {
                     'type': 'KBaseSearch.GenomeSet',
@@ -261,6 +274,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             })[0]
         self.genome_set_ref = str(obj_info[WSID_I]) + '/' + str(obj_info[OBJID_I]) + '/' + str(obj_info[VERSION_I])
 
+        self.logger.info({'Genome set ref': self.genome_set_ref})
         return True
 
     def prep_report(self):
@@ -300,12 +314,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         # add a kbasereport object
         report_output = self.kr.create_extended_report({
-            'workspace_name': self.wsName,
+            'workspace_name': self.refdata_wsName,
             'report_object_name': 'my_report',
             'direct_html_link_index': 0,
             'html_links': tmpl_arr,
         })
         self.report_ref = report_output['ref']
+        self.logger.info({'report_ref': self.report_ref})
+        return True
 
     def run_and_check_report(self, params, expected=None, with_filters=False):
 
@@ -1008,7 +1024,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
-    def notest_checkM_lineage_wf_full_app_single_genome(self):
+    def test_checkM_lineage_wf_full_app_single_genome(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_full_app_single_genome")
         self.logger.info("=================================================================\n")
@@ -1029,7 +1045,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         }
         expected_results = {
             'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome.html'],
         }
 
