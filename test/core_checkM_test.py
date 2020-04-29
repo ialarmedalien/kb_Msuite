@@ -716,7 +716,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #
 #         self.assertEqual(res['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
-    def notest_02_filter_binned_contigs(self):
+    def test_02_filter_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs")
@@ -729,7 +729,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self.prep_binned_contigs()
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu._set_run_config({'input_ref': self.report_ref})
+        cmu.run_config()
 
         # wrong type
         self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.report_ref}))

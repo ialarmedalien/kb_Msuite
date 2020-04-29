@@ -120,6 +120,7 @@ class CheckMUtil(Base, LogMixin):
         if 'workspace_name' not in params:
             raise ValueError('workspace_name field was not set in params for run_checkM_lineage_wf')
 
+        # normalize params
         if 'reduced_tree' in params:
             if params['reduced_tree'] is None or not int(params['reduced_tree']) == 1:
                 del params['reduced_tree']
@@ -149,7 +150,7 @@ class CheckMUtil(Base, LogMixin):
             return self.outputbuilder.build_report(params)
 
         # 3) optionally filter bins by quality scores and save object
-        filtered_obj_info = self._filter_binned_contigs(params)
+        filtered_obj_info = self._filter_binned_contigs(params, obj_info)
 
         # 4) make the plots:
         self.build_checkM_lineage_wf_plots()
@@ -196,7 +197,7 @@ class CheckMUtil(Base, LogMixin):
                 dist_value
         '''
         command = self._build_command(subcommand, options)
-        self.logger.debug('\n\ncheckMUtil.run_checkM: Running: ' + ' '.join(command) + '\n\n')
+        self.logger.debug('run_checkM: Running: ' + ' '.join(command) + '\n\n')
         run_config = self.run_config()
 
 #         log_output_file = None
@@ -303,11 +304,18 @@ class CheckMUtil(Base, LogMixin):
 
         return command
 
-    def _filter_binned_contigs(self, params):
+    def _filter_binned_contigs(self, params, obj_info):
 
         run_config = self.run_config()
 
-        if self.datastagingutils.get_data_obj_type(params['input_ref']) == 'KBaseMetagenomes.BinnedContigs' \
+#         return {
+#             'obj_name': obj_name,
+#             'obj_type': obj_type,
+#         }
+
+        obj_type = self.workspacehelper.get_data_obj_type(params['input_ref'])
+
+        if obj_type == 'KBaseMetagenomes.BinnedContigs' \
           and params.get('output_filtered_binnedcontigs_obj_name'):
             run_config['results_filtered'] = True
         else:
@@ -430,9 +438,8 @@ class CheckMUtil(Base, LogMixin):
             return None
 
         # create BinnedContig object from filtered bins
-        binned_contig_obj = self.datastagingutils.get_obj_from_workspace(params['input_ref'])
-
-        self.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj)
+        binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
+        self.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj, retained_bin_IDs)
         new_binned_contigs_info = self.save_binned_contigs(params, binned_contig_obj['assembly_ref'])
 
         return {
@@ -442,19 +449,31 @@ class CheckMUtil(Base, LogMixin):
             'removed_bin_IDs':   removed_bin_IDs,
         }
 
-    def build_bin_summary_file_from_binnedcontigs_obj(self, binned_contig_obj):
+    def build_bin_summary_file_from_binnedcontigs_obj(self, binned_contig_obj, retained_bin_IDs):
 
         run_config   = self.run_config()
         fasta_ext    = run_config['fasta_ext']
         bin_dir      = run_config['filtered_bins_dir']
         bin_basename = run_config['bin_basename']
 
+        dsu = self.datastagingutils
+        filtered_bin_ID_dict = dsu.get_bin_fasta_files(run_config['filtered_bins_dir'], fasta_ext)
+
+        filtered_bin_IDs = [self.clean_bin_ID(bin_ID, fasta_ext) for bin_ID in sorted(filtered_bin_ID_dict.keys())]
+
+        self.logger.debug('filtered_bin_IDs:')
+        self.logger.debug(filtered_bin_IDs)
+
+        self.logger.debug('retained_bin_IDs')
+        self.logger.debug(retained_bin_IDs)
+
         bin_summary_info = dict()
-        # bid in object is full name of contig fasta file.  want just the number
+
+        # bid in object is full name of contig fasta file. want just the number
         for bin_item in binned_contig_obj['bins']:
-            #self.logger.debug("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
             bin_ID = self.clean_bin_ID(bin_item['bid'], fasta_ext)
 
+            #self.logger.debug("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
             #self.logger.debug("BIN_ID: "+bin_ID)  # DEBUG
             bin_summary_info[bin_ID] = {
                 'n_contigs':        bin_item['n_contigs'],
@@ -463,22 +482,17 @@ class CheckMUtil(Base, LogMixin):
                 'cov':              round(100.0 * float(bin_item['cov']), 1),
             }
 
-        dsu = self.datastagingutils
-        bin_fasta_files_by_bin_ID = dsu.get_bin_fasta_files(run_config['filtered_bins_dir'], fasta_ext)
-
-        bin_IDs = [self.clean_bin_ID(bin_ID, fasta_ext) for bin_ID in sorted(bin_fasta_files_by_bin_ID.keys())]
-
-        summary_file_path = run_config['summary_file_path']
-
-
         # write summary file for just those bins present in bin_dir
         self.logger.info("writing filtered binned contigs summary file " + summary_file_path)
+
+        summary_file_path = run_config['summary_file_path']
         with open(summary_file_path, 'w') as summary_file_handle:
 
             header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
-
             summary_file_handle.write("\t".join(header_line)+"\n")
-            for bin_ID in bin_IDs:
+
+
+            for bin_ID in filtered_bin_IDs:
                 #self.logger.debug("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
                 bin_summary_info_line = [
                     bin_basename + '.' + str(bin_ID) + '.' + fasta_ext,
@@ -493,8 +507,7 @@ class CheckMUtil(Base, LogMixin):
     def save_binned_contigs(self, params, assembly_ref):
 
         run_config   = self.run_config()
-        mgu = self.client('MetagenomeUtils')
-        binned_contigs_ref = mgu.file_to_binned_contigs({
+        binned_contigs_ref = self.client('MetagenomeUtils').file_to_binned_contigs({
             'file_directory':       run_config['filtered_bins_dir'],
             'assembly_ref':         assembly_ref,
             'binned_contig_name':   params['output_filtered_binnedcontigs_obj_name'],
