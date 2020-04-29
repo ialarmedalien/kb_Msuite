@@ -515,6 +515,6 @@ class CheckMUtil(Base, LogMixin):
             'obj_ref':  binned_contigs_ref['binned_contig_obj_ref'],
         }
 
-    def clean_bin_ID(self, bin_id, fasta_ext):
+    def clean_bin_ID(self, bin_id, extension=''):
 
-        return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
+        return re.sub('^[^\.]+\.', '', bin_id.replace('.' + extension, ''))

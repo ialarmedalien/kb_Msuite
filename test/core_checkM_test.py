@@ -438,6 +438,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         for bid in bin_ids:
             self.logger.info(cmu.clean_bin_ID(bid, 'fasta'))
+            self.logger.info(cmu.clean_bin_ID(bid))
 
     def test_00_workspace_helper(self):
 
@@ -462,7 +463,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         ws_obj_info = cmu.workspacehelper.get_workspace_object_info(report_output['ref'])
         self.logger.debug(ws_obj_info)
 
-        # [1, 'Super_Cool_Extended_Report', 'KBaseReport.Report-3.0', '2020-04-29T06:29:59+0000', 1, 'ialarmedalien', 49674, 'test_kb_Msuite_1588141790596', '72c0c1862c986bfd8e9dc44d003be88a', 226, None]
         with self.subTest('get_object_property'):
             obj_name = cmu.workspacehelper.get_object_property(ws_obj_info, 'name')
             self.assertEqual(obj_name, report_object_name)
@@ -475,7 +475,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 cmu.workspacehelper.get_object_property(ws_obj_info, 'personality')
 
         with self.subTest('get_data_obj type and name'):
-            obj_name = cmu.workspacehelper.get_data_obj_anme(report_output['ref'])
+            obj_name = cmu.workspacehelper.get_data_obj_name(report_output['ref'])
             self.assertEqual(obj_name, report_object_name)
 
             obj_type = cmu.workspacehelper.get_data_obj_type(report_output['ref'], True)

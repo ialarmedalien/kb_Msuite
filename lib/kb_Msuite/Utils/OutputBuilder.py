@@ -197,7 +197,8 @@ class OutputBuilder(Base, LogMixin):
                 for bid in sorted(bin_stats.keys()):
                     # DEBUG
 
-                    bin_id = re.sub('^[^\.]+\.', '', bid)
+                    bin_id = self.checkMUtil.clean_bin_ID(bid)
+                    # bin_id = re.sub('^[^\.]+\.', '', bid)
                     if removed_bins and bin_id in removed_bins:
                         self.logger.debug("bin stats BID " + bid + ", bin_id " + bin_id + ": REMOVED")
                         log("BIN STATS BID " + bid + ": REMOVED")
@@ -262,7 +263,8 @@ class OutputBuilder(Base, LogMixin):
         # add a column to indicate whether the bin should be removed
         if results_filtered:
             if removed_bins:
-                bin_id = re.sub('^[^\.]+\.', '', bid)
+                bin_id = self.checkMUtil.clean_bin_ID(bid)
+                # bin_id = re.sub('^[^\.]+\.', '', bid)
                 if bin_id in removed_bins:
                     row.append('false')
                 else:
