@@ -458,11 +458,8 @@ class CheckMUtil(Base, LogMixin):
 
         filtered_bin_IDs = [self.clean_bin_ID(bin_ID, fasta_ext) for bin_ID in sorted(filtered_bin_ID_dict.keys())]
 
-        self.logger.debug('filtered_bin_IDs:')
-        self.logger.debug(filtered_bin_IDs)
-
-        self.logger.debug('retained_bin_IDs')
-        self.logger.debug(retained_bin_IDs)
+        self.logger.debug({'filtered_bin_IDs': filtered_bin_IDs})
+        self.logger.debug({'retained_bin_IDs': retained_bin_IDs})
 
         bin_summary_info = dict()
 
@@ -480,9 +477,9 @@ class CheckMUtil(Base, LogMixin):
             }
 
         # write summary file for just those bins present in bin_dir
+        summary_file_path = run_config['summary_file_path']
         self.logger.info("writing filtered binned contigs summary file " + summary_file_path)
 
-        summary_file_path = run_config['summary_file_path']
         with open(summary_file_path, 'w') as summary_file_handle:
 
             header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
