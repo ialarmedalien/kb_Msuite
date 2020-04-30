@@ -751,13 +751,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 run_config['bin_stats_ext_file'])
 
             for bid in list(range(5)):
-                bid_path = os.path.join(run_config['input_dir'], 'out_header.00' + str(bid))
-                Path(os.path.join(bid_path, 'genes.' + run_config['fasta_ext'])).touch(exist_ok=True)
+                bid_path = os.path.join(
+                    run_config['input_dir'],
+                    'out_header.00' + str(bid) + run_config['fasta_ext']
+                )
+                Path(bid_path).touch(exist_ok=True)
 
-            result = subprocess.run(['tree', output_dir],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-
-            self.logger.critical(result)
+#             result = subprocess.run(['tree', output_dir],
+#                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+#
+#             self.logger.critical(result)
 
             err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
             with self.assertRaisesRegex(ValueError, err_str):
