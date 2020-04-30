@@ -356,32 +356,6 @@ class CheckMUtil(Base, LogMixin):
         removed_bin_IDs = dict()
         some_bins_are_HQ = False
 
-        bin_stats = self.outputbuilder.read_bin_stats_file()
-
-#     def read_bin_stats_file(self):
-#         run_config = self.run_config()
-#         stats_file = run_config['bin_stats_ext_file']
-#
-#         bin_stats = dict()
-#
-#         if not os.path.isfile(stats_file):
-#             log('Warning! no stats file found (looking at: ' + stats_file + ')')
-#             return bin_stats
-#
-#         with open(stats_file) as lf:
-#             for line in lf:
-#                 if not line:
-#                     continue
-#                 if line.startswith('#'):
-#                     continue
-#                 col = line.split('\t')
-#                 bin_id = str(col[0])
-#                 data = ast.literal_eval(col[1])
-#                 bin_stats[bin_id] = data
-#
-#         return bin_stats
-
-
         with open(bin_stats_ext_file, 'r') as bin_stats_ext_handle:
             for bin_stats_line in bin_stats_ext_handle:
                 bin_stats_line.rstrip()
@@ -461,7 +435,7 @@ class CheckMUtil(Base, LogMixin):
         dsu = self.datastagingutils
         filtered_bin_ID_dict = dsu.get_bin_fasta_files(run_config['filtered_bins_dir'], fasta_ext)
 
-        filtered_bin_IDs = [self.clean_bin_ID(bin_ID, fasta_ext) for bin_ID in sorted(filtered_bin_ID_dict.keys())]
+        filtered_bin_IDs = self.clean_bin_ID(bin_ID, fasta_ext) for bin_ID in sorted(filtered_bin_ID_dict.keys())
 
         self.logger.debug({'filtered_bin_IDs': filtered_bin_IDs})
         self.logger.debug({'retained_bin_IDs': retained_bin_IDs})
@@ -481,6 +455,8 @@ class CheckMUtil(Base, LogMixin):
                 'cov':              round(100.0 * float(bin_item['cov']), 1),
             }
 
+
+        self.logger.debug({'bin_summary_info': bin_summary_info})
         # write summary file for just those bins present in bin_dir
         summary_file_path = run_config['summary_file_path']
         self.logger.info("writing filtered binned contigs summary file " + summary_file_path)
@@ -489,7 +465,6 @@ class CheckMUtil(Base, LogMixin):
 
             header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
             summary_file_handle.write("\t".join(header_line)+"\n")
-
 
             for bin_ID in filtered_bin_IDs:
                 #self.logger.debug("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG

@@ -883,6 +883,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         cmu = self.prep_filter_binned_contigs_dirs()
+        run_config = cmu.run_config()
         # no high quality bins
         self.assertIsNone(cmu._filter_binned_contigs({
             'input_ref': self.binned_contigs_ref,
@@ -902,6 +903,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         cmu = self.prep_filter_binned_contigs_dirs()
+        run_config = cmu.run_config()
         # 001 and 002 will pass
         contig_filtering_results = cmu._filter_binned_contigs({
             'input_ref': self.binned_contigs_ref,
@@ -932,6 +934,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         cmu = self.prep_filter_binned_contigs_dirs()
+        run_config = cmu.run_config()
         # set filters so all will pass
         contig_filtering_results = cmu._filter_binned_contigs({
             'input_ref': self.binned_contigs_ref,
