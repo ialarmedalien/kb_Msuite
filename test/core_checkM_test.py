@@ -669,6 +669,30 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input(self.report_ref)
 
+    def test_01_data_staging_assembly(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_data_staging_assembly")
+        self.logger.info("=================================================================\n")
+
+        self.require_data('assembly_mini_ref')
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        run_config = cmu.run_config()
+        dsu = cmu.datastagingutils
+        staged_input = dsu.stage_input(self.assembly_mini_ref)
+        self.assertEqual(
+            staged_input,
+            {'obj_name': 'MiniAssembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
+        )
+        self.assertTrue(os.path.isdir(run_config['input_dir']))
+        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+        self.assertTrue(os.path.isfile(os.path.join(
+            run_config['input_dir'], 'MiniAssembly.' + run_config['fasta_ext']
+        )))
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
     def test_01_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")

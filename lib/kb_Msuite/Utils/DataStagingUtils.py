@@ -167,7 +167,7 @@ class DataStagingUtils(Base, LogMixin):
         # download the bins as fasta and set the input folder name
         file_result = mguClient.binned_contigs_to_file({
             'input_ref': input_ref,
-            'save_to_shock': 0
+            'save_to_shock': 0,
         })
         bin_file_dir = file_result['bin_file_directory']
         self.logger.info('Renaming ' + bin_file_dir + ' to ' + input_dir)
@@ -205,6 +205,7 @@ class DataStagingUtils(Base, LogMixin):
             genomeSet_refs = []
             genomeSet_object = self.workspacehelper.get_obj_from_workspace(input_ref)
 
+            self.logger.debug({'genomeset_object': genomeSet_object})
             # iterate through genomeSet members
             for genome_id in list(genomeSet_object['elements'].keys()):
                 if 'ref' not in genomeSet_object['elements'][genome_id] or \
