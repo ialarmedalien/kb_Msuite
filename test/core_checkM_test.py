@@ -669,6 +669,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input(self.report_ref)
 
+    def check_data_staging_results(self, run_config, filenames):
+
+        self.assertTrue(os.path.isdir(run_config['input_dir']))
+        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+        for name in filenames:
+            self.assertTrue(os.path.isfile(os.path.join(
+                run_config['input_dir'], name + '.' + run_config['fasta_ext'])
+            ))
+
+
     def test_01_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
@@ -685,11 +695,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             staged_input,
             {'obj_name': 'MiniAssembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
         )
-        self.assertTrue(os.path.isdir(run_config['input_dir']))
-        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
-        self.assertTrue(os.path.isfile(os.path.join(
-            run_config['input_dir'], 'MiniAssembly.' + run_config['fasta_ext']
-        )))
+        self.check_data_staging_results(run_config, ['MiniAssembly'])
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
@@ -710,11 +716,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             staged_input,
             {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
         )
-        self.assertTrue(os.path.isdir(run_config['input_dir']))
-        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
-        self.assertTrue(os.path.isfile(os.path.join(
-            run_config['input_dir'], 'Test.Assembly.strange_fasta_extension')
-        ))
+        self.check_data_staging_results(run_config, ['Test.Assembly'])
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
@@ -737,10 +739,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'obj_type': 'KBaseSets.AssemblySet',
             }
         )
-        self.assertTrue(os.path.isdir(run_config['input_dir']))
-        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
-        # TODO: saved file?
-
+        self.check_data_staging_results(run_config, ['Test.Assembly', 'Dodgy_Contig.Assembly'])
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
@@ -767,15 +766,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertTrue(os.path.isdir(run_config['input_dir']))
         self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
 
-        self.assertTrue(os.path.isfile(os.path.join(
-            run_config['input_dir'], 'out_header.001.fna'
-        )))
-        self.assertTrue(os.path.isfile(os.path.join(
-            run_config['input_dir'], 'out_header.002.fna'
-        )))
-        self.assertTrue(os.path.isfile(os.path.join(
-            run_config['input_dir'], 'out_header.003.fna'
-        )))
+        # three binned contigs
+        for number in ["1", "2", "3"]:
+            self.assertTrue(os.path.isfile(os.path.join(
+                run_config['input_dir'], 'out_header.00' + number + '.' + run_config['fasta_ext']
+            )))
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
@@ -800,13 +795,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'obj_type': 'KBaseGenomes.Genome',
             }
         )
-        self.assertTrue(os.path.isdir(run_config['input_dir']))
-        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
-        self.assertTrue(os.path.isfile(os.path.join(
-            run_config['input_dir'],
-            'GCF_001439985.1_wTPRE_1.0_genomic.gbff' + '.' + run_config['fasta_ext'])
-        ))
-
+        self.check_data_staging_results(run_config, ['GCF_001439985.1_wTPRE_1.0_genomic.gbff'])
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
     def test_01_data_staging_genome_set(self):
@@ -829,13 +818,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'obj_type': 'KBaseSearch.GenomeSet',
             }
         )
-        self.assertTrue(os.path.isdir(run_config['input_dir']))
-        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
-#         TODO!!
-#         self.assertTrue(os.path.isfile(os.path.join(
-#             run_config['input_dir'],
-#             'GCF_001439985.1_wTPRE_1.0_genomic.gbff' + '.' + run_config['fasta_ext'])
-#         ))
+        self.check_data_staging_results(run_config, [
+            'GCF_000022285.1_ASM2228v1_genomic.gbff', 'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
+        ])
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
@@ -1151,14 +1136,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
-    def notest_checkM_lineage_wf_full_app_single_assembly(self):
+    def test_checkM_lineage_wf_full_app_single_assembly(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_full_app_single_assembly")
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_OK_ref')
         # run checkM lineage_wf app on a single assembly
-        input_ref = self.assembly_OK_ref
+        input_ref = self.assembly_mini_ref
         params = {
             'dir_name': 'single_assembly',
             'workspace_name': self.ws_info[1],
@@ -1172,7 +1157,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'something.html'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'MiniAssembly.html'],
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1211,7 +1196,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
-    def notest_checkM_lineage_wf_full_app_binned_contigs(self):
+    def test_checkM_lineage_wf_full_app_binned_contigs(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_full_app_binned_contigs")
         self.logger.info("=================================================================\n")
@@ -1235,7 +1220,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+                '001.html', '002.html', '003.html'
+            ],
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1355,7 +1342,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
-    def notest_checkM_lineage_wf_withFilter_binned_contigs(self):
+    def test_checkM_lineage_wf_withFilter_binned_contigs(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
         self.logger.info("=================================================================\n")
@@ -1382,7 +1369,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+                '001.html', '002.html', '003.html'
+            ],
         }
 
         self.run_and_check_report(params, expected_results, True)
