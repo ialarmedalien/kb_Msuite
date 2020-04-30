@@ -466,7 +466,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.prep_ref_data()
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-
         # run config not yet initialised
         self.assertFalse(hasattr(cmu, '_run_config'))
 
@@ -882,6 +881,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.require_data('binned_contigs_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.fasta_extension = 'fasta'
         cmu.run_config()
         run_config = cmu.run_config()
 
@@ -1045,12 +1045,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with open(run_config['tab_text_file'], newline='') as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
-                    tab_data[row['marker_lineage']] = row
-
-            self.logger.info({
-                'tsv_data': tab_data
-            })
-
+                    self.logger.debug({'row': row})
 
         with self.subTest('lots of output, binned contig obj'):
 
@@ -1091,11 +1086,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with open(run_config['tab_text_file'], newline='') as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
-                    tab_data[row['marker_lineage']] = row
-
-            self.logger.info({
-                'tsv_data': tab_data
-            })
+                    self.logger.debug({'row': row})
 
 
         shutil.rmtree(run_config['base_dir'])

@@ -424,7 +424,7 @@ class CheckMUtil(Base, LogMixin):
                     self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
 
         missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
-        self.logger.info({"missing IDs:": missing_ids})
+        self.logger.debug({"missing IDs:": missing_ids})
         if missing_ids:
             raise ValueError("The following Bin IDs are missing from the checkM output: "
                 + ", ".join(sorted(missing_ids)))
@@ -439,7 +439,7 @@ class CheckMUtil(Base, LogMixin):
         if not some_bins_are_HQ:
             return None
 
-        if not retained_bin_IDs or removed_bin_IDs:
+        if not retained_bin_IDs or not removed_bin_IDs:
             if not removed_bin_IDs:
                 self.logger.warning('No bins removed by filtering')
             return None
