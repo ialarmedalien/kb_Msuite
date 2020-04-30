@@ -773,7 +773,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
             # delete the two interloper files
             for bid in missing_ids:
-                os.remove(os.path.join(output_dir, bid)
+                os.remove(os.path.join(output_dir, bid + run_config['fasta_ext']))
 
             # no high quality bins
             self.assertIsNone(cmu._filter_binned_contigs({
