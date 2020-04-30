@@ -439,6 +439,11 @@ class CheckMUtil(Base, LogMixin):
         if not some_bins_are_HQ:
             return None
 
+        if not retained_bin_IDs or removed_bin_IDs:
+            if not removed_bin_IDs:
+                self.logger.warning('No bins removed by filtering')
+            return None
+
         # create BinnedContig object from filtered bins
 
         self.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj, retained_bin_IDs)

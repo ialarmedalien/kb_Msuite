@@ -900,7 +900,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             Path(bid_path).touch(exist_ok=True)
         return cmu
 
-
     def test_02_filter_binned_contigs_no_HQ(self):
 
         self.logger.info("=================================================================")
@@ -952,6 +951,37 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertTrue(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
+    def test_02_filter_binned_contigs_some_others_HQ(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs_some_others_HQ")
+        self.logger.info("=================================================================\n")
+
+        cmu = self.prep_filter_binned_contigs_dirs()
+        run_config = cmu.run_config()
+        # 001 and 002 will pass
+        contig_filtering_results = cmu._filter_binned_contigs({
+            'input_ref': self.binned_contigs_ref,
+            'output_filtered_binnedcontigs_obj_name': 'Gamma',
+            'completeness_perc': 97.0,
+            'contamination_perc': 2.5,
+            'workspace_name': self.wsName,
+        })
+
+        self.assertEqual(contig_filtering_results['filtered_object_name'], 'Gamma')
+        self.assertEqual(
+            sorted(contig_filtering_results['retained_bin_IDs'].keys()),
+            ['002','003']
+        )
+        self.assertEqual(
+            contig_filtering_results['removed_bin_IDs'].keys(),
+            ['001']
+        )
+        self.assertTrue('filtered_obj_ref' in contig_filtering_results)
+        # summary file has been created
+        self.assertTrue(os.path.exists(run_config['summary_file_path']))
+        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+
     def test_02_filter_binned_contigs_all_HQ(self):
 
         self.logger.info("=================================================================")
@@ -960,35 +990,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         cmu = self.prep_filter_binned_contigs_dirs()
         run_config = cmu.run_config()
-        # set filters so all will pass
-        contig_filtering_results = cmu._filter_binned_contigs({
+        # set filters so all will pass => returns none
+        self.assertIsNone(cmu._filter_binned_contigs({
             'input_ref': self.binned_contigs_ref,
             'output_filtered_binnedcontigs_obj_name': 'Octocat',
             'completeness_perc': 95.0,
             'contamination_perc': 2.0,
             'workspace_name': self.wsName,
-        })
-        self.assertEqual(contig_filtering_results['filtered_object_name'], 'Octocat')
-        self.assertEqual(
-            sorted(contig_filtering_results['retained_bin_IDs'].keys()),
-            ['001', '002', '003']
-        )
-        self.assertEqual(
-            contig_filtering_results['removed_bin_IDs'].keys(),
-            []
-        )
-        self.assertTrue('filtered_obj_ref' in contig_filtering_results)
-        # summary file has been created
-        self.assertTrue(os.path.exists(run_config['summary_file_path']))
+        }))
+        # no summary file
+        self.assertFalse(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
-
-    # Test 9: Plotting (intended data not checked into git repo: SKIP)
-    #
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_output_plotting")
-    # missing test data for this custom test
-    # note that the OutputBuilder interface has not been updated below since the test is skipped
     def test_05_outputbuilder(self):
 
         self.logger.info("=================================================================")
@@ -1029,11 +1042,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self.check_report(result, expected_results)
             # TODO: check the TSV file -- there should be one bin with a missing plot file
             tab_data = {}
-#             with open(run_config['tab_text_file'], newline='') as infile:
-#                 reader = csv.DictReader(infile, delimiter='\t')
-#                 for row in reader:
-#                     tab_data[row['marker_lineage']] = row
+            with open(run_config['tab_text_file'], newline='') as infile:
+                reader = csv.DictReader(infile, delimiter='\t')
+                for row in reader:
+                    tab_data[row['marker_lineage']] = row
 
+            self.logger.info({
+                'tsv_data': tab_data
+            })
 
 
         with self.subTest('lots of output, binned contig obj'):
@@ -1070,7 +1086,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             }
 
             self.check_report(result, expected_results)
-            # TODO: check TSV output!
+            # TODO: check the TSV file -- there should be one bin with a missing plot file
+            tab_data = {}
+            with open(run_config['tab_text_file'], newline='') as infile:
+                reader = csv.DictReader(infile, delimiter='\t')
+                for row in reader:
+                    tab_data[row['marker_lineage']] = row
+
+            self.logger.info({
+                'tsv_data': tab_data
+            })
 
 
         shutil.rmtree(run_config['base_dir'])
@@ -1120,7 +1145,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         expected_results = {
             'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'something.html'],
         }
 
@@ -1150,7 +1175,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         expected_results = {
             'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'something.html'],
         }
 
@@ -1170,7 +1195,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.require_data('binned_contigs_ref')
         # run checkM lineage_wf app on BinnedContigs
-        input_ref = self.binned_contigs_ref
+        input_ref = self.binned_contigs_mini_ref
         params = {
             'dir_name': 'binned_contigs',
             'workspace_name': self.ws_info[1],
@@ -1183,7 +1208,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         expected_results = {
             'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
         }
 
@@ -1235,7 +1260,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         expected_results = {
             'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'assembly_1.html', 'assembly_2.html'],
         }
 
@@ -1294,7 +1319,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # two genomes in the genome set
         expected_results = {
             'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome_1.html', 'genome_2.html'],
         }
 
@@ -1314,7 +1339,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
         # run checkM lineage_wf app on BinnedContigs
-        input_ref = self.binned_contigs_ref
+        input_ref = self.binned_contigs_mini_ref
         params = {
             'dir_name': 'binned_contigs_filter',
             'workspace_name': self.ws_info[1],
@@ -1330,7 +1355,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         expected_results = {
             'direct_html_link_index': 0,
-            'file_links': ['full_output.zip', 'CheckM_summary_table.tsv', 'plots', 'plots.zip' 'full_output'],
+            'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'out_header.001.html', 'out_header.002.html', 'out_header.003.html'],
         }
 
