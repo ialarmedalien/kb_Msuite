@@ -337,7 +337,7 @@ class CheckMUtil(Base, LogMixin):
 
         bin_summary_info = {}
         for bin_item in binned_contig_obj['bins']:
-            bin_ID = self.clean_bin_ID(bin_item['bid'], fasta_ext)
+            bin_ID = self.clean_bin_ID(bin_item['bid'], run_config['fasta_ext'])
             bin_summary_info[bin_ID] = {
 #                'n_contigs':        bin_item['n_contigs'],
                 'gc':               round(100.0 * float(bin_item['gc']), 1),

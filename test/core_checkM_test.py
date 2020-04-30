@@ -133,6 +133,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'report_ref': '49697/6/1',
             'genome_refs': ['49697/8/1', '49697/10/1'],
             'genome_set_ref': '49697/11/1',
+            'assembly_mini_ref': '49697/12/1',
+            'binned_contigs_mini_ref': '49697/13/1',
         }
 
         for key, value in saved_refs.items():
@@ -185,7 +187,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'path': 'offending_contig_67815-67907.fa',
                 'name': 'Dodgy_Contig.Assembly',
                 'attr': 'assembly_dodgy_ref',
-            }
+            },
+            {
+                'path': 'mini_assembly.fasta',
+                'name': 'MiniAssembly',
+                'attr': 'assembly_mini_ref',
+            },
         ]
 
         for assembly in assembly_list:
@@ -246,6 +253,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             {
                 'path': 'binned_contigs_empty',
                 'name': 'Binned_Contigs_Empty',
+            },
+            {
+                'path': 'binned_contigs_mini',
+                'name': 'Mini_Binned_Contigs',
             }
         ]
 
@@ -453,19 +464,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         self.prep_ref_data()
-
-        ## add in the new mini binned contigs and mini assembly
-        self._prep_assembly({
-            # example assembly
-            'path': 'mini_assembly.fasta',
-            'name': 'MiniAssembly',
-            'attr': 'assembly_mini_ref',
-        })
-
-        self._prep_binned_contig({
-            'path': 'binned_contigs_mini',
-            'name': 'Mini_Binned_Contigs',
-        })
 
         cmu = CheckMUtil(self.cfg, self.ctx)
 
