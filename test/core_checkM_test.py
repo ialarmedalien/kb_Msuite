@@ -4,7 +4,7 @@ import os  # noqa: F401
 import json  # noqa: F401
 import time
 import shutil
-
+import csv
 import subprocess
 
 from os import environ
@@ -623,6 +623,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #     Genome and GenomeSet
 #     'KBaseGenomes.Genome': self.process_genome_genome_set,
 #     'KBaseSearch.GenomeSet': self.process_genome_genome_set,
+#   also test:
+#   - empty versions of each of these
+
 
     def test_01_data_staging(self):
 
@@ -653,10 +656,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.fasta_extension = 'strange_fasta_extension'
         run_config = cmu._set_run_config()
-        dsu = cmu.datastagingutils
-
-        # reset the run_config
-        new_run_config = cmu._set_run_config()
         dsu = cmu.datastagingutils
         staged_input = dsu.stage_input(self.assembly_OK_ref)
         self.assertEqual(
@@ -844,7 +843,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             )
             Path(bid_path).touch(exist_ok=True)
 
-        missing_ids = ['out_header.000', 'out_header.004']
+        missing_ids = ['000', '004']
 
         err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
         with self.assertRaisesRegex(ValueError, err_str):
@@ -887,6 +886,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'output_filtered_binnedcontigs_obj_name': 'Gamma',
                 'completeness_perc': 99.0,
                 'contamination_perc': 1.0,
+                'workspace_name': self.wsName,
             }))
             # no summary file
             self.assertFalse(os.path.exists(run_config['summary_file_path']))
@@ -899,6 +899,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'output_filtered_binnedcontigs_obj_name': 'Epsilon',
                 'completeness_perc': 95.0,
                 'contamination_perc': 1.5,
+                'workspace_name': self.wsName,
             })
 
             self.assertEqual(contig_filtering_results['filtered_object_name'], 'Epsilon')
@@ -923,6 +924,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'output_filtered_binnedcontigs_obj_name': 'Octocat',
                 'completeness_perc': 95.0,
                 'contamination_perc': 2.0,
+                'workspace_name': self.wsName,
             })
             self.assertEqual(contig_filtering_results['filtered_object_name'], 'Octocat')
             self.assertEqual(
@@ -950,6 +952,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 05_outputbuilder")
         self.logger.info("=================================================================\n")
+
+        self.require_data('binned_contigs_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
@@ -981,6 +985,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 ],
             }
             self.check_report(result, expected_results)
+            # TODO: check the TSV file -- there should be one bin with a missing plot file
 
         with self.subTest('lots of output, binned contig obj'):
 
@@ -992,15 +997,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             }
 
             filtered_obj_info = {
-                'filtered_obj_ref': self.binned_contigs_empty_ref,
+                'filtered_obj_ref': self.binned_contigs_ref,
                 'filtered_obj_name': 'Nancy Drew',
-                'removed_bin_IDs': ['out_header.001'],
+                'removed_bin_IDs': ['002', '005', '033'],
             }
 
             result = cmu.outputbuilder.build_report(params, filtered_obj_info)
             self.assertEqual(set(result.keys()), set(['report_name', 'report_ref', 'binned_contig_obj_ref']))
 
-            self.assertEqual(result['binned_contig_obj_ref'], self.binned_contigs_empty_ref)
+            self.assertEqual(result['binned_contig_obj_ref'], self.binned_contigs_ref)
             expected_results = {
                 'direct_html_link_index': 0,
                 'file_links': ['CheckM_summary_table.tsv', 'full_output'],
@@ -1016,6 +1021,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             }
 
             self.check_report(result, expected_results)
+            # TODO: check TSV output!
+
 
         shutil.rmtree(run_config['base_dir'])
 
@@ -1039,43 +1046,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         }
         self.check_report(report, expected_results)
         shutil.rmtree(run_config['base_dir'])
-
-#         rerun with filters
-#         cmu = CheckMUtil(self.cfg, self.ctx)
-#         run_config = cmu.run_config()
-
-
-        # empty output dir
-#         if not os.path.isfile(stats_file):
-#             log('Warning! no stats file found (looking at: ' + stats_file + ')')
-#             return bin_stats
-
-
-        # all items present and correct
-
-
-#         impl = self.getImpl()
-#         cmu = CheckMUtil(impl)
-#         plots_dir = os.path.join(self.scratch, 'plots_1')
-#         html_dir = os.path.join(self.scratch, 'html_1')
-#         tetra_file = os.path.join(self.scratch, 'tetra_1.tsv')
-#
-#         cmu.build_checkM_lineage_wf_plots(self.input_dir, self.output_dir, plots_dir,
-#                                           self.all_seq_fasta, tetra_file)
-#         self.assertTrue(os.path.isdir(plots_dir))
-# #        self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'bin_qa_plot.png')))
-#         self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'NewBins.001.ref_dist_plots.png')))
-#         self.assertTrue(os.path.isfile(os.path.join(plots_dir, 'NewBins.002.ref_dist_plots.png')))
-#         self.assertTrue(os.path.isfile(tetra_file))
-#
-#         ob = OutputBuilder(self.output_dir, plots_dir, self.scratch, self.callback_url)
-#         os.makedirs(html_dir)
-#         res = ob.build_html_output_for_lineage_wf(html_dir, 'MyCheckMOutput')
-#         self.assertIn('shock_id', res)
-#         self.assertIn('name', res)
-#         self.assertIn('description', res)
-#
-#         self.assertEqual(res['html_links'][0]['name'], self.getImpl().run_config['html_file'])
 
     # Test 1: single assembly
     #
