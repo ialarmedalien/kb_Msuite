@@ -434,8 +434,10 @@ class CheckMUtil(Base, LogMixin):
 
         dsu = self.datastagingutils
         filtered_bin_ID_dict = dsu.get_bin_fasta_files(run_config['filtered_bins_dir'], fasta_ext)
+        filtered_bin_IDs = []
 
-        filtered_bin_IDs = self.clean_bin_ID(bin_ID, fasta_ext) for bin_ID in sorted(filtered_bin_ID_dict.keys())
+        for bin_ID in sorted(filtered_bin_ID_dict.keys()):
+            filtered_bin_IDs.append(self.clean_bin_ID(bin_ID, fasta_ext))
 
         self.logger.debug({'filtered_bin_IDs': filtered_bin_IDs})
         self.logger.debug({'retained_bin_IDs': retained_bin_IDs})
