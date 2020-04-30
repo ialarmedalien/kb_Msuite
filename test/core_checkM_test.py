@@ -752,7 +752,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
             for bid in list(range(5)):
                 bid_path = os.path.join(run_config['input_dir'], 'out_header.00' + str(bid))
-                Path(os.path.join(bid_path, 'genes.' + faa')).touch(exist_ok=True)
+                Path(os.path.join(bid_path, 'genes.' + run_config['fasta_ext'])).touch(exist_ok=True)
 
             result = subprocess.run(['tree', output_dir],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
