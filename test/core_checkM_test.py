@@ -640,8 +640,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             staged_input = dsu.stage_input(self.binned_contigs_ref)
             run_config = dsu.run_config()
             # expect to get back {'obj_name': name, 'obj_type': type}
-            self.logger.info(staged_input)
-
             self.assertEqual(staged_input, {
                 'obj_name': 'Binned_Contigs',
                 'obj_type': 'KBaseMetagenomes.BinnedContigs'
@@ -667,16 +665,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             new_run_config = cmu._set_run_config()
             dsu = cmu.datastagingutils
             staged_input = dsu.stage_input(self.assembly_OK_ref)
-            self.logger.info(staged_input)
+            self.assertEqual(
+                staged_input,
+                {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
+            )
             self.assertTrue(os.path.isdir(new_run_config['input_dir']))
             self.assertTrue(os.path.isfile(new_run_config['all_seq_fasta']))
             self.assertTrue(os.path.isfile(os.path.join(
                 new_run_config['input_dir'], 'Test.Assembly.strange_fasta_extension')
             ))
-            self.assertEqual(
-                staged_input,
-                {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
-            )
 
         shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
 
@@ -698,20 +695,19 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             run_config = cmu.run_config()
             dsu = cmu.datastagingutils
             staged_input = dsu.stage_input(self.genome_refs[1])
-            self.logger.info(staged_input)
+            self.assertEqual(
+                staged_input,
+                {
+                    'obj_name': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
+                    'obj_type': 'KBaseGenomes.Genome',
+                }
+            )
             self.assertTrue(os.path.isdir(run_config['input_dir']))
             self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
             self.assertTrue(os.path.isfile(os.path.join(
                 run_config['input_dir'],
                 'GCF_001439985.1_wTPRE_1.0_genomic.gbff' + '.' + run_config['fasta_ext'])
             ))
-            self.assertEqual(
-                staged_input,
-                {
-                    'obj_name': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff.fna',
-                    'obj_type': 'KBaseGenomes.Genome',
-                }
-            )
 
         shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
 
@@ -743,27 +739,27 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'output_filtered_binnedcontigs_obj_name': 'Alpha',
             }))
 
-        with self.subTest('missing IDs in checkM output'):
-            output_dir = cmu.run_config()['output_dir']
-            os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
+        missing_ids = ['out_header.000', 'out_header.004']
 
+        with self.subTest('missing IDs in checkM output'):
+            run_config = cmu.run_config()
+            output_dir = run_config['output_dir']
+            os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
+            os.makedirs(run_config['input_dir'], exist_ok=True)
             # copy over a results file
             shutil.copy(
                 os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
-                os.path.join(output_dir, 'storage', 'bin_stats_ext.tsv')
+                run_config['bin_stats_ext_file'])
             )
-
             for bid in list(range(5)):
-                bid_path = os.path.join(output_dir, 'bins', 'out_header.00' + str(bid))
-                os.makedirs(bid_path, exist_ok=True)
-                Path(os.path.join(bid_path, 'genes.faa')).touch(exist_ok=True)
+                bid_path = os.path.join(run_config['input_dir'], 'out_header.00' + str(bid))
+                Path(os.path.join(bid_path, 'genes.' + faa')).touch(exist_ok=True)
 
             result = subprocess.run(['tree', output_dir],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
             self.logger.critical(result)
 
-            missing_ids = ['out_header.000', 'out_header.004']
             err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu._filter_binned_contigs({
@@ -773,9 +769,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         with self.subTest('No HQ bins'):
 
-            # delete the two interloper directories
+            # delete the two interloper files
             for bid in missing_ids:
-                shutil.rmtree(os.path.join(output_dir, 'bins', bid), exist_ok=True)
+                os.remove(os.path.join(output_dir, bid)
 
             # no high quality bins
             self.assertIsNone(cmu._filter_binned_contigs({
