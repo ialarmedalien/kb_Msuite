@@ -5,7 +5,7 @@ class LogMixin(object):
     def logger(self):
         name = '.'.join([__name__, self.__class__.__name__])
         class_name = self.__class__.__name__
-        return logging.getLogger(class_name)
+        return logging.getLogger('kb_Msuite.' + class_name)
 
 class Base(object):
     pass

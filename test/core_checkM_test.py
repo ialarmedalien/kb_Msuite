@@ -79,7 +79,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cls.appdir      = cls.cfg['appdir']
 
         cls.test_data_dir = os.path.join(cls.scratch, 'test_data')
-#        shutil.rmtree(cls.test_data_dir, ignore_errors=True)
         os.makedirs(cls.test_data_dir, exist_ok=True)
 
         cls.suffix      = test_time_stamp
@@ -87,11 +86,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         cls.wsName  = "test_kb_Msuite_" + str(cls.suffix)
         cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
-        print({'ws_info': cls.ws_info})
 
+        # refdata WS
         cls.refdata_wsName = 'test_kb_Msuite_refdata_1588183380977'
         cls.refdata_ws_info = [49697, 'test_kb_Msuite_refdata_1588183380977', 'ialarmedalien', '2020-04-29T18:03:01+0000', 0, 'a', 'n', 'unlocked', {}]
-        print({'refdata_ws_info': cls.refdata_ws_info})
 
         cls.au      = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
         cls.gfu     = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
@@ -348,15 +346,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def run_and_check_report(self, params, expected=None, with_filters=False):
 
-        self.logger.info("Running run_and_check_report")
-
         if (with_filters):
             result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
         else:
             result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
-
-        self.logger.info('End to end test result:')
-        self.logger.info(result)
 
         return self.check_report(result, expected)
 
@@ -611,12 +604,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 cmu.client(client)
             self.assertFalse(hasattr(cmu.client_util, '_' + client))
 
-    # Test 8: Data staging (intended data not checked into git repo: SKIP)
-    #
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_data_staging")
-    # missing test data for this custom test
-    # note that the DataStagingUtils interface has not been updated below since the test is skipped
+#     Standard Single Assembly
+#     'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
+#     'KBaseGenomes.ContigSet': self.process_assembly_contigset, --- TODO
+#     AssemblySet
+#     'KBaseSets.AssemblySet': self.process_assembly_set,
+#     Binned Contigs
+#     'KBaseMetagenomes.BinnedContigs': self.process_binned_contigs,
+#     Genome and GenomeSet
+#     'KBaseGenomes.Genome': self.process_genome_genome_set,
+#     'KBaseSearch.GenomeSet': self.process_genome_genome_set,
+
     def test_01_data_staging(self):
 
         self.logger.info("=================================================================")
@@ -635,81 +633,145 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input(self.report_ref)
 
-        with self.subTest('binned contig staging'):
-            # test stage binned contigs
-            staged_input = dsu.stage_input(self.binned_contigs_ref)
-            run_config = dsu.run_config()
-            # expect to get back {'obj_name': name, 'obj_type': type}
-            self.assertEqual(staged_input, {
-                'obj_name': 'Binned_Contigs',
-                'obj_type': 'KBaseMetagenomes.BinnedContigs'
-            })
-            self.assertTrue(os.path.isdir(run_config['input_dir']))
-            self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+    def test_01_data_staging_assembly_strange_fasta_ext(self):
 
-            self.assertTrue(os.path.isfile(os.path.join(
-                run_config['input_dir'], 'out_header.001.fna'
-            )))
-            self.assertTrue(os.path.isfile(os.path.join(
-                run_config['input_dir'], 'out_header.002.fna'
-            )))
-            self.assertTrue(os.path.isfile(os.path.join(
-                run_config['input_dir'], 'out_header.003.fna'
-            )))
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_data_staging_assembly_strange_fasta_ext")
+        self.logger.info("=================================================================\n")
 
-        shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.fasta_extension = 'strange_fasta_extension'
+        run_config = cmu._set_run_config()
+        dsu = cmu.datastagingutils
 
-        with self.subTest('assembly with strange fasta extension'):
-            cmu.fasta_extension = 'strange_fasta_extension'
-            # reset the run_config
-            new_run_config = cmu._set_run_config()
-            dsu = cmu.datastagingutils
-            staged_input = dsu.stage_input(self.assembly_OK_ref)
-            self.assertEqual(
-                staged_input,
-                {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
-            )
-            self.assertTrue(os.path.isdir(new_run_config['input_dir']))
-            self.assertTrue(os.path.isfile(new_run_config['all_seq_fasta']))
-            self.assertTrue(os.path.isfile(os.path.join(
-                new_run_config['input_dir'], 'Test.Assembly.strange_fasta_extension')
-            ))
+        # reset the run_config
+        new_run_config = cmu._set_run_config()
+        dsu = cmu.datastagingutils
+        staged_input = dsu.stage_input(self.assembly_OK_ref)
+        self.assertEqual(
+            staged_input,
+            {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
+        )
+        self.assertTrue(os.path.isdir(run_config['input_dir']))
+        self.assertTrue(os.path.isfile(nrun_config['all_seq_fasta']))
+        self.assertTrue(os.path.isfile(os.path.join(
+            run_config['input_dir'], 'Test.Assembly.strange_fasta_extension')
+        ))
 
-        shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-#             Standard Single Assembly
-#             'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
-#             'KBaseGenomes.ContigSet': self.process_assembly_contigset,
-#             AssemblySet
-#             'KBaseSets.AssemblySet': self.process_assembly_set,
-#             Binned Contigs
-#             'KBaseMetagenomes.BinnedContigs': self.process_binned_contigs,
-#             Genome and GenomeSet
-#             'KBaseGenomes.Genome': self.process_genome_genome_set,
-#             'KBaseSearch.GenomeSet': self.process_genome_genome_set,
+    def test_01_data_staging_assemblyset(self):
 
-        # genome
-        with self.subTest('Genome staging'):
-            cmu = CheckMUtil(self.cfg, self.ctx)
-            # init the run_config
-            run_config = cmu.run_config()
-            dsu = cmu.datastagingutils
-            staged_input = dsu.stage_input(self.genome_refs[1])
-            self.assertEqual(
-                staged_input,
-                {
-                    'obj_name': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
-                    'obj_type': 'KBaseGenomes.Genome',
-                }
-            )
-            self.assertTrue(os.path.isdir(run_config['input_dir']))
-            self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
-            self.assertTrue(os.path.isfile(os.path.join(
-                run_config['input_dir'],
-                'GCF_001439985.1_wTPRE_1.0_genomic.gbff' + '.' + run_config['fasta_ext'])
-            ))
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_data_staging_assemblyset")
+        self.logger.info("=================================================================\n")
 
-        shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        run_config = cmu._set_run_config()
+        dsu = cmu.datastagingutils
+        staged_input = dsu.stage_input(self.assembly_set_ref)
+        self.assertEqual(
+            staged_input,
+            {
+                'obj_name': 'TEST_ASSEMBLY_SET',
+                'obj_type': 'KBaseSets.AssemblySet',
+            }
+        )
+        self.assertTrue(os.path.isdir(run_config['input_dir']))
+        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+        # TODO: saved file?
+
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
+    def test_01_data_staging_binned_contigs(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_data_staging_binned_contigs")
+        self.logger.info("=================================================================\n")
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
+        dsu = cmu.datastagingutils
+
+        # test stage binned contigs
+        staged_input = dsu.stage_input(self.binned_contigs_ref)
+        run_config = dsu.run_config()
+        # expect to get back {'obj_name': name, 'obj_type': type}
+        self.assertEqual(staged_input, {
+            'obj_name': 'Binned_Contigs',
+            'obj_type': 'KBaseMetagenomes.BinnedContigs'
+        })
+        self.assertTrue(os.path.isdir(run_config['input_dir']))
+        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+
+        self.assertTrue(os.path.isfile(os.path.join(
+            run_config['input_dir'], 'out_header.001.fna'
+        )))
+        self.assertTrue(os.path.isfile(os.path.join(
+            run_config['input_dir'], 'out_header.002.fna'
+        )))
+        self.assertTrue(os.path.isfile(os.path.join(
+            run_config['input_dir'], 'out_header.003.fna'
+        )))
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
+    def test_01_data_staging_genome(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_data_staging_genome")
+        self.logger.info("=================================================================\n")
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.fasta_extension = 'strange_fasta_extension'
+        run_config = cmu._set_run_config()
+        dsu = cmu.datastagingutils
+
+        staged_input = dsu.stage_input(self.genome_refs[1])
+        self.assertEqual(
+            staged_input,
+            {
+                'obj_name': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
+                'obj_type': 'KBaseGenomes.Genome',
+            }
+        )
+        self.assertTrue(os.path.isdir(run_config['input_dir']))
+        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+        self.assertTrue(os.path.isfile(os.path.join(
+            run_config['input_dir'],
+            'GCF_001439985.1_wTPRE_1.0_genomic.gbff' + '.' + run_config['fasta_ext'])
+        ))
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
+    def test_01_data_staging_genome_set(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_data_staging_genome_set")
+        self.logger.info("=================================================================\n")
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        run_config = cmu._set_run_config()
+        dsu = cmu.datastagingutils
+
+        staged_input = dsu.stage_input(self.genome_set_ref)
+        self.assertEqual(
+            staged_input,
+            {
+                'obj_name': 'test_genomeset_1',
+                'obj_type': 'KBaseSearch.GenomeSet',
+            }
+        )
+        self.assertTrue(os.path.isdir(run_config['input_dir']))
+        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+#         TODO!!
+#         self.assertTrue(os.path.isfile(os.path.join(
+#             run_config['input_dir'],
+#             'GCF_001439985.1_wTPRE_1.0_genomic.gbff' + '.' + run_config['fasta_ext'])
+#         ))
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
     def test_02_filter_binned_contigs(self):
 
@@ -719,61 +781,81 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.require_data('binned_contigs_ref', 'report_ref')
 
-        self.logger.critical('Data loaded. Starting tests!')
-
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.run_config()
 
-        with self.subTest('input errors'):
-            # wrong type
-            self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.report_ref}))
-            self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.assembly_dodgy_ref}))
+        # wrong type
+        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.report_ref}))
+        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.assembly_dodgy_ref}))
 
-            # no output_filtered_binnedcontigs_obj_name
-            self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.binned_contigs_ref}))
+        # no output_filtered_binnedcontigs_obj_name
+        self.assertIsNone(cmu._filter_binned_contigs({'input_ref': self.binned_contigs_ref}))
 
-            # empty input dir
-            os.makedirs(cmu.run_config()['input_dir'], exist_ok=True)
-            self.assertIsNone(cmu._filter_binned_contigs({
+        # empty input dir
+        os.makedirs(cmu.run_config()['input_dir'], exist_ok=True)
+        self.assertIsNone(cmu._filter_binned_contigs({
+            'input_ref': self.binned_contigs_ref,
+            'output_filtered_binnedcontigs_obj_name': 'Alpha',
+        }))
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
+    def test_02_filter_binned_contigs_checkM_missing_IDs(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs_checkM_missing_IDs")
+        self.logger.info("=================================================================\n")
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
+        run_config = cmu.run_config()
+
+        # copy over a results file
+        output_dir = run_config['output_dir']
+        os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
+        shutil.copy(os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
+            run_config['bin_stats_ext_file'])
+
+        # mimic the input dir
+        os.makedirs(run_config['input_dir'], exist_ok=True)
+        for bid in list(range(5)):
+            bid_path = os.path.join(
+                run_config['input_dir'],
+                'out_header.00' + str(bid) + run_config['fasta_ext']
+            )
+            Path(bid_path).touch(exist_ok=True)
+
+        err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
+        with self.assertRaisesRegex(ValueError, err_str):
+            cmu._filter_binned_contigs({
                 'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Alpha',
-            }))
+                'output_filtered_binnedcontigs_obj_name': 'Beta',
+            })
 
-        missing_ids = ['out_header.000', 'out_header.004']
+    def test_02_filter_binned_contigs_filter_levels(self):
 
-        with self.subTest('missing IDs in checkM output'):
-            run_config = cmu.run_config()
-            output_dir = run_config['output_dir']
-            os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
-            os.makedirs(run_config['input_dir'], exist_ok=True)
-            # copy over a results file
-            shutil.copy(os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
-                run_config['bin_stats_ext_file'])
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs_filter_levels")
+        self.logger.info("=================================================================\n")
 
-            for bid in list(range(5)):
-                bid_path = os.path.join(
-                    run_config['input_dir'],
-                    'out_header.00' + str(bid) + run_config['fasta_ext']
-                )
-                Path(bid_path).touch(exist_ok=True)
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
+        run_config = cmu.run_config()
 
-#             result = subprocess.run(['tree', output_dir],
-#                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-#
-#             self.logger.critical(result)
+        # copy over a results file
+        output_dir = run_config['output_dir']
+        os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
+        shutil.copy(os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
+            run_config['bin_stats_ext_file'])
 
-            err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
-            with self.assertRaisesRegex(ValueError, err_str):
-                cmu._filter_binned_contigs({
-                    'input_ref': self.binned_contigs_ref,
-                    'output_filtered_binnedcontigs_obj_name': 'Beta',
-                })
+        os.makedirs(run_config['input_dir'], exist_ok=True)
+        for bid in [1, 2, 3]:
+            bid_path = os.path.join(
+                run_config['input_dir'],
+                'out_header.00' + str(bid) + run_config['fasta_ext']
+            )
+            Path(bid_path).touch(exist_ok=True)
 
         with self.subTest('No HQ bins'):
-
-            # delete the two interloper files
-            for bid in missing_ids:
-                os.remove(os.path.join(output_dir, bid + run_config['fasta_ext']))
 
             # no high quality bins
             self.assertIsNone(cmu._filter_binned_contigs({
@@ -876,25 +958,25 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self.check_report(report, expected_results)
             shutil.rmtree(run_config['base_dir'])
 
-        with self.subTest('No checkM output'):
-            cmu = CheckMUtil(self.cfg, self.ctx)
-            # init the run_config
-            run_config = cmu.run_config()
-            # no checkM output: no report
-            os.makedirs(run_config['output_dir'])
-            Path(os.path.join(run_config['output_dir'], 'checkm.log')).touch(exist_ok=True)
-            params = {
-                'workspace_name': self.ws_info[1],
-                'save_plots_dir': 1,
-            }
-            report = cmu.outputbuilder.build_report(params)
+    def test_05_outputbuilder_no_checkM_output(self):
 
-            expected_results = {
-                'file_links': ['full_output'],
-                'text_message': 'CheckM did not produce any output.',
-            }
-            self.check_report(report, expected_results)
-            shutil.rmtree(run_config['base_dir'])
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        run_config = cmu.run_config()
+        # no checkM output: no report
+        os.makedirs(run_config['output_dir'])
+        Path(os.path.join(run_config['output_dir'], 'checkm.log')).touch(exist_ok=True)
+        params = {
+            'workspace_name': self.ws_info[1],
+            'save_plots_dir': 1,
+        }
+        report = cmu.outputbuilder.build_report(params)
+
+        expected_results = {
+            'file_links': ['full_output'],
+            'text_message': 'CheckM did not produce any output.',
+        }
+        self.check_report(report, expected_results)
+        shutil.rmtree(run_config['base_dir'])
 
 #         rerun with filters
 #         cmu = CheckMUtil(self.cfg, self.ctx)
@@ -1104,7 +1186,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome.html'],
         }
-
+        # correct the file name!
         self.run_and_check_report(params, expected_results)
 
     # Test 7: Genome Set
