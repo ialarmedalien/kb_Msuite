@@ -358,7 +358,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info('End to end test result:')
         self.logger.info(result)
 
-        return check_report(result, expected)
+        return self.check_report(result, expected)
 
     def check_report(self, result, expected):
 
