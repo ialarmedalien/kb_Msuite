@@ -5,6 +5,8 @@ import json  # noqa: F401
 import time
 import shutil
 
+import subprocess
+
 from os import environ
 from configparser import ConfigParser
 
@@ -541,13 +543,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             obj_type = cmu.workspacehelper.get_ws_obj_type(object_info=ws_obj_info, remove_module=True)
             self.assertEqual(obj_type, 'Report')
 
-#         with self.subTest('get_data_obj_type_by_name'):
-#             result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'])
-#             self.assertEqual(result, {report_object_name: 'KBaseReport.Report'})
-#
-#             result = cmu.workspacehelper.get_data_obj_type_by_name(report_output['ref'], True)
-#             self.assertEqual(result, {report_object_name: 'Report'})
-
         with self.subTest('get obj from workspace'):
             ws_obj = cmu.workspacehelper.get_obj_from_workspace(report_output['ref'])
             self.logger.info(ws_obj)
@@ -647,20 +642,26 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             # expect to get back {'obj_name': name, 'obj_type': type}
             self.logger.info(staged_input)
 
-            self.assertEqual(staged_input,{'obj_name': 'Binned_Contigs', 'obj_type': 'KBaseMetagenomes.BinnedContigs'})
+            self.assertEqual(staged_input, {
+                'obj_name': 'Binned_Contigs',
+                'obj_type': 'KBaseMetagenomes.BinnedContigs'
+            })
             self.assertTrue(os.path.isdir(run_config['input_dir']))
             self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
 
-            self.assertTrue(os.path.isfile(os.path.join(run_config['input_dir'],
-                                                        'out_header.001.fna')))
-            self.assertTrue(os.path.isfile(os.path.join(run_config['input_dir'],
-                                                        'out_header.002.fna')))
-            self.assertTrue(os.path.isfile(os.path.join(run_config['input_dir'],
-                                                        'out_header.003.fna')))
+            self.assertTrue(os.path.isfile(os.path.join(
+                run_config['input_dir'], 'out_header.001.fna'
+            )))
+            self.assertTrue(os.path.isfile(os.path.join(
+                run_config['input_dir'], 'out_header.002.fna'
+            )))
+            self.assertTrue(os.path.isfile(os.path.join(
+                run_config['input_dir'], 'out_header.003.fna'
+            )))
 
         shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
 
-        with self.subTest('strange fasta extension'):
+        with self.subTest('assembly with strange fasta extension'):
             cmu.fasta_extension = 'strange_fasta_extension'
             # reset the run_config
             new_run_config = cmu._set_run_config()
@@ -675,6 +676,41 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self.assertEqual(
                 staged_input,
                 {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
+            )
+
+        shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
+
+#             Standard Single Assembly
+#             'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
+#             'KBaseGenomes.ContigSet': self.process_assembly_contigset,
+#             AssemblySet
+#             'KBaseSets.AssemblySet': self.process_assembly_set,
+#             Binned Contigs
+#             'KBaseMetagenomes.BinnedContigs': self.process_binned_contigs,
+#             Genome and GenomeSet
+#             'KBaseGenomes.Genome': self.process_genome_genome_set,
+#             'KBaseSearch.GenomeSet': self.process_genome_genome_set,
+
+        # genome
+        with self.subTest('Genome staging'):
+            cmu = CheckMUtil(self.cfg, self.ctx)
+            # init the run_config
+            run_config = cmu.run_config()
+            dsu = cmu.datastagingutils
+            staged_input = dsu.stage_input(self.genome_refs[1])
+            self.logger.info(staged_input)
+            self.assertTrue(os.path.isdir(run_config['input_dir']))
+            self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+            self.assertTrue(os.path.isfile(os.path.join(
+                run_config['input_dir'],
+                'GCF_001439985.1_wTPRE_1.0_genomic.gbff' + '.' + run_config['fasta_ext'])
+            ))
+            self.assertEqual(
+                staged_input,
+                {
+                    'obj_name': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff.fna',
+                    'obj_type': 'KBaseGenomes.Genome',
+                }
             )
 
         shutil.rmtree(cmu.run_config()['input_dir'], ignore_errors=True)
@@ -704,7 +740,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             os.makedirs(cmu.run_config()['input_dir'], exist_ok=True)
             self.assertIsNone(cmu._filter_binned_contigs({
                 'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Robin',
+                'output_filtered_binnedcontigs_obj_name': 'Alpha',
             }))
 
         with self.subTest('missing IDs in checkM output'):
@@ -722,12 +758,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 os.makedirs(bid_path, exist_ok=True)
                 Path(os.path.join(bid_path, 'genes.faa')).touch(exist_ok=True)
 
+            result = subprocess.run(['tree', output_dir],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+            self.logger.critical(result)
+
             missing_ids = ['out_header.000', 'out_header.004']
             err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu._filter_binned_contigs({
                     'input_ref': self.binned_contigs_ref,
-                    'output_filtered_binnedcontigs_obj_name': 'Robin',
+                    'output_filtered_binnedcontigs_obj_name': 'Beta',
                 })
 
         with self.subTest('No HQ bins'):
@@ -739,7 +780,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             # no high quality bins
             self.assertIsNone(cmu._filter_binned_contigs({
                 'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Robin',
+                'output_filtered_binnedcontigs_obj_name': 'Gamma',
                 'completeness_perc': 99.0,
                 'contamination_perc': 1.0,
             }))
@@ -751,12 +792,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             # 001 and 002 will pass
             contig_filtering_results = cmu._filter_binned_contigs({
                 'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Robin',
+                'output_filtered_binnedcontigs_obj_name': 'Epsilon',
                 'completeness_perc': 95.0,
                 'contamination_perc': 1.5,
             })
 
-            self.assertEqual(contig_filtering_results['filtered_object_name'], 'Robin')
+            self.assertEqual(contig_filtering_results['filtered_object_name'], 'Epsilon')
             self.assertEqual(
                 sorted(contig_filtering_results['retained_bin_IDs'].keys()),
                 ['out_header.001', 'out_header.002']

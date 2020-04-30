@@ -305,18 +305,13 @@ class CheckMUtil(Base, LogMixin):
 
         return command
 
-    def _filter_binned_contigs(self, params):
+    def _filter_binned_contigs(self, params, obj_info=None):
 
         run_config = self.run_config()
 
-#         return {
-#             'obj_name': obj_name,
-#             'obj_type': obj_type,
-#         }
+        obj_type = obj_info['obj_type'] if obj_info else self.workspacehelper.get_ws_obj_type(params['input_ref'])
 
-        obj_type = self.workspacehelper.get_ws_obj_type(params['input_ref'])
-
-        self.logger.debug('obj_type: ' + obj_type)
+        self.logger.debug({'obj_type': obj_type})
 
         if obj_type == 'KBaseMetagenomes.BinnedContigs' \
           and 'output_filtered_binnedcontigs_obj_name' in params:

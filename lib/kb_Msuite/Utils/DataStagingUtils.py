@@ -284,9 +284,7 @@ class DataStagingUtils(Base, LogMixin):
         bin_fasta_files = dict()
         for (dirpath, dirnames, filenames) in os.walk(search_dir):
             # DEBUG
-            #self.logger.debug("DIRPATH: "+dirpath)
-            #self.logger.debug("DIRNAMES: "+", ".join(dirnames))
-            #self.logger.debug("FILENAMES: "+", ".join(filenames))
+            #self.logger.debug({'dirpath': dirpath, 'dirnames': dirnames, 'filenames': filenames})
             for filename in filenames:
                 if not os.path.isfile(os.path.join(search_dir, filename)):
                     continue

@@ -195,7 +195,9 @@ class OutputBuilder(Base, LogMixin):
                     has_plot_file = False
                     if os.path.isfile(plot_file):
                         has_plot_file = True
-                        html_dir_plot_file = os.path.join(html_plots_dir, str(bid) + self.PLOT_FILE_EXT)
+                        html_dir_plot_file = os.path.join(
+                            html_plots_dir, str(bid) + self.PLOT_FILE_EXT
+                        )
                         # copy it to the html_plot
                         self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
                         html_files.append({
@@ -297,98 +299,3 @@ class OutputBuilder(Base, LogMixin):
             # TODO: add error message reporting
             self.logger.error('copy failed')
             self.logger.error(e)
-
-#     def build_critical_output(self, critical_out_dir):
-#
-#         run_config = self.run_config()
-#         self._copy_file_ignore_errors('lineage.ms', run_config['output_dir'], critical_out_dir)
-#
-#         storage_folder = os.path.join(critical_out_dir, 'storage')
-#         if not os.path.exists(storage_folder):
-#             os.makedirs(storage_folder)
-#
-#         src = run_config['output_dir']
-#         dest = critical_out_dir
-#         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats.analyze.tsv'), src, dest)
-#         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats.tree.tsv'), src, dest)
-#         self._copy_file_ignore_errors(os.path.join('storage', 'bin_stats_ext.tsv'), src, dest)
-#         self._copy_file_ignore_errors(os.path.join('storage', 'marker_gene_stats.tsv'), src, dest)
-#         self._copy_file_ignore_errors(os.path.join('storage', 'tree', 'concatenated.tre'), src, dest)
-
-#     def _copy_ref_dist_plots(self, dest_folder):
-#         run_config = self.run_config()
-#         plots_dir = run_config['plots_dir']
-#         for plotfile in os.listdir(plots_dir):
-#             plot_file_path = os.path.join(plots_dir, plotfile)
-#             if os.path.isfile(plot_file_path) and plotfile.endswith(self.PLOT_FILE_EXT):
-#                 try:
-#                     shutil.copy(os.path.join(plots_dir, plotfile),
-#                                 os.path.join(dest_folder, plotfile))
-#                 except:
-#                     # TODO: add error message reporting
-#                     log('copy of ' + plot_file_path + ' to html directory failed')
-#     def _write_dist_html_page(self, html_dir, bin_id):
-#
-#         bin_html_file = os.path.join(html_dir, bin_id + '.html')
-#         # write the html report to file
-#         with open(bin_html_file, 'w') as html:
-#
-#             html.write('<html>\n')
-#             html.write('<head>\n')
-#             html.write('<title>CheckM Dist Plots for Bin ' + bin_id + '</title>')
-#             html.write('<style style="text/css">\n a { color: #337ab7; } \n a:hover { color: #23527c; }\n</style>\n')
-#             html.write('<body>\n')
-#             html.write('<br><a href="CheckM_Table.html">Back to summary</a><br>\n')
-#             html.write('<center><h2>Bin: ' + bin_id + '</h2></center>\n')
-#             html.write('<img src="' + bin_id + self.PLOT_FILE_EXT + '" width="90%" />\n')
-#             html.write('<br><br><br>\n')
-#             html.write('</body>\n</html>\n')
-#
-#         return bin_html_file
-#
-#     def build_summary_tsv_file(self, bin_stats, removed_bins=None):
-#
-#         fields = self.get_fields()
-#         run_config = self.run_config()
-#
-#         if not os.path.exists(run_config['tab_text_dir']):
-#             os.makedirs(run_config['tab_text_dir'])
-#
-#         with open(run_config['tab_text_file'], 'w') as out_handle:
-#
-#             out_header = ['Bin Name']
-#             for f in fields:
-#                 out_header.append(f['display'])
-#             if 'results_filtered' in run_config:
-#                 out_header.append('QC Pass')
-#
-#             out_handle.write("\t".join(out_header)+"\n")
-#
-#             # DEBUG
-#             #for bid in sorted(bin_stats.keys()):
-#             #    log("BIN STATS BID: "+bid)
-#
-#             for bid in sorted(bin_stats.keys()):
-#                 row = []
-#                 row.append(bid)
-#                 for f in fields:
-#                     if f['id'] in bin_stats[bid]:
-#                         value = str(bin_stats[bid][f['id']])
-#                         if f.get('round'):
-#                             value = str(round(bin_stats[bid][f['id']], f['round']))
-#                         row.append(str(value))
-#
-#                 # add a column to indicate whether the bin should be removed
-#                 if 'results_filtered' in run_config:
-#                     if removed_bins:
-#                         bin_id = re.sub('^[^\.]+\.', '', bid)
-#                         if bin_id in removed_bins:
-#                             row.append('false')
-#                         else:
-#                             row.append('true')
-#                     else:
-#                         row.append('true')
-#
-#                 out_handle.write("\t".join(row)+"\n")
-#
-#         return run_config['tab_text_file']

@@ -42,14 +42,6 @@ class WorkspaceHelper(Base, LogMixin):
 
         return object_info[obj_property[prop]]
 
-#     def get_ws_obj_type_by_name(self, ref, remove_module=False):
-#
-#         object_info = self.get_ws_obj_info(ref)
-#
-#         obj_name = self.get_ws_obj_name(object_info=object_info)
-#         obj_type = self.get_ws_obj_type(object_info=object_info, remove_module=remove_module)
-#         return {obj_name: obj_type}
-
     def get_ws_obj_name(self, ref=None, object_info=None):
 
         if not object_info:
