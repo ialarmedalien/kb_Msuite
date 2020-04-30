@@ -876,6 +876,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'output_filtered_binnedcontigs_obj_name': 'Beta',
             })
 
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
     def prep_filter_binned_contigs_dirs(self):
 
         self.require_data('binned_contigs_ref')
@@ -920,6 +922,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertFalse(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
     def test_02_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
@@ -937,7 +941,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'workspace_name': self.wsName,
         })
 
-        self.assertEqual(contig_filtering_results['filtered_object_name'], 'Epsilon')
+        self.assertEqual(contig_filtering_results['filtered_obj_name'], 'Epsilon')
         self.assertEqual(
             sorted(contig_filtering_results['retained_bin_IDs'].keys()),
             ['001', '002']
@@ -968,7 +972,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'workspace_name': self.wsName,
         })
 
-        self.assertEqual(contig_filtering_results['filtered_object_name'], 'Gamma')
+        self.assertEqual(contig_filtering_results['filtered_obj_name'], 'Gamma')
         self.assertEqual(
             sorted(contig_filtering_results['retained_bin_IDs'].keys()),
             ['002','003']
@@ -981,6 +985,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # summary file has been created
         self.assertTrue(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+        # filtered bins dir has been created
+        self.assertTrue(os.path.exists(run_config['filtered_bins_dir']))
+        self.assertTrue(os.path.isfile(os.path.join(
+            run_config['filtered_bins_dir'], '002' + run_config['fasta_ext']
+        )))
 
     def test_02_filter_binned_contigs_all_HQ(self):
 
@@ -1001,6 +1010,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # no summary file
         self.assertFalse(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
     def test_05_outputbuilder(self):
 

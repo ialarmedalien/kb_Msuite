@@ -100,6 +100,8 @@ class DataStagingUtils(Base, LogMixin):
         if not self.fasta_seq_len_at_least(filename, min_fasta_len):
             raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
 
+        self.logger.debug('Saved assembly or contigset to ' + filename)
+
         return True
 
     def process_assembly_set(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
@@ -113,28 +115,21 @@ class DataStagingUtils(Base, LogMixin):
         except Exception as e:
             raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
 
-        assembly_refs = []
-        assembly_names = []
+#         assembly_refs = []
+#         assembly_names = []
         for assembly_item in assemblySet_obj['data']['items']:
-            this_assembly_ref = assembly_item['ref']
+
+            assembly_ref = assembly_item['ref']
+            assembly_info = None
             # assembly obj info
             try:
-                this_assembly_info = self.client('Workspace').get_object_info_new({'objects': [{'ref': this_assembly_ref}]})[0]
-                this_assembly_name = this_assembly_info[1]
+                assembly_info = self.client('Workspace').get_object_info_new({'objects': [{'ref': assembly_ref}]})[0]
             except Exception as e:
                 raise ValueError('Unable to get object from workspace: (' + this_assembly_ref + '): ' + str(e))
-            assembly_refs.append(this_assembly_ref)
-            assembly_names.append(this_assembly_name)
-
-        self.logger.debug(assembly_refs)
-        self.logger.debug(assembly_names)
-
-        # create file data (name for file is what's reported in results)
-        for ass_i, assembly_ref in enumerate(assembly_refs):
-            this_name = assembly_names[ass_i]
-            filename = os.path.join(input_dir, this_name + '.' + fasta_ext)
+            self.logger.debug({'assembly info': assembly_info})
+            assembly_name = assembly_info[1]
+            filename = os.path.join(input_dir, assembly_name + '.' + fasta_ext)
             auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
-            self.logger.debug('ass ref: ' + assembly_ref + '; filename: ' + filename)
 
             if not os.path.isfile(filename):
                 raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
@@ -143,6 +138,26 @@ class DataStagingUtils(Base, LogMixin):
             if not self.fasta_seq_len_at_least(filename, min_fasta_len):
                 raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
 
+            self.logger.info('saved ' + assembly_name + ' to ' + filename)
+#             assembly_refs.append(this_assembly_ref)
+#             assembly_names.append(this_assembly_name)
+#
+#         self.logger.debug({'assembly_refs': assembly_refs, 'assembly_names': assembly_names})
+
+#         create file data (name for file is what's reported in results)
+#         for ass_i, assembly_ref in enumerate(assembly_refs):
+#             this_name = assembly_names[ass_i]
+#             filename = os.path.join(input_dir, this_name + '.' + fasta_ext)
+#             auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
+#             self.logger.debug('ass ref: ' + assembly_ref + '; filename: ' + filename)
+#
+#             if not os.path.isfile(filename):
+#                 raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
+#             make sure fasta file isn't empty
+#             min_fasta_len = 1
+#             if not self.fasta_seq_len_at_least(filename, min_fasta_len):
+#                 raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
+
         return True
 
     def process_binned_contigs(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
@@ -150,19 +165,28 @@ class DataStagingUtils(Base, LogMixin):
         mguClient = self.client('MetagenomeUtils')
 
         # download the bins as fasta and set the input folder name
-        bin_file_dir = mguClient.binned_contigs_to_file({
+        file_result = mguClient.binned_contigs_to_file({
             'input_ref': input_ref,
             'save_to_shock': 0
-        })['bin_file_directory']
+        })
+        bin_file_dir = file_result['bin_file_directory']
+        self.logger.info('Renaming ' + bin_file_dir + ' to ' + input_dir)
         os.rename(bin_file_dir, input_dir)
         # make sure fasta file isn't empty
         self.set_fasta_file_extensions(input_dir, fasta_ext)
         for (dirpath, dirnames, filenames) in os.walk(input_dir):
+            self.logger.debug({
+                'dirpath': dirpath,
+                'dirnames': dirnames,
+                'filenames': filenames,
+            })
+
             for fasta_file in filenames:
                 fasta_path = os.path.join(input_dir, fasta_file)
                 min_fasta_len = 1
                 if not self.fasta_seq_len_at_least(fasta_path, min_fasta_len):
                     raise ValueError('Binned Assembly is empty for fasta_path: ' + str(fasta_path))
+                self.logger.info('Processed valid binned contig file ' + fasta_path)
             break
 
         return True
