@@ -1217,7 +1217,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
-    def test_checkM_lineage_wf_full_app_single_genome(self):
+    def notest_checkM_lineage_wf_full_app_single_genome(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_full_app_single_genome")
         self.logger.info("=================================================================\n")
