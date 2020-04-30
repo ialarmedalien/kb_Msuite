@@ -32,10 +32,10 @@ class OutputBuilder(Base, LogMixin):
 
     def get_fields(self):
         return [
-            {'id': 'marker lineage', 'display': 'Marker Lineage'},
-            {'id': '# genomes', 'display': '# Genomes'},
-            {'id': '# markers', 'display': '# Markers'},
-            {'id': '# marker sets', 'display': '# Marker Sets'},
+            {'id': 'marker_lineage', 'display': 'Marker Lineage'},
+            {'id': 'n_genomes', 'display': '# Genomes'},
+            {'id': 'n_markers', 'display': '# Markers'},
+            {'id': 'n_marker_sets', 'display': '# Marker Sets'},
             {'id': '0', 'display': '0'},
             {'id': '1', 'display': '1'},
             {'id': '2', 'display': '2'},
@@ -43,7 +43,7 @@ class OutputBuilder(Base, LogMixin):
             {'id': '4', 'display': '4'},
             {'id': '5+', 'display': '5+'},
             {'id': 'Completeness', 'display': 'Completeness', 'round': 2},
-            {'id': 'Contamination', 'display': 'Contamination', 'round': 2}
+            {'id': 'Contamination', 'display': 'Contamination', 'round': 2},
         ]
 
     def build_report(self, params, filtered_obj_info=None):

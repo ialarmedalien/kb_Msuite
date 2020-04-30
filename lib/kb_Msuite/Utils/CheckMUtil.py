@@ -347,14 +347,13 @@ class CheckMUtil(Base, LogMixin):
             test_contamination = True
             contamination_thresh = float(params.get('contamination_perc'))
 
+        bin_stats_ext_file = run_config['bin_stats_ext_file']
+        bin_basename = run_config['bin_basename']
+        file_ext = run_config['fasta_ext_binned_contigs']
+
         bin_stats_data = dict()
         retained_bin_IDs = dict()
         removed_bin_IDs = dict()
-
-        bin_stats_ext_file = run_config['bin_stats_ext_file']
-        bin_basename = run_config['bin_basename']
-
-        file_ext = run_config['fasta_ext_binned_contigs']
         some_bins_are_HQ = False
 
         bin_stats = self.outputbuilder.read_bin_stats_file()
@@ -394,12 +393,9 @@ class CheckMUtil(Base, LogMixin):
                     json.dumps(ast.literal_eval(bin_stats_json_str)),
                     parse_float=Decimal
                 )
-
+                self.logger.debug({bin_ID: bin_stats_data[bin_ID]})
                 comp = float(bin_stats_data[bin_ID]['Completeness'])
                 cont = float(bin_stats_data[bin_ID]['Contamination'])
-
-                self.logger.debug("Bin " + bin_ID + " CheckM COMPLETENESS:  " + str(comp))
-                self.logger.debug("Bin " + bin_ID + " CheckM CONTAMINATION: " + str(cont))
 
                 bin_is_HQ = True
                 if test_completeness and comp < completeness_thresh:
@@ -412,9 +408,11 @@ class CheckMUtil(Base, LogMixin):
                 if not bin_is_HQ:
                     self.logger.info("Bin " + bin_ID + " didn't pass QC filters.  Skipping.")
                     removed_bin_IDs[bin_ID] = True
+                    bin_stats_data[bin_ID]['bin_is_HQ'] = False
                 else:
                     self.logger.info("Bin " + bin_ID + " passed QC filters.  Adding to new BinnedContigs")
                     some_bins_are_HQ = True
+                    bin_stats_data[bin_ID]['bin_is_HQ'] = True
                     retained_bin_IDs[bin_ID] = True
 
                     # copy filtered bin scaffold files to filtered dir
@@ -431,11 +429,18 @@ class CheckMUtil(Base, LogMixin):
 
         self.bin_stats_data = bin_stats_data
 
+        self.logger.debug({
+            'retained_bin_IDs': retained_bin_IDs,
+            'removed_bin_IDs': removed_bin_IDs,
+        })
+
         if not some_bins_are_HQ:
             return None
 
         # create BinnedContig object from filtered bins
         binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
+        self.logger.debug({'binned_contig_obj': binned_contig_obj})
+
         self.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj, retained_bin_IDs)
         new_binned_contigs_info = self.save_binned_contigs(params, binned_contig_obj['assembly_ref'])
 
@@ -495,6 +500,8 @@ class CheckMUtil(Base, LogMixin):
                     str(bin_summary_info[bin_ID]['gc'])
                 ]
                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
+                self.logger.debug({'bin_summary_line': bin_summary_info_line})
+
 
         return summary_file_path
 

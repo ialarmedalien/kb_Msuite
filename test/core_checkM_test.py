@@ -852,11 +852,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'output_filtered_binnedcontigs_obj_name': 'Beta',
             })
 
-    def test_02_filter_binned_contigs_filter_levels(self):
-
-        self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs_filter_levels")
-        self.logger.info("=================================================================\n")
+    def prep_filter_binned_contigs_dirs(self):
 
         self.require_data('binned_contigs_ref')
 
@@ -877,68 +873,86 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'out_header.00' + str(bid) + '.' + run_config['fasta_ext']
             )
             Path(bid_path).touch(exist_ok=True)
+        return cmu
 
-        with self.subTest('No HQ bins'):
 
-            # no high quality bins
-            self.assertIsNone(cmu._filter_binned_contigs({
-                'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Gamma',
-                'completeness_perc': 99.0,
-                'contamination_perc': 1.0,
-                'workspace_name': self.wsName,
-            }))
-            # no summary file
-            self.assertFalse(os.path.exists(run_config['summary_file_path']))
-            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+    def test_02_filter_binned_contigs_no_HQ(self):
 
-        with self.subTest('some HQ bins'):
-            # 001 and 002 will pass
-            contig_filtering_results = cmu._filter_binned_contigs({
-                'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Epsilon',
-                'completeness_perc': 95.0,
-                'contamination_perc': 1.5,
-                'workspace_name': self.wsName,
-            })
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs_no_HQ")
+        self.logger.info("=================================================================\n")
 
-            self.assertEqual(contig_filtering_results['filtered_object_name'], 'Epsilon')
-            self.assertEqual(
-                sorted(contig_filtering_results['retained_bin_IDs'].keys()),
-                ['out_header.001', 'out_header.002']
-            )
-            self.assertEqual(
-                sorted(contig_filtering_results['removed_bin_IDs'].keys()),
-                ['out_header.003']
-            )
-            self.assertTrue('filtered_obj_ref' in contig_filtering_results)
-            # summary file has been created
-            self.assertTrue(os.path.exists(run_config['summary_file_path']))
-            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+        cmu = self.prep_filter_binned_contigs_dirs()
+        # no high quality bins
+        self.assertIsNone(cmu._filter_binned_contigs({
+            'input_ref': self.binned_contigs_ref,
+            'output_filtered_binnedcontigs_obj_name': 'Gamma',
+            'completeness_perc': 99.0,
+            'contamination_perc': 1.0,
+            'workspace_name': self.wsName,
+        }))
+        # no summary file
+        self.assertFalse(os.path.exists(run_config['summary_file_path']))
+        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
-        with self.subTest('All HQ bins'):
-            # remove the summary file and re-filter so all pass
-            os.remove(run_config['summary_file_path'])
-            contig_filtering_results = cmu._filter_binned_contigs({
-                'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Octocat',
-                'completeness_perc': 95.0,
-                'contamination_perc': 2.0,
-                'workspace_name': self.wsName,
-            })
-            self.assertEqual(contig_filtering_results['filtered_object_name'], 'Octocat')
-            self.assertEqual(
-                sorted(contig_filtering_results['retained_bin_IDs'].keys()),
-                ['out_header.001', 'out_header.002', 'out_header.003']
-            )
-            self.assertEqual(
-                sorted(contig_filtering_results['removed_bin_IDs'].keys()),
-                []
-            )
-            self.assertTrue('filtered_obj_ref' in contig_filtering_results)
-            # summary file has been created
-            self.assertTrue(os.path.exists(run_config['summary_file_path']))
-            self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+    def test_02_filter_binned_contigs_some_HQ(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs_some_HQ")
+        self.logger.info("=================================================================\n")
+
+        cmu = self.prep_filter_binned_contigs_dirs()
+        # 001 and 002 will pass
+        contig_filtering_results = cmu._filter_binned_contigs({
+            'input_ref': self.binned_contigs_ref,
+            'output_filtered_binnedcontigs_obj_name': 'Epsilon',
+            'completeness_perc': 95.0,
+            'contamination_perc': 1.5,
+            'workspace_name': self.wsName,
+        })
+
+        self.assertEqual(contig_filtering_results['filtered_object_name'], 'Epsilon')
+        self.assertEqual(
+            sorted(contig_filtering_results['retained_bin_IDs'].keys()),
+            ['001', '002']
+        )
+        self.assertEqual(
+            contig_filtering_results['removed_bin_IDs'].keys(),
+            ['003']
+        )
+        self.assertTrue('filtered_obj_ref' in contig_filtering_results)
+        # summary file has been created
+        self.assertTrue(os.path.exists(run_config['summary_file_path']))
+        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+
+    def test_02_filter_binned_contigs_all_HQ(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs_all_HQ")
+        self.logger.info("=================================================================\n")
+
+        cmu = self.prep_filter_binned_contigs_dirs()
+        # set filters so all will pass
+        contig_filtering_results = cmu._filter_binned_contigs({
+            'input_ref': self.binned_contigs_ref,
+            'output_filtered_binnedcontigs_obj_name': 'Octocat',
+            'completeness_perc': 95.0,
+            'contamination_perc': 2.0,
+            'workspace_name': self.wsName,
+        })
+        self.assertEqual(contig_filtering_results['filtered_object_name'], 'Octocat')
+        self.assertEqual(
+            sorted(contig_filtering_results['retained_bin_IDs'].keys()),
+            ['001', '002', '003']
+        )
+        self.assertEqual(
+            contig_filtering_results['removed_bin_IDs'].keys(),
+            []
+        )
+        self.assertTrue('filtered_obj_ref' in contig_filtering_results)
+        # summary file has been created
+        self.assertTrue(os.path.exists(run_config['summary_file_path']))
+        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
 
     # Test 9: Plotting (intended data not checked into git repo: SKIP)
@@ -986,6 +1000,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             }
             self.check_report(result, expected_results)
             # TODO: check the TSV file -- there should be one bin with a missing plot file
+            tab_data = {}
+#             with open(run_config['tab_text_file'], newline='') as infile:
+#                 reader = csv.DictReader(infile, delimiter='\t')
+#                 for row in reader:
+#                     tab_data[row['marker_lineage']] = row
+
+
 
         with self.subTest('lots of output, binned contig obj'):
 
