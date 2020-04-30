@@ -97,6 +97,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cls.setAPI  = SetAPI(url=cls.cfg['srv-wiz-url'], token=cls.ctx['token'])
         cls.kr      = KBaseReport(os.environ['SDK_CALLBACK_URL'])
 
+        cls.data_loaded = False
 
         # stage an input and output directory
         """
@@ -116,6 +117,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         pass
 
     def require_data(self, *args):
+        if self.data_loaded:
+            return True
+
         return self.prep_ref_data()
 
     def prep_ref_data(self):
@@ -133,6 +137,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         for key, value in saved_refs.items():
             setattr(self, key, value)
+
+            self.assertEqual(getattr(self, key), saved_refs[key])
+
+        self.data_loaded = True
+        return True
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -621,7 +630,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING 01_data_staging")
         self.logger.info("=================================================================\n")
 
-        self.require_data('binned_contigs_ref', 'report_ref')
+        self.require_data('report_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         # init the run_config
@@ -638,6 +647,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assembly_strange_fasta_ext")
         self.logger.info("=================================================================\n")
+
+        self.require_data('assembly_OK_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.fasta_extension = 'strange_fasta_extension'
@@ -666,6 +677,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING 01_data_staging_assemblyset")
         self.logger.info("=================================================================\n")
 
+        self.require_data('assembly_set_ref')
+
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu._set_run_config()
         dsu = cmu.datastagingutils
@@ -689,6 +702,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_binned_contigs")
         self.logger.info("=================================================================\n")
+
+        self.require_data('binned_contigs_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.run_config()
@@ -723,6 +738,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING 01_data_staging_genome")
         self.logger.info("=================================================================\n")
 
+        self.require_data('genome_refs')
+
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.fasta_extension = 'strange_fasta_extension'
         run_config = cmu._set_run_config()
@@ -750,6 +767,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_genome_set")
         self.logger.info("=================================================================\n")
+
+        self.require_data('genome_set_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu._set_run_config()
@@ -805,8 +824,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING 02_filter_binned_contigs_checkM_missing_IDs")
         self.logger.info("=================================================================\n")
 
+        self.require_data('binned_contigs_ref')
+
         cmu = CheckMUtil(self.cfg, self.ctx)
-        cmu.run_config()
         run_config = cmu.run_config()
 
         # copy over a results file
@@ -820,9 +840,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         for bid in list(range(5)):
             bid_path = os.path.join(
                 run_config['input_dir'],
-                'out_header.00' + str(bid) + run_config['fasta_ext']
+                'out_header.00' + str(bid) + '.' + run_config['fasta_ext']
             )
             Path(bid_path).touch(exist_ok=True)
+
+        missing_IDs = ['out_header.000', 'out_header.004']
 
         err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
         with self.assertRaisesRegex(ValueError, err_str):
@@ -836,6 +858,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_filter_levels")
         self.logger.info("=================================================================\n")
+
+        self.require_data('binned_contigs_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.run_config()
@@ -851,7 +875,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         for bid in [1, 2, 3]:
             bid_path = os.path.join(
                 run_config['input_dir'],
-                'out_header.00' + str(bid) + run_config['fasta_ext']
+                'out_header.00' + str(bid) + '.' + run_config['fasta_ext']
             )
             Path(bid_path).touch(exist_ok=True)
 
@@ -1184,7 +1208,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome.html'],
+            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'GCF_0000222851_ASM2228v1_genomicgbff.html'],
         }
         # correct the file name!
         self.run_and_check_report(params, expected_results)
