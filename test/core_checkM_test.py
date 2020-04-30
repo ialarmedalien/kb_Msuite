@@ -747,10 +747,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
             os.makedirs(run_config['input_dir'], exist_ok=True)
             # copy over a results file
-            shutil.copy(
-                os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
+            shutil.copy(os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
                 run_config['bin_stats_ext_file'])
-            )
+
             for bid in list(range(5)):
                 bid_path = os.path.join(run_config['input_dir'], 'out_header.00' + str(bid))
                 Path(os.path.join(bid_path, 'genes.' + faa')).touch(exist_ok=True)
