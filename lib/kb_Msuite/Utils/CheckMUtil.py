@@ -331,6 +331,33 @@ class CheckMUtil(Base, LogMixin):
 
         self.logger.debug({"bin_IDs": bin_IDs})
 
+        # fetch the existing binned_contig object
+        binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
+        self.logger.debug({'binned_contig_obj': binned_contig_obj})
+
+        bin_summary_info = {}
+        for bin_item in binned_contig_obj['bins']:
+            bin_ID = self.clean_bin_ID(bin_item['bid'], fasta_ext)
+            bin_summary_info[bin_ID] = {
+#                'n_contigs':        bin_item['n_contigs'],
+                'gc':               round(100.0 * float(bin_item['gc']), 1),
+                'sum_contig_len':   bin_item['sum_contig_len'],
+                'cov':              str(round(100.0 * float(bin_item['cov']), 1)) + '%',
+                'name': run_config['bin_basename'] + '.' + str(bin_ID) + '.' + run_config['fasta_ext'],
+            }
+            self.logger.debug({
+                "bin_item[bid]": bin_item['bid'],
+                'clean_id': bin_ID,
+                'summary_info': bin_summary_info[bin_ID],
+            })  # DEBUG
+
+#                     bin_basename + '.' + str(bin_ID) + '.' + fasta_ext,
+#                     str(bin_summary_info[bin_ID]['cov'])+'%',
+#                     str(bin_summary_info[bin_ID]['sum_contig_len']),
+#                     str(bin_summary_info[bin_ID]['gc'])
+
+
+
         filtered_bins_dir = run_config['filtered_bins_dir']
         if not os.path.exists(filtered_bins_dir):
             os.makedirs(filtered_bins_dir)
@@ -360,9 +387,10 @@ class CheckMUtil(Base, LogMixin):
             for bin_stats_line in bin_stats_ext_handle:
                 bin_stats_line.rstrip()
                 [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
+
+                # full_bin_ID is in the form bin.xxx, so strip off the 'bin' prefix
                 bin_ID = self.clean_bin_ID(full_bin_ID, run_config['fasta_ext'])
 
-#                bin_stats_json_str = json.dumps(ast.literal_eval(bin_stats_json_str))
                 bin_stats_data[bin_ID] = json.loads(
                     json.dumps(ast.literal_eval(bin_stats_json_str)),
                     parse_float=Decimal
@@ -412,8 +440,6 @@ class CheckMUtil(Base, LogMixin):
             return None
 
         # create BinnedContig object from filtered bins
-        binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
-        self.logger.debug({'binned_contig_obj': binned_contig_obj})
 
         self.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj, retained_bin_IDs)
         new_binned_contigs_info = self.save_binned_contigs(params, binned_contig_obj['assembly_ref'])
@@ -437,6 +463,10 @@ class CheckMUtil(Base, LogMixin):
         filtered_bin_IDs = []
 
         for bin_ID in sorted(filtered_bin_ID_dict.keys()):
+            self.logger.debug({
+                'original_key': bin_ID,
+                'cleaned_key': self.clean_bin_ID(bin_ID, fasta_ext),
+            })
             filtered_bin_IDs.append(self.clean_bin_ID(bin_ID, fasta_ext))
 
         self.logger.debug({'filtered_bin_IDs': filtered_bin_IDs})

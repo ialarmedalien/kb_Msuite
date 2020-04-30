@@ -155,6 +155,21 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     def getConfig(self):
         return self.__class__.serviceImpl.config
 
+    def _prep_assembly(self, assembly):
+
+        assembly_file_path = os.path.join(self.test_data_dir, assembly['path'])
+        if not os.path.exists(assembly_file_path):
+            shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
+        saved_assembly = self.au.save_assembly_from_fasta({
+            'file': {'path': assembly_file_path},
+            'workspace_name': self.refdata_ws_info[1],
+            'assembly_name': assembly['name'],
+        })
+        setattr(self, assembly['attr'], saved_assembly)
+        self.logger.info({
+            assembly['attr']: saved_assembly,
+        })
+
     def prep_assemblies(self):
         ''' prepare the assemblies and assembly set '''
 
@@ -174,19 +189,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         ]
 
         for assembly in assembly_list:
-            assembly_file_path = os.path.join(self.test_data_dir, assembly['path'])
-            if not os.path.exists(assembly_file_path):
-                shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
-            saved_assembly = self.au.save_assembly_from_fasta({
-                'file': {'path': assembly_file_path},
-                'workspace_name': self.refdata_ws_info[1],
-                'assembly_name': assembly['name'],
-            })
-            setattr(self, assembly['attr'], saved_assembly)
-            self.logger.info({
-                'assembly_attr': assembly['attr'],
-                'Saved Assembly': saved_assembly,
-            })
+            self._prep_assembly(assembly)
 
         # create an AssemblySet
         assembly_items = [
@@ -209,6 +212,26 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         return True
 
+    def _prep_binned_contig(self, bc):
+
+        binned_contigs_path = os.path.join(self.test_data_dir, bc['path'])
+        if not os.path.exists(binned_contigs_path) or not os.path.exists(os.path.join(binned_contigs_path, 'out_header.summary')):
+            shutil.rmtree(binned_contigs_path, ignore_errors=True)
+            shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
+
+        saved_object = self.mu.file_to_binned_contigs({
+            'file_directory': binned_contigs_path,
+            'workspace_name': self.refdata_ws_info[1],
+            'assembly_ref': self.assembly_OK_ref,
+            'binned_contig_name': bc['name'],
+        })
+
+        setattr(self, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
+        self.logger.info({
+            'Saved BinnedContigs': saved_object,
+            bc['path'] + '_ref': getattr(self, bc['path'] + '_ref')
+        })
+
     def prep_binned_contigs(self):
 
         if not hasattr(self, 'assembly_OK_ref'):
@@ -226,26 +249,25 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             }
         ]
 
-        for bc in binned_contigs_list:
-            binned_contigs_path = os.path.join(self.test_data_dir, bc['path'])
-            if not os.path.exists(binned_contigs_path) or not os.path.exists(os.path.join(binned_contigs_path, 'out_header.summary')):
-                shutil.rmtree(binned_contigs_path, ignore_errors=True)
-                shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
-
-            saved_object = self.mu.file_to_binned_contigs({
-                'file_directory': binned_contigs_path,
-                'workspace_name': self.refdata_ws_info[1],
-                'assembly_ref': self.assembly_OK_ref,
-                'binned_contig_name': bc['name'],
-            })
-
-            setattr(self, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
-            self.logger.info({
-                'Saved BinnedContigs': saved_object,
-                bc['path'] + '_ref': getattr(self, bc['path'] + '_ref')
-            })
+        for binned_contig in binned_contigs_list:
+            self._prep_binned_contig(binned_contig)
 
         return True
+
+    def _prep_genome(self, genome_filename):
+
+        genome_file_path = os.path.join(self.test_data_dir, genome_filename)
+        if not os.path.exists(genome_file_path):
+            shutil.copy(os.path.join("data", "genomes", genome_filename), genome_file_path)
+
+        genome_data = self.gfu.genbank_to_genome({
+            'file': {'path': genome_file_path},
+            'workspace_name': self.refdata_ws_info[1],
+            'genome_name': genome_filename,
+            'generate_ids_if_needed': 1,
+        })
+        self.genome_refs.append(genome_data['genome_ref'])
+        self.logger.info({'Saved Genome': genome_data})
 
     def prep_genomes(self):
 
@@ -256,20 +278,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         # upload a few genomes
         self.genome_refs = []
-        genomes = ['GCF_000022285.1_ASM2228v1_genomic.gbff', 'GCF_001439985.1_wTPRE_1.0_genomic.gbff']
+        genomes = [
+            'GCF_000022285.1_ASM2228v1_genomic.gbff',
+            'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
+        ]
         for genome_filename in genomes:
-            genome_file_path = os.path.join(self.test_data_dir, genome_filename)
-            if not os.path.exists(genome_file_path):
-                shutil.copy(os.path.join("data", "genomes", genome_filename), genome_file_path)
-
-            genome_data = self.gfu.genbank_to_genome({
-                'file': {'path': genome_file_path},
-                'workspace_name': self.refdata_ws_info[1],
-                'genome_name': genome_filename,
-                'generate_ids_if_needed': 1,
-            })
-            self.genome_refs.append(genome_data['genome_ref'])
-            self.logger.info({'Saved Genome': genome_data})
+            self._prep_genome(genome_filename)
 
         self.logger.info({'genome_refs': self.genome_refs})
 
@@ -439,6 +453,19 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         self.prep_ref_data()
+
+        ## add in the new mini binned contigs and mini assembly
+        self._prep_assembly({
+            # example assembly
+            'path': 'mini_assembly.fasta',
+            'name': 'MiniAssembly',
+            'attr': 'assembly_mini_ref',
+        })
+
+        self._prep_binned_contig({
+            'path': 'binned_contigs_mini',
+            'name': 'Mini_Binned_Contigs',
+        })
 
         cmu = CheckMUtil(self.cfg, self.ctx)
 
