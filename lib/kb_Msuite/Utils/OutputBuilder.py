@@ -114,13 +114,13 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         '''
         Based on the output of CheckM lineage_wf, build an HTML report
         '''
-        run_config      = self.run_config()
-        html_dir        = run_config['html_dir']
-        plots_dir       = run_config['plots_dir']
-        html_plots_dir  = os.path.join(html_dir, 'plots')
-        tab_text_dir    = run_config['tab_text_dir']
-        tmpl_src_dir    = run_config['template_src_dir']
-        tmpl_dest_dir   = run_config['template_dest_dir']
+        run_config = self.run_config()
+        html_dir = run_config['html_dir']
+        plots_dir = run_config['plots_dir']
+        html_plots_dir = os.path.join(html_dir, 'plots')
+        tab_text_dir = run_config['tab_text_dir']
+        tmpl_src_dir = run_config['template_src_dir']
+        tmpl_dest_dir = run_config['template_dest_dir']
 
         for dir in [html_plots_dir, tab_text_dir, tmpl_dest_dir]:
             os.makedirs(dir, exist_ok=True)
@@ -136,10 +136,10 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         html_files = [
             {
                 # checkm table:
-#                 'template': {
-#                     'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
-#                     'template_data_json': {'params':params,}
-#                 },
+                # 'template': {
+                #     'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
+                #     'template_data_json': {'params':params,}
+                # },
                 'name': 'checkm_results.html',
                 'description': 'Summarized report from CheckM',
                 'path': html_index_file,
@@ -193,6 +193,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
                     self.write_tsv_row(tsv_writer, bid, bin_stats[bid], results_filtered)
                     self.logger.debug({
+                        'event': 'tsv_row_data',
                         'bid': bid,
                         'bin_id': bin_id,
                         'bin_stats': bin_stats[bid]

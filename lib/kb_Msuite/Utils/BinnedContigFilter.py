@@ -73,61 +73,66 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         retained_bin_IDs = dict()
         removed_bin_IDs = dict()
 
-        (summary_fh, summary_writer) = self._init_summary_writer()
+        run_config = self.run_config()
 
-        with open(run_config['bin_stats_ext_file'], 'r') as bin_stats_fh:
-            for bin_stats_line in bin_stats_fh:
-                bin_stats_line.rstrip()
-                [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
+        # write summary file for just those bins present in bin_dir
+        self.logger.info("writing filtered binned contigs summary file " + run_config['summary_file_path'] + '-new')
 
-                # full_bin_ID is in the form bin.xxx, so strip off the 'bin' prefix
-                bin_ID = self.checkMUtil.clean_bin_ID(full_bin_ID, run_config['fasta_ext'])
+        with open(run_config['summary_file_path'] + '-new', 'w', newline='') as summary_fh:
+            summary_writer = self._init_summary_writer(summary_fh)
 
-                bin_stats_data[bin_ID] = json.loads(
-                    json.dumps(ast.literal_eval(bin_stats_json_str)),
-                    parse_float=Decimal
-                )
-                self.logger.debug({bin_ID: bin_stats_data[bin_ID]})
-                comp = float(bin_stats_data[bin_ID]['Completeness'])
-                cont = float(bin_stats_data[bin_ID]['Contamination'])
-                bin_is_HQ = True
+            with open(run_config['bin_stats_ext_file'], 'r') as bin_stats_fh:
+                for bin_stats_line in bin_stats_fh:
+                    bin_stats_line.rstrip()
+                    [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
 
-                if test_completeness and comp < completeness_thresh:
-                    bin_is_HQ = False
-                    self.log_completeness_fail(bin_ID, comp, completeness_thresh)
+                    # full_bin_ID is in the form bin.xxx, so strip off the 'bin' prefix
+                    bin_ID = self.checkMUtil.clean_bin_ID(full_bin_ID, run_config['fasta_ext'])
 
-                if test_contamination and cont > contamination_thresh:
-                    bin_is_HQ = False
-                    self.log_contamination_fail(bin_ID, cont, contamination_thresh)
+                    bin_stats_data[bin_ID] = json.loads(
+                        json.dumps(ast.literal_eval(bin_stats_json_str)),
+                        parse_float=Decimal
+                    )
+                    comp = float(bin_stats_data[bin_ID]['Completeness'])
+                    cont = float(bin_stats_data[bin_ID]['Contamination'])
+                    bin_is_HQ = True
 
-                bin_stats_data[bin_ID]['QA Pass'] = bin_is_HQ
+                    if test_completeness and comp < completeness_thresh:
+                        bin_is_HQ = False
+                        self.log_completeness_fail(bin_ID, comp, completeness_thresh)
 
-                if not bin_is_HQ:
-                    self.logger.info("Bin " + bin_ID + " didn't pass QC filters. Skipping.")
-                    removed_bin_IDs[bin_ID] = True
-                else:
-                    self.logger.info("Bin " + bin_ID + " passed QC filters. Adding to new BinnedContigs")
-                    retained_bin_IDs[bin_ID] = True
+                    if test_contamination and cont > contamination_thresh:
+                        bin_is_HQ = False
+                        self.log_contamination_fail(bin_ID, cont, contamination_thresh)
 
-                    # copy filtered bin scaffold files to filtered dir
-                    src_path = bin_fasta_files_by_bin_ID[bin_ID]
-                    dst_path = os.path.join(filtered_bins_dir,
-                        bin_basename + '.' + str(bin_ID) + '.' + fasta_ext_bc)
+                    bin_stats_data[bin_ID]['QA Pass'] = bin_is_HQ
 
-                    self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
+                    self.logger.debug({'event': 'bin_stats_read', bin_ID: bin_stats_data[bin_ID]})
 
-                    if bin_summary_info[bin_ID]:
-                        summary_writer.writerow([
-                            bin_summary_info[bin_ID]['name'],
-                            bin_summary_info[bin_ID]['cov'],
-                            bin_summary_info[bin_ID]['sum_contig_len'],
-                            bin_summary_info[bin_ID]['gc'],
-                        ])
+                    if not bin_is_HQ:
+                        self.logger.info("Bin " + bin_ID + " didn't pass QC filters. Skipping.")
+                        removed_bin_IDs[bin_ID] = True
                     else:
-                        # wtf?
-                        self.logger.error('No bin summary data found for ' + bin_ID)
+                        self.logger.info("Bin " + bin_ID + " passed QC filters. Adding to new BinnedContigs")
+                        retained_bin_IDs[bin_ID] = True
 
-        # summary_fh.close()
+                        # copy filtered bin scaffold files to filtered dir
+                        src_path = bin_fasta_files_by_bin_ID[bin_ID]
+                        dst_path = os.path.join(filtered_bins_dir,
+                            bin_basename + '.' + str(bin_ID) + '.' + fasta_ext_bc)
+
+                        self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
+
+                        if bin_summary_info[bin_ID]:
+                            summary_writer.writerow([
+                                bin_summary_info[bin_ID]['name'],
+                                bin_summary_info[bin_ID]['cov'],
+                                bin_summary_info[bin_ID]['sum_contig_len'],
+                                bin_summary_info[bin_ID]['gc'],
+                            ])
+                        else:
+                            # wtf?
+                            self.logger.error('No bin summary data found for ' + bin_ID)
 
         missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
         if missing_ids:
@@ -167,17 +172,12 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
     def log_completeness_fail(self, bin_ID, value, threshold):
         self.logger.info("Bin " + bin_ID + ": completeness of " + str(value) + " below thresh " + str(threshold))
 
-    def _init_summary_writer(self):
+    def _init_summary_writer(self, summary_fh):
 
-        run_config = self.run_config()
+        summary_writer = self.init_tsv_writer(summary_fh)
+        summary_writer.writerow(['Bin name', 'Completeness', 'Genome size', 'GC content'])
 
-        # write summary file for just those bins present in bin_dir
-        self.logger.info("writing filtered binned contigs summary file " + run_config['summary_file_path'] + '-new')
-        with open(run_config['summary_file_path'] + '-new', 'w', newline='') as summary_fh:
-            summary_writer = self.init_tsv_writer(summary_fh)
-            summary_writer.writerow(['Bin name', 'Completeness', 'Genome size', 'GC content'])
-
-            return (summary_fh, summary_writer)
+        return summary_writer
 
     def fetch_binned_contigs_data(self, params):
 
@@ -236,8 +236,6 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         for bin_item in binned_contig_obj['bins']:
             bin_ID = self.checkMUtil.clean_bin_ID(bin_item['bid'], fasta_ext)
 
-            #self.logger.debug("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
-            #self.logger.debug("BIN_ID: "+bin_ID)  # DEBUG
             bin_summary_info[bin_ID] = {
                 'n_contigs':        bin_item['n_contigs'],
                 'gc':               round(100.0 * float(bin_item['gc']), 1),
@@ -256,7 +254,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
             summary_file_handle.write("\t".join(header_line)+"\n")
 
             for bin_ID in filtered_bin_IDs:
-                #self.logger.debug("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
+                # self.logger.debug("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
                 bin_summary_info_line = [
                     bin_basename + '.' + str(bin_ID) + '.' + fasta_ext,
                     str(bin_summary_info[bin_ID]['cov'])+'%',

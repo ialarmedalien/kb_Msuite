@@ -884,7 +884,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cmu = self.prep_filter_binned_contigs_dirs()
         run_config = cmu.run_config()
 
-        missing_ids = ['000', '004']
+        missing_ids = ['0', '4']
         for bid in missing_ids:
             bid_path = os.path.join(
                 run_config['input_dir'],

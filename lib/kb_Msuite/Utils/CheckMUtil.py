@@ -37,7 +37,7 @@ class CheckMUtil(Base, LogMixin):
         # init logger
         logging.basicConfig(
             level=logging.DEBUG,
-            format='%(name)s %(levelname)s %(message)s'
+            format='%(name)s %(levelname)s %(func)s %(lineno)s %(message)s'
         )
 
     def client(self, client_name):
@@ -81,7 +81,9 @@ class CheckMUtil(Base, LogMixin):
         run_config['storage'] = os.path.join(run_config['output_dir'], 'storage')
 
         # files
-        run_config['all_seq_fasta'] = os.path.join(base_dir, 'all_sequences.' + run_config['fasta_ext'])
+        run_config['all_seq_fasta'] = os.path.join(
+            base_dir, 'all_sequences.' + run_config['fasta_ext']
+        )
         run_config['tetra_file'] = os.path.join(base_dir, 'tetra.tsv')
 
         run_config['bin_stats_ext_file'] = os.path.join(run_config['storage'], 'bin_stats_ext.tsv')
@@ -128,7 +130,7 @@ class CheckMUtil(Base, LogMixin):
         # 1) stage input data
         obj_info = self.datastagingutils.stage_input(params['input_ref'])
         self.logger.info('Staged input directory: ' + run_config['input_dir'])
-        self.logger.info({'input object info': obj_info})
+        self.logger.debug({'input object info': obj_info})
 
         # 2) run the lineage workflow
         lineage_wf_options = {
@@ -167,7 +169,7 @@ class CheckMUtil(Base, LogMixin):
             'threads':     self.threads,
             'quiet':       1
         }
-        self.run_checkM('tetra', tetra_options)     #, dropOutput=True)
+        self.run_checkM('tetra', tetra_options)
 
         # plot distributions for each bin
         self.logger.info('Creating distribution plots per bin...')
@@ -179,9 +181,9 @@ class CheckMUtil(Base, LogMixin):
             'dist_value':   95,
             'quiet':        1
         }
-        self.run_checkM('dist_plot', dist_plot_options)     #, dropOutput=True)
+        self.run_checkM('dist_plot', dist_plot_options)
 
-    def run_checkM(self, subcommand, options):      #, dropOutput=True):
+    def run_checkM(self, subcommand, options):
         '''
             subcommand is the checkm subcommand (eg lineage_wf, tetra, etc)
             options indicate, depending on the subcommand:
@@ -195,7 +197,6 @@ class CheckMUtil(Base, LogMixin):
                 dist_value
         '''
         command = self._build_command(subcommand, options)
-        self.logger.debug('run_checkM: Running: ' + ' '.join(command) + '\n\n')
         run_config = self.run_config()
 
 #         log_output_file = None
@@ -204,15 +205,17 @@ class CheckMUtil(Base, LogMixin):
 
         log_output_filename = os.path.join(run_config['base_dir'], subcommand + '.log')
 
+        self.logger.debug('run_checkM: Running: ' + ' '.join(command) + '\n\n')
         self.logger.debug('sending log output to ' + log_output_filename)
         with open(log_output_filename, 'w') as log_output_file:
 
-#             current_tree = subprocess.run(['tree', run_config['base_dir']],
-#                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-#             log_output_file.write(current_tree.stdout)
-#             log_output_file.write("\n\n\n")
-#
-            p = subprocess.Popen(command, cwd=self.scratch, shell=False,
+            # current_tree = subprocess.run(['tree', run_config['base_dir']],
+            #     stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
+            # log_output_file.write(current_tree.stdout)
+            # log_output_file.write("\n\n\n")
+
+            p = subprocess.Popen(
+                command, cwd=self.scratch, shell=False,
                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
     #         else:
     #             p = subprocess.Popen(command, cwd=self.scratch, shell=False)

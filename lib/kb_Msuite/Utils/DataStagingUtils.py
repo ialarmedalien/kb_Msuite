@@ -113,8 +113,6 @@ class DataStagingUtils(Base, LogMixin):
         except Exception as e:
             raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
 
-#         assembly_refs = []
-#         assembly_names = []
         for assembly_item in assemblySet_obj['data']['items']:
 
             assembly_ref = assembly_item['ref']
@@ -175,12 +173,6 @@ class DataStagingUtils(Base, LogMixin):
         # make sure fasta file isn't empty
         self.set_fasta_file_extensions(input_dir, fasta_ext)
         for (dirpath, dirnames, filenames) in os.walk(input_dir):
-            self.logger.debug({
-                'dirpath': dirpath,
-                'dirnames': dirnames,
-                'filenames': filenames,
-            })
-
             for fasta_file in filenames:
                 fasta_path = os.path.join(input_dir, fasta_file)
                 min_fasta_len = 1
