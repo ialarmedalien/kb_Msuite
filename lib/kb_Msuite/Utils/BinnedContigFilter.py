@@ -11,7 +11,7 @@ import logging
 import csv
 from decimal import Decimal
 
-from kb_Msuite.Utils.Logger import Base, LogMixin, TSVer
+from kb_Msuite.Utils.Utils import Base, LogMixin, TSVer
 
 class DataStagingUtils(Base, LogMixin):
 
