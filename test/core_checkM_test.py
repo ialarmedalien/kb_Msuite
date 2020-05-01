@@ -40,6 +40,7 @@ def print_method_name(method):
         return method(*args, **kwargs)
     return wrapper
 
+
 TEST_DATA = {
 
     assembly_list: [
@@ -82,19 +83,10 @@ TEST_DATA = {
             'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
 
         }
-
-
     ],
-
     genomeset_list: [
-
-
-
     ]
-
-
 }
-
 
 
 class CoreCheckMTest(unittest.TestCase, LogMixin):
@@ -366,10 +358,28 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.genome_refs.append(genome_data['genome_ref'])
         self.logger.info({'Saved Genome': genome_data})
 
-
     def _prep_genomeset(self, genomeset):
 
+        obj_info = self.wsClient.save_objects({
+            'workspace': self.refdata_ws_info[1],
+            'objects': [
+                {
+                    'type': 'KBaseSearch.GenomeSet',
+                    'data': genomeset['data'],
+                    'name': genomeset['name'],
+                    'meta': {},
+                    'provenance': [
+                        {
+                            'service': 'kb_Msuite',
+                            'method': 'test_CheckM'
+                        }
+                    ]
+                }]
+            })[0]
+        reference = str(obj_info[WSID_I]) + '/' + str(obj_info[OBJID_I]) + '/' + str(obj_info[VERSION_I])
+        setattr(self, genomeset['attr'], reference)
 
+        self.logger.info({'Genome set ref': self.genome_set_ref})
 
     def prep_genomes(self):
 
@@ -401,25 +411,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         for genome_ref in self.genome_refs:
             testGS['elements'][genome_scinames[genome_ref]] = {'ref': genome_ref}
 
-        obj_info = self.wsClient.save_objects({
-            'workspace': self.refdata_ws_info[1],
-            'objects': [
-                {
-                    'type': 'KBaseSearch.GenomeSet',
-                    'data': testGS,
-                    'name': 'test_genomeset_1',
-                    'meta': {},
-                    'provenance': [
-                        {
-                            'service': 'kb_Msuite',
-                            'method': 'test_CheckM'
-                        }
-                    ]
-                }]
-            })[0]
-        self.genome_set_ref = str(obj_info[WSID_I]) + '/' + str(obj_info[OBJID_I]) + '/' + str(obj_info[VERSION_I])
+        self._prep_genomeset({
+            'name': 'test_genomeset_1',
+            'attr': 'genome_set_ref',
+            'data': testGS,
+        })
 
-        self.logger.info({'Genome set ref': self.genome_set_ref})
         return True
 
     def prep_report(self):
@@ -783,13 +780,53 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_01_data_staging_assembly_empty(self):
+    def test_01_data_staging_things_are_empty(self):
 
+        self.require_data('assembly_empty', 'assembly_set_empty',
+            'genome_empty', 'genome_set_empty')
 
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        run_config = cmu.run_config()
+        dsu = cmu.datastagingutils
 
-    def test_01_data_staging_assemblyset_empty(self):
+        err_str = 'Assembly or ContigSet is empty in filename: '
+        with self.assertRaisesRegex(ValueError, err_str):
+            dsu.stage_input(self.assembly_empty)
 
+        # assemblyset errors:
 
+        err_str = ' is empty for fasta_path: '
+    #    raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
+        # with self.assertRaisesRegex(ValueError, err_str):
+        #     dsu.stage_input(self.ref_does_not_exist)
+
+        # error fetching one of the assemblyset constituents from the WS
+        # raise ValueError('Unable to get object from workspace: (' + assembly_ref + '): ' + str(e))
+
+        # assembly util problem:
+        # raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
+
+        # one of the assemblies is empty:
+        # with self.assertRaisesRegex(ValueError, err_str):
+        #     dsu.stage_input(self.assembly_empty)
+        #         raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
+
+        # empty genome / genome set
+        # raise ValueError('genome_ref not found for genome_id: ' + str(genome_id) + ' in genomeSet: ' + str(input_ref))
+        # msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" MISSING BOTH contigset_ref AND assembly_ref. Cannot process. Exiting."
+        # raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
+
+    def test_01_data_staging_binned_contigs_empty(self):
+
+        self.require_data('binned_contigs_empty')
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        run_config = cmu.run_config()
+        dsu = cmu.datastagingutils
+
+        err_str = 'Binned Assembly is empty for fasta_path: '
+        with self.assertRaisesRegex(ValueError, err_str):
+            dsu.stage_input(self.binned_contigs_empty)
 
     def test_01_data_staging_assembly_strange_fasta_ext(self):
 
@@ -1054,8 +1091,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         )
         # check that the summary file is as expected
         self.assertEqual(
-                open(run_config['summary_file_path']),'r').read(),
-                open(expected_content_file,'r').read()
+                open(run_config['summary_file_path']), 'r').read(),
+                open(expected_content_file, 'r').read()
             )
 
         # filtered bins dir has been created

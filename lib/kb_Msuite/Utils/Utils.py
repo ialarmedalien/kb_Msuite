@@ -1,5 +1,6 @@
 import logging
 import csv
+import re
 
 
 class LogMixin(object):
@@ -19,6 +20,7 @@ class Base(object):
 
         return re.sub('^[^\.]+\.', '', bin_id)
 
+
 class TSVMixin(object):
 
     def init_tsv_writer(self, open_file_handle):
@@ -29,11 +31,3 @@ class TSVMixin(object):
             quotechar="'",
             quoting=csv.QUOTE_MINIMAL
         )
-
-# if __name__ == '__main__':
-#     # Configure only in your main program clause
-#     logging.basicConfig(
-#         level=logging.DEBUG,
-#         format='%(name)s %(levelname)s %(message)s\n')
-#
-#     main()
