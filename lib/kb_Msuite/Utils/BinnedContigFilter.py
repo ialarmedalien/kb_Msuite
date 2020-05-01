@@ -11,9 +11,9 @@ import logging
 import csv
 from decimal import Decimal
 
-from kb_Msuite.Utils.Utils import Base, LogMixin, TSVer
+from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
 
-class DataStagingUtils(Base, LogMixin):
+class DataStagingUtils(Base, LogMixin, TSVMixin):
 
     def __init__(self, checkMUtil_obj):
         self.checkMUtil = checkMUtil_obj
@@ -177,12 +177,7 @@ class DataStagingUtils(Base, LogMixin):
         # write summary file for just those bins present in bin_dir
         self.logger.info("writing filtered binned contigs summary file " + run_config['summary_file_path'] + '-new')
         with open(run_config['summary_file_path'] + '-new', 'w', newline='') as summary_fh:
-            summary_writer = csv.writer(
-                summary_file_handle,
-                delimiter='\t',
-                quotechar="'",
-                quoting=csv.QUOTE_MINIMAL
-            )
+            summary_writer = self.init_tsv_writer(summary_file_handle)
             summary_writer.writerow(['Bin name', 'Completeness', 'Genome size', 'GC content'])
 
             return (summary_fh, summary_writer)
