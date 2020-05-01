@@ -125,7 +125,7 @@ class DataStagingUtils(Base, LogMixin):
                         summary_writer.writerow([
                             bin_summary_info[bin_ID]['name'],
                             bin_summary_info[bin_ID]['cov'],
-                            bin_summary_info[bin_ID]['sum_contig_len']),
+                            bin_summary_info[bin_ID]['sum_contig_len'],
                             bin_summary_info[bin_ID]['gc'],
                         ])
                     else:
