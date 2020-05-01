@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 import time
 import os
-import uuid
 import subprocess
-import sys
 import re
-import ast
-import json
 import logging
-import csv
-from decimal import Decimal
 
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
@@ -17,6 +11,7 @@ from kb_Msuite.Utils.ClientUtil import ClientUtil
 from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
 from kb_Msuite.Utils.Utils import Base, LogMixin
+
 
 class CheckMUtil(Base, LogMixin):
 
@@ -33,7 +28,7 @@ class CheckMUtil(Base, LogMixin):
 
         self.scratch = config['scratch']
         self.threads = config['threads']
-        self.appdir  = config['appdir']
+        self.appdir = config['appdir']
         self.fasta_extension = 'fna'
         self.binned_contigs_builder_fasta_extension = 'fasta'
         if not os.path.exists(self.scratch):
@@ -44,7 +39,6 @@ class CheckMUtil(Base, LogMixin):
             level=logging.DEBUG,
             format='%(name)s %(levelname)s %(message)s'
         )
-
 
     def client(self, client_name):
         return self.client_util.client(client_name)
@@ -103,9 +97,9 @@ class CheckMUtil(Base, LogMixin):
         )
 
         self._run_config = run_config
-        self.workspacehelper    = WorkspaceHelper(self)
-        self.datastagingutils   = DataStagingUtils(self)
-        self.outputbuilder      = OutputBuilder(self)
+        self.workspacehelper = WorkspaceHelper(self)
+        self.datastagingutils = DataStagingUtils(self)
+        self.outputbuilder = OutputBuilder(self)
         self.binnedcontigfilter = BinnedContigFilter(self)
 
         # self.logger.debug(run_config)
@@ -173,7 +167,7 @@ class CheckMUtil(Base, LogMixin):
             'threads':     self.threads,
             'quiet':       1
         }
-        self.run_checkM('tetra', tetra_options) #, dropOutput=True)
+        self.run_checkM('tetra', tetra_options)     #, dropOutput=True)
 
         # plot distributions for each bin
         self.logger.info('Creating distribution plots per bin...')
@@ -185,9 +179,9 @@ class CheckMUtil(Base, LogMixin):
             'dist_value':   95,
             'quiet':        1
         }
-        self.run_checkM('dist_plot', dist_plot_options) #, dropOutput=True)
+        self.run_checkM('dist_plot', dist_plot_options)     #, dropOutput=True)
 
-    def run_checkM(self, subcommand, options): #, dropOutput=True):
+    def run_checkM(self, subcommand, options):      #, dropOutput=True):
         '''
             subcommand is the checkm subcommand (eg lineage_wf, tetra, etc)
             options indicate, depending on the subcommand:
@@ -233,17 +227,16 @@ class CheckMUtil(Base, LogMixin):
 #         if log_output_file:
 #             log_output_file.close()
 
-        if (exitCode == 0):
-            self.logger.info('Executed command: ' + ' '.join(command) + '\n' +
-                'Exit Code: ' + str(exitCode))
-        else:
+        self.logger.info(
+            'Executed command: ' + ' '.join(command) + '\n' + 'Exit Code: ' + str(exitCode)
+        )
+        if (exitCode != 0):
             self.logger.error('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
             with open(log_output_filename, 'r') as log_output_file:
                 for line in log_output_file:
                     self.logger.error(line)
 
-            raise ValueError('Error running command: ' + ' '.join(command) + '\n' +
-                             'Exit Code: ' + str(exitCode))
+            raise ValueError('Stopped execution due to exit code ' + str(exitCode))
 
     def _process_universal_options(self, command_list, options):
         if options.get('threads'):

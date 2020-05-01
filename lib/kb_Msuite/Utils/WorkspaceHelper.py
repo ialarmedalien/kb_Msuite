@@ -1,5 +1,6 @@
 from kb_Msuite.Utils.Utils import Base, LogMixin
 
+
 class WorkspaceHelper(Base, LogMixin):
 
     def __init__(self, checkMUtil_obj):
@@ -24,17 +25,17 @@ class WorkspaceHelper(Base, LogMixin):
         '''
 
         obj_property = {
-            'id': 0,        # 0 obj_id objid - the numerical id of the object
-            'name': 1,      # 1 obj_name name - the name of the object
-            'type': 2,      # 2 type_string type - the type of the object
-            'timestamp': 3, # 3 timestamp save_date - the save date of the object
-            'version': 4,   # 4 obj_ver ver - the version of the object
-            'username': 5,  # 5 username saved_by - the user that saved or copied the object
-            'ws_id': 6,     # 6 ws_id wsid - the workspace containing the object
-            'ws_name': 7,   # 7 ws_name workspace - the workspace containing the object
-            'chsum': 8,     # 8 string chsum - the md5 checksum of the object
-            'size': 9,      # 9 int size - the size of the object in bytes
-            'usermeta': 10  # 10 usermeta meta - arbitrary user-supplied metadata about the object
+            'id': 0,            # 0 obj_id objid - the numerical id of the object
+            'name': 1,          # 1 obj_name name - the name of the object
+            'type': 2,          # 2 type_string type - the type of the object
+            'timestamp': 3,     # 3 timestamp save_date - the save date of the object
+            'version': 4,       # 4 obj_ver ver - the version of the object
+            'username': 5,      # 5 username saved_by - the user that saved or copied the object
+            'ws_id': 6,         # 6 ws_id wsid - the workspace containing the object
+            'ws_name': 7,       # 7 ws_name workspace - the workspace containing the object
+            'chsum': 8,         # 8 the md5 checksum of the object
+            'size': 9,          # 9 the size of the object in bytes
+            'usermeta': 10      # 10 arbitrary user-supplied metadata about the object
         }
 
         if prop not in obj_property:
@@ -67,7 +68,9 @@ class WorkspaceHelper(Base, LogMixin):
     def get_obj_from_workspace(self, object_ref):
         ''' Thin wrapper with error handling around getting a WS object '''
         try:
-            workspace_object = self.client('Workspace').get_objects2({'objects': [{'ref': object_ref}]})['data'][0]['data']
+            workspace_object = self.client('Workspace').get_objects2({
+                'objects': [{'ref': object_ref}]
+            })['data'][0]['data']
         except Exception as e:
             err_str = 'Unable to fetch ' + str(object_ref) + ' object from workspace: ' + str(e)
             raise ValueError(err_str)

@@ -1,13 +1,10 @@
 import os
 import shutil
-import re
 import ast
-import sys
-import time
 import json
-import csv
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
+
 
 class OutputBuilder(Base, LogMixin, TSVMixin):
     '''
@@ -17,10 +14,10 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
     # (self, run_config)
     def __init__(self, checkMUtil_obj):
-        self.checkMUtil     = checkMUtil_obj
-        self.client_util    = checkMUtil_obj.client_util
-        self.scratch        = checkMUtil_obj.scratch
-        self.PLOT_FILE_EXT  = '.ref_dist_plots.png'
+        self.checkMUtil = checkMUtil_obj
+        self.client_util = checkMUtil_obj.client_util
+        self.scratch = checkMUtil_obj.scratch
+        self.PLOT_FILE_EXT = '.ref_dist_plots.png'
 
     def client(self, client_name):
 
@@ -38,8 +35,8 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         removed_bins = None
 
         if filtered_obj_info:
-            binned_contig_obj_ref   = filtered_obj_info['filtered_obj_ref']
-            removed_bins            = filtered_obj_info['removed_bin_IDs']
+            binned_contig_obj_ref = filtered_obj_info['filtered_obj_ref']
+            removed_bins = filtered_obj_info['removed_bin_IDs']
 
         report_params = {
             'report_object_name': 'kb_checkM_report_' + run_config['suffix'],
@@ -146,10 +143,10 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                 'name': 'checkm_results.html',
                 'description': 'Summarized report from CheckM',
                 'path': html_index_file,
-            },{
+            }, {
                 'name': run_config['tab_text_file_name'],
                 'path': run_config['tab_text_file'],
-            },{
+            }, {
                 'name': 'plots',
                 'path': html_plots_dir,
             }
@@ -274,7 +271,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
     def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
 
-        src  = os.path.join(src_folder, filename)
+        src = os.path.join(src_folder, filename)
         dest = os.path.join(dest_folder, filename)
         os.makedirs(dest_folder, exist_ok=True)
 

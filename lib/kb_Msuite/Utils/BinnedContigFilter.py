@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
-import time
 import os
-import uuid
-import subprocess
-import sys
-import re
 import ast
 import json
-import logging
-import csv
+import shutil
 from decimal import Decimal
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
+
 
 class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
@@ -121,7 +116,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
                     self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
 
-                    if bin_summary_data[bin_ID]:
+                    if bin_summary_info[bin_ID]:
                         summary_writer.writerow([
                             bin_summary_info[bin_ID]['name'],
                             bin_summary_info[bin_ID]['cov'],
@@ -153,6 +148,8 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                 self.logger.warning('No bins removed by filtering')
             return None
 
+        binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
+
         # create BinnedContig object from filtered bins
         self.build_bin_summary_file_from_binnedcontigs_obj(params, retained_bin_IDs)
         new_binned_contigs_info = self.save_binned_contigs(params, binned_contig_obj['assembly_ref'])
@@ -177,14 +174,14 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         # write summary file for just those bins present in bin_dir
         self.logger.info("writing filtered binned contigs summary file " + run_config['summary_file_path'] + '-new')
         with open(run_config['summary_file_path'] + '-new', 'w', newline='') as summary_fh:
-            summary_writer = self.init_tsv_writer(summary_file_handle)
+            summary_writer = self.init_tsv_writer(summary_fh)
             summary_writer.writerow(['Bin name', 'Completeness', 'Genome size', 'GC content'])
 
             return (summary_fh, summary_writer)
 
     def fetch_binned_contigs_data(self, params):
 
-        run_config   = self.run_config()
+        run_config = self.run_config()
 
         # fetch the existing binned_contig object
         binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
@@ -212,9 +209,8 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
     def build_bin_summary_file_from_binnedcontigs_obj(self, params, retained_bin_IDs):
 
-        run_config   = self.run_config()
-        fasta_ext    = run_config['fasta_ext']
-        bin_dir      = run_config['filtered_bins_dir']
+        run_config = self.run_config()
+        fasta_ext = run_config['fasta_ext']
         bin_basename = run_config['bin_basename']
 
         dsu = self.datastagingutils
@@ -249,7 +245,6 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                 'cov':              round(100.0 * float(bin_item['cov']), 1),
             }
 
-
         self.logger.debug({'bin_summary_info': bin_summary_info})
         # write summary file for just those bins present in bin_dir
         summary_file_path = run_config['summary_file_path']
@@ -271,12 +266,11 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                 summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
                 self.logger.debug({'bin_summary_line': bin_summary_info_line})
 
-
         return summary_file_path
 
     def save_binned_contigs(self, params, assembly_ref):
 
-        run_config   = self.run_config()
+        run_config = self.run_config()
         binned_contigs_ref = self.client('MetagenomeUtils').file_to_binned_contigs({
             'file_directory':       run_config['filtered_bins_dir'],
             'assembly_ref':         assembly_ref,

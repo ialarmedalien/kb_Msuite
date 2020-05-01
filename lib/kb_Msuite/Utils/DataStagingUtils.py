@@ -1,9 +1,9 @@
 import os
 import glob
-import re
 import subprocess
 
 from kb_Msuite.Utils.Utils import Base, LogMixin
+
 
 class DataStagingUtils(Base, LogMixin):
 
@@ -29,10 +29,8 @@ class DataStagingUtils(Base, LogMixin):
         '''
         Stage input based on an input data reference for CheckM
 
-        input_ref can be a reference to an Assembly, BinnedContigs, or (not yet implemented) a Genome
-
         This method creates a directory in the scratch area with the set of Fasta files, names
-        will have the fasta_file_extension parameter tacked on.
+        will have the fasta_ext run_config (run_config['fasta_ext']) parameter tacked on.
 
             ex:
 
@@ -41,15 +39,13 @@ class DataStagingUtils(Base, LogMixin):
             staged_input
             {"input_dir": '...'}
         '''
-        # config
-        #SERVICE_VER = 'dev'
+
         run_config = self.run_config()
 
         # 1) generate a folder in scratch to hold the input
-        suffix          = run_config['suffix']
-        input_dir       = run_config['input_dir']
-        all_seq_fasta   = run_config['all_seq_fasta']
-        fasta_ext       = run_config['fasta_ext']
+        input_dir = run_config['input_dir']
+        all_seq_fasta = run_config['all_seq_fasta']
+        fasta_ext = run_config['fasta_ext']
 
         if not os.path.exists(input_dir):
             os.makedirs(input_dir)
@@ -110,7 +106,10 @@ class DataStagingUtils(Base, LogMixin):
 
         # read assemblySet
         try:
-            assemblySet_obj = setAPI_Client.get_assembly_set_v1({'ref': input_ref, 'include_item_info': 1})
+            assemblySet_obj = setAPI_Client.get_assembly_set_v1({
+                    'ref': input_ref,
+                    'include_item_info': 1
+                })
         except Exception as e:
             raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
 
@@ -122,9 +121,11 @@ class DataStagingUtils(Base, LogMixin):
             assembly_info = None
             # assembly obj info
             try:
-                assembly_info = self.client('Workspace').get_object_info_new({'objects': [{'ref': assembly_ref}]})[0]
+                assembly_info = self.client('Workspace').get_object_info_new({
+                    'objects': [{'ref': assembly_ref}]
+                })[0]
             except Exception as e:
-                raise ValueError('Unable to get object from workspace: (' + this_assembly_ref + '): ' + str(e))
+                raise ValueError('Unable to get object from workspace: (' + assembly_ref + '): ' + str(e))
             self.logger.debug({'assembly info': assembly_info})
             assembly_name = assembly_info[1]
             filename = os.path.join(input_dir, assembly_name + '.' + fasta_ext)
@@ -308,15 +309,13 @@ class DataStagingUtils(Base, LogMixin):
         bin_fasta_files = dict()
         for (dirpath, dirnames, filenames) in os.walk(search_dir):
             # DEBUG
-            #self.logger.debug({'dirpath': dirpath, 'dirnames': dirnames, 'filenames': filenames})
+            # self.logger.debug({'dirpath': dirpath, 'dirnames': dirnames, 'filenames': filenames})
             for filename in filenames:
                 if not os.path.isfile(os.path.join(search_dir, filename)):
                     continue
                 if filename.endswith('.' + fasta_ext):
-                    fasta_file = filename
-                    bin_ID = self.checkMUtil.clean_bin_ID(fasta_file, fasta_ext)
-                    bin_fasta_files[bin_ID] = os.path.join(search_dir, fasta_file)
-                    #bin_fasta_files[bin_ID] = fasta_file
-                    #self.logger.debug("ACCEPTED: "+bin_ID+" FILE:"+fasta_file)  # DEBUG
+                    bin_ID = self.checkMUtil.clean_bin_ID(filename, fasta_ext)
+                    bin_fasta_files[bin_ID] = os.path.join(search_dir, filename)
+                    # self.logger.debug("ACCEPTED: "+bin_ID+" FILE:"+filename)  # DEBUG
 
         return bin_fasta_files

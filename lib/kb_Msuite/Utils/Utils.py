@@ -1,15 +1,18 @@
 import logging
 import csv
 
+
 class LogMixin(object):
     @property
     def logger(self):
-        name = '.'.join([__name__, self.__class__.__name__])
+        # name = '.'.join([__name__, self.__class__.__name__])
         class_name = self.__class__.__name__
         return logging.getLogger('kb_Msuite.' + class_name)
 
+
 class Base(object):
     pass
+
 
 class TSVMixin(object):
 
@@ -29,4 +32,3 @@ class TSVMixin(object):
 #         format='%(name)s %(levelname)s %(message)s\n')
 #
 #     main()
-
