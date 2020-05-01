@@ -228,7 +228,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         return tsv_fields
 
-    def write_tsv_headers(self, tsv_writer, results_filtered)
+    def write_tsv_headers(self, tsv_writer, results_filtered):
 
         tsv_fields = self.get_fields(results_filtered)
         headers = [f.get('display', f['id']) for f in tsv_fields]
