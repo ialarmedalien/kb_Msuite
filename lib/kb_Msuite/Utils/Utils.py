@@ -11,8 +11,13 @@ class LogMixin(object):
 
 
 class Base(object):
-    pass
 
+    def clean_bin_ID(self, bin_id, extension=None):
+
+        if extension:
+            bin_id = bin_id.replace('.' + extension, '')
+
+        return re.sub('^[^\.]+\.', '', bin_id)
 
 class TSVMixin(object):
 

@@ -53,7 +53,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         if hasattr(self.checkMUtil, 'bin_stats_data'):
             bin_stats_data = self.checkMUtil.bin_stats_data
         else:
-            bin_stats_data = self.read_bin_stats_file()
+            bin_stats_data = self.checkMUtil.read_bin_stats_file()
 
         if bin_stats_data:
             self.logger.info('creating HTML and TSV summary tables')
@@ -244,29 +244,6 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                 row.append('')
 
         tsv_writer.writerow(row)
-
-    def read_bin_stats_file(self):
-        run_config = self.run_config()
-        stats_file = run_config['bin_stats_ext_file']
-
-        bin_stats = dict()
-
-        if not os.path.isfile(stats_file):
-            self.logger.warning('No stats file found (looking at: ' + stats_file + ')')
-            return bin_stats
-
-        with open(stats_file) as lf:
-            for line in lf:
-                if not line:
-                    continue
-                if line.startswith('#'):
-                    continue
-                col = line.split('\t')
-                bin_id = str(col[0])
-                data = ast.literal_eval(col[1])
-                bin_stats[bin_id] = data
-
-        return bin_stats
 
     def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
 

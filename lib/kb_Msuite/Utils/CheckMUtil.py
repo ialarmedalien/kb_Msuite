@@ -310,3 +310,26 @@ class CheckMUtil(Base, LogMixin):
             bin_id = bin_id.replace('.' + extension, '')
 
         return re.sub('^[^\.]+\.', '', bin_id)
+
+    def read_bin_stats_file(self):
+        run_config = self.run_config()
+        stats_file = run_config['bin_stats_ext_file']
+
+        bin_stats = dict()
+
+        if not os.path.isfile(stats_file):
+            self.logger.warning('No stats file found (looking at: ' + stats_file + ')')
+            return bin_stats
+
+        with open(stats_file) as lf:
+            for line in lf:
+                if not line:
+                    continue
+                if line.startswith('#'):
+                    continue
+                col = line.split('\t')
+                bin_id = str(col[0])
+                data = ast.literal_eval(col[1])
+                bin_stats[bin_id] = data
+
+        return bin_stats

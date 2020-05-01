@@ -40,6 +40,62 @@ def print_method_name(method):
         return method(*args, **kwargs)
     return wrapper
 
+TEST_DATA = {
+
+    assembly_list: [
+        {
+            # example assembly
+            'path': 'assembly.fasta',
+            'name': 'Test.Assembly',
+            'attr': 'assembly_OK_ref',
+        },
+        {
+            # contig that breaks checkm v1.0.7 reduced_tree (works on v1.0.8)
+            'path': 'offending_contig_67815-67907.fa',
+            'name': 'Dodgy_Contig.Assembly',
+            'attr': 'assembly_dodgy_ref',
+        },
+        {
+            'path': 'mini_assembly.fasta',
+            'name': 'MiniAssembly',
+            'attr': 'assembly_mini_ref',
+        },
+    ],
+
+    assemblyset_list: [
+        {
+            'name': 'TEST_ASSEMBLY_SET',
+            'items': [
+                {'ref': self.assembly_OK_ref, 'label': 'assembly_1'},
+                {'ref': self.assembly_dodgy_ref, 'label': 'assembly_2'}
+            ],
+            'attr': 'assembly_set_ref',
+        }
+    ],
+
+    genome_list: [
+        {
+            'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
+
+        },
+        {
+            'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
+
+        }
+
+
+    ],
+
+    genomeset_list: [
+
+
+
+    ]
+
+
+}
+
+
 
 class CoreCheckMTest(unittest.TestCase, LogMixin):
 
@@ -159,10 +215,20 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         return self.__class__.serviceImpl.config
 
     def _prep_assembly(self, assembly):
+        '''
+        input: dict of assembly data in the form
+        {
+            'path': '/path/to/assembly/file.fna',
+            'name': 'Cool_Assembly_Name',
+            'attr': 'assembly_blah_ref', # name of the attribute to populate
+        }
+
+        '''
 
         assembly_file_path = os.path.join(self.test_data_dir, assembly['path'])
         if not os.path.exists(assembly_file_path):
             shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
+
         saved_assembly = self.au.save_assembly_from_fasta({
             'file': {'path': assembly_file_path},
             'workspace_name': self.refdata_ws_info[1],
@@ -171,6 +237,30 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         setattr(self, assembly['attr'], saved_assembly)
         self.logger.info({
             assembly['attr']: saved_assembly,
+        })
+
+    def _prep_assemblyset(self, assemblyset):
+        '''
+        input: dict of assemblyset data in the form:
+        {
+            'name': 'Cool_AssemblySet_Name',
+            'items': [{}]
+            'attr': 'assemblyset_blah_ref',
+        }
+
+        '''
+        saved_assembly_set = self.setAPI.save_assembly_set_v1({
+            'workspace_name': self.refdata_ws_info[1],
+            'output_object_name': 'TEST_ASSEMBLY_SET',
+            'data': {
+                'description': 'test assembly set',
+                'items': assembly_items,
+            },
+        })
+        self.assembly_set_ref = saved_assembly_set['set_ref']
+        self.logger.info({
+            'assembly_set_ref': self.assembly_set_ref,
+            'Saved AssemblySet': saved_assembly_set,
         })
 
     def prep_assemblies(self):
@@ -199,24 +289,19 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         for assembly in assembly_list:
             self._prep_assembly(assembly)
 
-        # create an AssemblySet
-        assembly_items = [
-            {'ref': self.assembly_OK_ref, 'label': 'assembly_1'},
-            {'ref': self.assembly_dodgy_ref, 'label': 'assembly_2'}
+        assemblyset_list = [
+            {
+                'name': 'TEST_ASSEMBLY_SET',
+                'items': [
+                    {'ref': self.assembly_OK_ref, 'label': 'assembly_1'},
+                    {'ref': self.assembly_dodgy_ref, 'label': 'assembly_2'}
+                ],
+                'attr': 'assembly_set_ref',
+            }
         ]
-        saved_assembly_set = self.setAPI.save_assembly_set_v1({
-            'workspace_name': self.refdata_ws_info[1],
-            'output_object_name': 'TEST_ASSEMBLY_SET',
-            'data': {
-                'description': 'test assembly set',
-                'items': assembly_items,
-            },
-        })
-        self.assembly_set_ref = saved_assembly_set['set_ref']
-        self.logger.info({
-            'assembly_set_ref': self.assembly_set_ref,
-            'Saved AssemblySet': saved_assembly_set,
-        })
+
+        for assemblyset in assemblyset_list:
+            self._prep_assemblyset(assemblyset)
 
         return True
 
@@ -280,6 +365,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         })
         self.genome_refs.append(genome_data['genome_ref'])
         self.logger.info({'Saved Genome': genome_data})
+
+
+    def _prep_genomeset(self, genomeset):
+
+
 
     def prep_genomes(self):
 
@@ -411,11 +501,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'html_window_height': None,
             'summary_window_height': None,
         }
-
         report_data.update(expected)
-
-        # expect the same keys in both
-        # self.assertEqual(set(rep.keys()), set(expected.keys()))
 
         for key in expected.keys():
             with self.subTest('checking ' + key):
@@ -697,6 +783,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
+    def test_01_data_staging_assembly_empty(self):
+
+
+
+    def test_01_data_staging_assemblyset_empty(self):
+
+
+
     def test_01_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")
@@ -955,6 +1049,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # summary file has been created
         self.assertTrue(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+        expected_content_file = os.path.join(
+            'data', 'expected', expected['filtered_obj_name'] + '.summary'
+        )
+        # check that the summary file is as expected
+        self.assertEqual(
+                open(run_config['summary_file_path']),'r').read(),
+                open(expected_content_file,'r').read()
+            )
 
         # filtered bins dir has been created
         self.assertTrue(os.path.exists(run_config['filtered_bins_dir']))
@@ -963,6 +1065,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 run_config['filtered_bins_dir'],
                 run_config['bin_basename'] + '.' + id + '.' + run_config['fasta_ext']
             )))
+
+        #
 
     def test_02_filter_binned_contigs_some_HQ(self):
 
@@ -985,7 +1089,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'retained_bin_IDs': {'002': True},
             'removed_bin_IDs': {'001': True, '003': True}
         }
-
         self.check_filtered_bins(cmu, run_config, results, expected)
 
     def test_02_filter_binned_contigs_some_others_HQ(self):

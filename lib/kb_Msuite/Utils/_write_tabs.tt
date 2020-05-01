@@ -1,6 +1,0 @@
-[% IF report_type == 'Plot' %]
-<div><b>CheckM PLOT</b> | <a href="CheckM_Table.html">CheckM Table</a></div>
-[% ELSE %]
-<div><a href="CheckM_Plot.html">CheckM Plot</a> | <b>CheckM TABLE</b></div>
-[% END %]
-
