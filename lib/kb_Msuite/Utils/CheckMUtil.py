@@ -8,13 +8,15 @@ import re
 import ast
 import json
 import logging
+import csv
 from decimal import Decimal
 
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
 from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
-from kb_Msuite.Utils.Logger import Base, LogMixin
+from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
+from kb_Msuite.Utils.Utils import Base, LogMixin
 
 class CheckMUtil(Base, LogMixin):
 
@@ -104,6 +106,7 @@ class CheckMUtil(Base, LogMixin):
         self.workspacehelper    = WorkspaceHelper(self)
         self.datastagingutils   = DataStagingUtils(self)
         self.outputbuilder      = OutputBuilder(self)
+        self.binnedcontigfilter = BinnedContigFilter(self)
 
         # self.logger.debug(run_config)
 
@@ -151,7 +154,7 @@ class CheckMUtil(Base, LogMixin):
             return self.outputbuilder.build_report(params)
 
         # 3) optionally filter bins by quality scores and save object
-        filtered_obj_info = self._filter_binned_contigs(params, obj_info)
+        filtered_obj_info = self.binnedcontigfilter.filter_binned_contigs(params, obj_info)
 
         # 4) make the plots:
         self.build_checkM_lineage_wf_plots()
@@ -305,233 +308,9 @@ class CheckMUtil(Base, LogMixin):
 
         return command
 
-    def _filter_binned_contigs(self, params, obj_info=None):
+    def clean_bin_ID(self, bin_id, extension=None):
 
-        run_config = self.run_config()
+        if extension:
+            bin_id = bin_id.replace('.' + extension, '')
 
-        obj_type = obj_info['obj_type'] if obj_info else self.workspacehelper.get_ws_obj_type(params['input_ref'])
-
-        self.logger.debug({'obj_type': obj_type})
-
-        if obj_type == 'KBaseMetagenomes.BinnedContigs' \
-          and 'output_filtered_binnedcontigs_obj_name' in params:
-            run_config['results_filtered'] = True
-        else:
-            return None
-
-        bin_fasta_files_by_bin_ID = self.datastagingutils.get_bin_fasta_files(
-            run_config['input_dir'], run_config['fasta_ext']
-        )
-        self.logger.debug({"bin_fasta_files_by_bin_ID": bin_fasta_files_by_bin_ID})
-
-        if not bin_fasta_files_by_bin_ID:
-            return None
-
-        bin_IDs = sorted(bin_fasta_files_by_bin_ID.keys())
-
-        self.logger.debug({"bin_IDs": bin_IDs})
-
-        # fetch the existing binned_contig object
-        binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
-        self.logger.debug({'binned_contig_obj': binned_contig_obj})
-
-        bin_summary_info = {}
-        for bin_item in binned_contig_obj['bins']:
-            bin_ID = self.clean_bin_ID(bin_item['bid'], run_config['fasta_ext'])
-            bin_summary_info[bin_ID] = {
-#                'n_contigs':        bin_item['n_contigs'],
-                'gc':               round(100.0 * float(bin_item['gc']), 1),
-                'sum_contig_len':   bin_item['sum_contig_len'],
-                'cov':              str(round(100.0 * float(bin_item['cov']), 1)) + '%',
-                'name': run_config['bin_basename'] + '.' + str(bin_ID) + '.' + run_config['fasta_ext'],
-            }
-            self.logger.debug({
-                "bin_item[bid]": bin_item['bid'],
-                'clean_id': bin_ID,
-                'summary_info': bin_summary_info[bin_ID],
-            })  # DEBUG
-
-#                     bin_basename + '.' + str(bin_ID) + '.' + fasta_ext,
-#                     str(bin_summary_info[bin_ID]['cov'])+'%',
-#                     str(bin_summary_info[bin_ID]['sum_contig_len']),
-#                     str(bin_summary_info[bin_ID]['gc'])
-
-
-
-        filtered_bins_dir = run_config['filtered_bins_dir']
-        if not os.path.exists(filtered_bins_dir):
-            os.makedirs(filtered_bins_dir)
-
-        # read CheckM stats to get completeness and contamination scores
-        test_completeness = False
-        test_contamination = False
-        if params.get('completeness_perc') \
-           and float(params.get('completeness_perc')) > 0.0:
-            test_completeness = True
-            completeness_thresh = float(params.get('completeness_perc'))
-        if params.get('contamination_perc') \
-           and float(params.get('contamination_perc')) < 100.0:
-            test_contamination = True
-            contamination_thresh = float(params.get('contamination_perc'))
-
-        bin_stats_ext_file = run_config['bin_stats_ext_file']
-        bin_basename = run_config['bin_basename']
-        file_ext = run_config['fasta_ext_binned_contigs']
-
-        bin_stats_data = dict()
-        retained_bin_IDs = dict()
-        removed_bin_IDs = dict()
-        some_bins_are_HQ = False
-
-        with open(bin_stats_ext_file, 'r') as bin_stats_ext_handle:
-            for bin_stats_line in bin_stats_ext_handle:
-                bin_stats_line.rstrip()
-                [full_bin_ID, bin_stats_json_str] = bin_stats_line.split("\t")
-
-                # full_bin_ID is in the form bin.xxx, so strip off the 'bin' prefix
-                bin_ID = self.clean_bin_ID(full_bin_ID, run_config['fasta_ext'])
-
-                bin_stats_data[bin_ID] = json.loads(
-                    json.dumps(ast.literal_eval(bin_stats_json_str)),
-                    parse_float=Decimal
-                )
-                self.logger.debug({bin_ID: bin_stats_data[bin_ID]})
-                comp = float(bin_stats_data[bin_ID]['Completeness'])
-                cont = float(bin_stats_data[bin_ID]['Contamination'])
-
-                bin_is_HQ = True
-                if test_completeness and comp < completeness_thresh:
-                    bin_is_HQ = False
-                    self.logger.info("Bin " + bin_ID + " Completeness of " + str(comp) + " below thresh " + str(completeness_thresh))
-                if test_contamination and cont > contamination_thresh:
-                    bin_is_HQ = False
-                    self.logger.info("Bin " + bin_ID + " Contamination of " + str(cont) + " above thresh " + str(contamination_thresh))
-
-                if not bin_is_HQ:
-                    self.logger.info("Bin " + bin_ID + " didn't pass QC filters.  Skipping.")
-                    removed_bin_IDs[bin_ID] = True
-                    bin_stats_data[bin_ID]['bin_is_HQ'] = False
-                else:
-                    self.logger.info("Bin " + bin_ID + " passed QC filters.  Adding to new BinnedContigs")
-                    some_bins_are_HQ = True
-                    bin_stats_data[bin_ID]['bin_is_HQ'] = True
-                    retained_bin_IDs[bin_ID] = True
-
-                    # copy filtered bin scaffold files to filtered dir
-                    src_path = bin_fasta_files_by_bin_ID[bin_ID]
-                    dst_path = os.path.join(filtered_bins_dir,
-                        bin_basename + '.' + str(bin_ID) + '.' + file_ext)
-                    self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
-
-        missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
-        self.logger.debug({"missing IDs:": missing_ids})
-        if missing_ids:
-            raise ValueError("The following Bin IDs are missing from the checkM output: "
-                + ", ".join(sorted(missing_ids)))
-
-        self.bin_stats_data = bin_stats_data
-
-        self.logger.debug({
-            'retained_bin_IDs': retained_bin_IDs,
-            'removed_bin_IDs': removed_bin_IDs,
-        })
-
-        if not some_bins_are_HQ:
-            return None
-
-        if not retained_bin_IDs or not removed_bin_IDs:
-            if not removed_bin_IDs:
-                self.logger.warning('No bins removed by filtering')
-            return None
-
-        # create BinnedContig object from filtered bins
-
-        self.build_bin_summary_file_from_binnedcontigs_obj(binned_contig_obj, retained_bin_IDs)
-        new_binned_contigs_info = self.save_binned_contigs(params, binned_contig_obj['assembly_ref'])
-
-        return {
-            'filtered_obj_name': new_binned_contigs_info['obj_name'],
-            'filtered_obj_ref':  new_binned_contigs_info['obj_ref'],
-            'retained_bin_IDs':  retained_bin_IDs,
-            'removed_bin_IDs':   removed_bin_IDs,
-        }
-
-    def build_bin_summary_file_from_binnedcontigs_obj(self, binned_contig_obj, retained_bin_IDs):
-
-        run_config   = self.run_config()
-        fasta_ext    = run_config['fasta_ext']
-        bin_dir      = run_config['filtered_bins_dir']
-        bin_basename = run_config['bin_basename']
-
-        dsu = self.datastagingutils
-        filtered_bin_ID_dict = dsu.get_bin_fasta_files(run_config['filtered_bins_dir'], fasta_ext)
-        filtered_bin_IDs = []
-
-        for bin_ID in sorted(filtered_bin_ID_dict.keys()):
-            self.logger.debug({
-                'original_key': bin_ID,
-                'cleaned_key': self.clean_bin_ID(bin_ID, fasta_ext),
-            })
-            filtered_bin_IDs.append(self.clean_bin_ID(bin_ID, fasta_ext))
-
-        self.logger.debug({'filtered_bin_IDs': filtered_bin_IDs})
-        self.logger.debug({'retained_bin_IDs': retained_bin_IDs})
-
-        bin_summary_info = dict()
-
-        # bid in object is full name of contig fasta file. want just the number
-        for bin_item in binned_contig_obj['bins']:
-            bin_ID = self.clean_bin_ID(bin_item['bid'], fasta_ext)
-
-            #self.logger.debug("BIN_ITEM[bid]: "+bin_item['bid'])  # DEBUG
-            #self.logger.debug("BIN_ID: "+bin_ID)  # DEBUG
-            bin_summary_info[bin_ID] = {
-                'n_contigs':        bin_item['n_contigs'],
-                'gc':               round(100.0 * float(bin_item['gc']), 1),
-                'sum_contig_len':   bin_item['sum_contig_len'],
-                'cov':              round(100.0 * float(bin_item['cov']), 1),
-            }
-
-
-        self.logger.debug({'bin_summary_info': bin_summary_info})
-        # write summary file for just those bins present in bin_dir
-        summary_file_path = run_config['summary_file_path']
-        self.logger.info("writing filtered binned contigs summary file " + summary_file_path)
-
-        with open(summary_file_path, 'w') as summary_file_handle:
-
-            header_line = ['Bin name', 'Completeness', 'Genome size', 'GC content']
-            summary_file_handle.write("\t".join(header_line)+"\n")
-
-            for bin_ID in filtered_bin_IDs:
-                #self.logger.debug("EXAMINING BIN SUMMARY INFO FOR BIN_ID: "+bin_ID)  # DEBUG
-                bin_summary_info_line = [
-                    bin_basename + '.' + str(bin_ID) + '.' + fasta_ext,
-                    str(bin_summary_info[bin_ID]['cov'])+'%',
-                    str(bin_summary_info[bin_ID]['sum_contig_len']),
-                    str(bin_summary_info[bin_ID]['gc'])
-                ]
-                summary_file_handle.write("\t".join(bin_summary_info_line)+"\n")
-                self.logger.debug({'bin_summary_line': bin_summary_info_line})
-
-
-        return summary_file_path
-
-    def save_binned_contigs(self, params, assembly_ref):
-
-        run_config   = self.run_config()
-        binned_contigs_ref = self.client('MetagenomeUtils').file_to_binned_contigs({
-            'file_directory':       run_config['filtered_bins_dir'],
-            'assembly_ref':         assembly_ref,
-            'binned_contig_name':   params['output_filtered_binnedcontigs_obj_name'],
-            'workspace_name':       params['workspace_name'],
-        })
-
-        return {
-            'obj_name': params['output_filtered_binnedcontigs_obj_name'],
-            'obj_ref':  binned_contigs_ref['binned_contig_obj_ref'],
-        }
-
-    def clean_bin_ID(self, bin_id, extension=''):
-
-        return re.sub('^[^\.]+\.', '', bin_id.replace('.' + extension, ''))
+        return re.sub('^[^\.]+\.', '', bin_id)

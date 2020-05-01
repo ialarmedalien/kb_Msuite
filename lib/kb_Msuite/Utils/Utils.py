@@ -1,4 +1,5 @@
 import logging
+import csv
 
 class LogMixin(object):
     @property
@@ -9,6 +10,17 @@ class LogMixin(object):
 
 class Base(object):
     pass
+
+class TSVMixin(object):
+
+    def init_tsv_writer(self, open_file_handle):
+
+        return csv.writer(
+            open_file_handle,
+            delimiter='\t',
+            quotechar="'",
+            quoting=csv.QUOTE_MINIMAL
+        )
 
 # if __name__ == '__main__':
 #     # Configure only in your main program clause

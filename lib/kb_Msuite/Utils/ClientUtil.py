@@ -5,7 +5,6 @@ from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.WorkspaceClient import Workspace
 
-
 class ClientUtil:
 
     def __init__(self, config):

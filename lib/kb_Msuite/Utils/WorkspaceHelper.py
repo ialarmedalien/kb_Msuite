@@ -1,4 +1,4 @@
-from kb_Msuite.Utils.Logger import Base, LogMixin
+from kb_Msuite.Utils.Utils import Base, LogMixin
 
 class WorkspaceHelper(Base, LogMixin):
 

@@ -7,9 +7,9 @@ import time
 import json
 import csv
 
-from kb_Msuite.Utils.Logger import Base, LogMixin
+from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
 
-class OutputBuilder(Base, LogMixin):
+class OutputBuilder(Base, LogMixin, TSVMixin):
     '''
     Constructs the output HTML report and artifacts based on a CheckM lineage_wf
     run.  This includes running any necssary plotting utilities of CheckM.
@@ -30,22 +30,6 @@ class OutputBuilder(Base, LogMixin):
 
         return self.checkMUtil.run_config()
 
-    def get_fields(self):
-        return [
-            {'id': 'marker_lineage', 'display': 'Marker Lineage'},
-            {'id': 'n_genomes', 'display': '# Genomes'},
-            {'id': 'n_markers', 'display': '# Markers'},
-            {'id': 'n_marker_sets', 'display': '# Marker Sets'},
-            {'id': '0', 'display': '0'},
-            {'id': '1', 'display': '1'},
-            {'id': '2', 'display': '2'},
-            {'id': '3', 'display': '3'},
-            {'id': '4', 'display': '4'},
-            {'id': '5+', 'display': '5+'},
-            {'id': 'Completeness', 'display': 'Completeness', 'round': 2},
-            {'id': 'Contamination', 'display': 'Contamination', 'round': 2},
-        ]
-
     def build_report(self, params, filtered_obj_info=None):
 
         run_config = self.run_config()
@@ -61,7 +45,6 @@ class OutputBuilder(Base, LogMixin):
             'report_object_name': 'kb_checkM_report_' + run_config['suffix'],
             'workspace_name': params['workspace_name'],
         }
-
 
         self.logger.info('Packaging output directory')
         output_packages = [{
@@ -175,26 +158,32 @@ class OutputBuilder(Base, LogMixin):
         results_filtered = 'results_filtered' in run_config
 
         # init the TSV output file
-        with open(run_config['tab_text_file'], 'w') as tsv_file:
-            header = self._generate_row_header(results_filtered)
-            tsv_file.write("\t".join(header)+"\n")
+        with open(run_config['tab_text_file'], 'w', newline='') as tab_text_fh:
+            tsv_writer = self.init_tsv_writer(tab_text_fh)
+            self.write_tsv_headers(tsv_writer, results_filtered)
 
             # init html_file output
-            with open(html_index_file, 'w') as open_fh:
+            with open(html_index_file, 'w') as html_index_fh:
 
                 for bid in sorted(bin_stats.keys()):
                     bin_id = self.checkMUtil.clean_bin_ID(bid)
+                    bin_stats[bid]['Bin Name'] = bin_id
+
                     # bin_id = re.sub('^[^\.]+\.', '', bid)
-                    if removed_bins and bin_id in removed_bins:
-                        self.logger.debug("bin stats BID " + bid + ", bin_id " + bin_id + ": REMOVED")
-                    else:
-                        self.logger.debug("bin stats BID " + bid + ", bin_id " + bin_id)
+                    if removed_bins:
+                        bin_stats[bid]['QA Pass'] = False if bin_id in removed_bins else True
+
+                    self.logger.debug({
+                        'bid': bid,
+                        'bin_id': bin_id,
+                        'bin_stats': bin_stats[bid]
+                    })
 
                     # create the dist plot page
                     plot_file = os.path.join(plots_dir, str(bid) + self.PLOT_FILE_EXT)
-                    has_plot_file = False
+                    bin_stats[bid]['Has Plot File'] = False
                     if os.path.isfile(plot_file):
-                        has_plot_file = True
+                        bin_stats[bid]['Has Plot File'] = True
                         html_dir_plot_file = os.path.join(
                             html_plots_dir, str(bid) + self.PLOT_FILE_EXT
                         )
@@ -211,54 +200,54 @@ class OutputBuilder(Base, LogMixin):
                             'name': bin_id + '.html',
                         })
 
-                    row = self._generate_row_data(
-                        bid, bin_stats[bid], has_plot_file, results_filtered, removed_bins
-                    )
-                    tsv_file.write("\t".join(row) + "\n")
-                    open_fh.write("BIN ID: " + bin_id + "\t".join(row) + "\n")
+                    self.write_tsv_row(tsv_writer, bid, bin_stats[bid], results_filtered)
+                    html_index_fh.write({'bin_id': bin_id, 'bin_stats': bin_stats[bid]})
 
         return html_files
 
-    def _generate_row_header(self, results_filtered):
-        out_header = ['Bin Name']
-        fields = self.get_fields()
-        for f in fields:
-            out_header.append(f['display'])
-        out_header.append('has_plot_file')
-        if results_filtered:
-            out_header.append('QC Pass')
-        return out_header
+    def get_fields(self, results_filtered):
+        tsv_fields = [
+            {'id': 'Bin Name'},
+            {'id': 'marker lineage', 'display': 'Marker Lineage'},
+            {'id': '# genomes', 'display': '# Genomes'},
+            {'id': '# markers', 'display': '# Markers'},
+            {'id': '# marker sets', 'display': '# Marker Sets'},
+            {'id': '0'},
+            {'id': '1'},
+            {'id': '2'},
+            {'id': '3'},
+            {'id': '4'},
+            {'id': '5+'},
+            {'id': 'Completeness', 'round': 2},
+            {'id': 'Contamination', 'round': 2},
+            {'id': 'Has Plot File'},
+        ]
 
-    def _generate_row_data(self, bid, bin_stats, has_plot_file, results_filtered, removed_bins):
+        if results_filtered:
+            return tsv_fields + [{'id': 'QA Pass'}]
+
+        return tsv_fields
+
+    def write_tsv_headers(self, tsv_writer, results_filtered)
+
+        tsv_fields = self.get_fields(results_filtered)
+        headers = [f.get('display', f['id']) for f in tsv_fields]
+        tsv_writer.writerow(headers)
+
+    def write_tsv_row(self, tsv_writer, bid, bin_stats, results_filtered):
 
         row = [bid]
-        fields = self.get_fields()
+        fields = self.get_fields(results_filtered)
         for f in fields:
             if f['id'] in bin_stats:
-                value = str(bin_stats[f['id']])
                 if f.get('round'):
-                    value = str(round(bin_stats[f['id']], f['round']))
-                row.append(str(value))
-
-        # is there a plot file for this entry?
-        if has_plot_file:
-            row.append('true')
-        else:
-            row.append('false')
-
-        # add a column to indicate whether the bin should be removed
-        if results_filtered:
-            if removed_bins:
-                bin_id = self.checkMUtil.clean_bin_ID(bid)
-                # bin_id = re.sub('^[^\.]+\.', '', bid)
-                if bin_id in removed_bins:
-                    row.append('false')
+                    row.append(str(round(bin_stats[f['id']], f['round'])))
                 else:
-                    row.append('true')
+                    row.append(str(bin_stats[f['id']]))
             else:
-                row.append('true')
+                row.append('')
 
-        return row
+        tsv_writer.writerow(row)
 
     def read_bin_stats_file(self):
         run_config = self.run_config()

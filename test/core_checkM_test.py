@@ -30,6 +30,14 @@ from kb_Msuite.Utils.ClientUtil import ClientUtil
 from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 from kb_Msuite.Utils.Logger import LogMixin
 
+TEST_DATA = {
+
+
+
+
+
+}
+
 def print_method_name(method):
     def wrapper(*args, **kwargs):
         method_name = method.__name__
@@ -850,43 +858,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         }))
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_02_filter_binned_contigs_checkM_missing_IDs(self):
-
-        self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs_checkM_missing_IDs")
-        self.logger.info("=================================================================\n")
-
-        self.require_data('binned_contigs_ref')
-
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu.run_config()
-
-        # copy over a results file
-        output_dir = run_config['output_dir']
-        os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
-        shutil.copy(os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
-            run_config['bin_stats_ext_file'])
-
-        # mimic the input dir
-        os.makedirs(run_config['input_dir'], exist_ok=True)
-        for bid in list(range(5)):
-            bid_path = os.path.join(
-                run_config['input_dir'],
-                'out_header.00' + str(bid) + '.' + run_config['fasta_ext']
-            )
-            Path(bid_path).touch(exist_ok=True)
-
-        missing_ids = ['000', '004']
-
-        err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
-        with self.assertRaisesRegex(ValueError, err_str):
-            cmu._filter_binned_contigs({
-                'input_ref': self.binned_contigs_ref,
-                'output_filtered_binnedcontigs_obj_name': 'Beta',
-            })
-
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
-
     def prep_filter_binned_contigs_dirs(self):
 
         self.require_data('binned_contigs_ref')
@@ -897,6 +868,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         run_config = cmu.run_config()
 
         # copy over a results file
+        # out_header.001  'Completeness': 97.6,              'Contamination': 1.907,
+        # out_header.002  'Completeness': 98.11542991755006, 'Contamination': 1.4134275618374559,
+        # out_header.003  'Completeness': 96.34019795657727, 'Contamination': 1.7600574712643677,
         output_dir = run_config['output_dir']
         os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
         shutil.copy(os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
@@ -909,7 +883,34 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'out_header.00' + str(bid) + '.' + run_config['fasta_ext']
             )
             Path(bid_path).touch(exist_ok=True)
+
         return cmu
+
+    def test_02_filter_binned_contigs_checkM_missing_IDs(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs_checkM_missing_IDs")
+        self.logger.info("=================================================================\n")
+
+        cmu = self.prep_filter_binned_contigs_dirs()
+        run_config = cmu.run_config()
+
+        missing_ids = ['000', '004']
+        for bid in missing_ids:
+            bid_path = os.path.join(
+                run_config['input_dir'],
+                'out_header.00' + str(bid) + '.' + run_config['fasta_ext']
+            )
+            Path(bid_path).touch(exist_ok=True)
+
+        err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
+        with self.assertRaisesRegex(ValueError, err_str):
+            cmu._filter_binned_contigs({
+                'input_ref': self.binned_contigs_ref,
+                'output_filtered_binnedcontigs_obj_name': 'Beta',
+            })
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
     def test_02_filter_binned_contigs_no_HQ(self):
 
@@ -933,6 +934,47 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
+    def test_02_filter_binned_contigs_all_HQ(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 02_filter_binned_contigs_all_HQ")
+        self.logger.info("=================================================================\n")
+
+        cmu = self.prep_filter_binned_contigs_dirs()
+        run_config = cmu.run_config()
+        # set filters so all will pass => returns none
+        self.assertIsNone(cmu._filter_binned_contigs({
+            'input_ref': self.binned_contigs_ref,
+            'output_filtered_binnedcontigs_obj_name': 'Theta',
+            'completeness_perc': 95.0,
+            'contamination_perc': 2.0,
+            'workspace_name': self.wsName,
+        }))
+        # no summary file
+        self.assertFalse(os.path.exists(run_config['summary_file_path']))
+        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
+    def check_filtered_bins(self, cmu, run_config, results, expected):
+
+        for key, value in expected.items():
+            self.assertEqual(results[key], value)
+
+        self.assertTrue('filtered_obj_ref' in results)
+
+        # summary file has been created
+        self.assertTrue(os.path.exists(run_config['summary_file_path']))
+        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+
+        # filtered bins dir has been created
+        self.assertTrue(os.path.exists(run_config['filtered_bins_dir']))
+        for id in expected['retained_bin_IDs'].keys():
+            self.assertTrue(os.path.isfile(os.path.join(
+                run_config['filtered_bins_dir'],
+                run_config['bin_basename'] + '.' + id + '.' run_config['fasta_ext']
+            )))
+
     def test_02_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
@@ -941,28 +983,21 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         cmu = self.prep_filter_binned_contigs_dirs()
         run_config = cmu.run_config()
-        # 001 and 002 will pass
+        # 002 will pass
         contig_filtering_results = cmu._filter_binned_contigs({
             'input_ref': self.binned_contigs_ref,
             'output_filtered_binnedcontigs_obj_name': 'Epsilon',
-            'completeness_perc': 95.0,
-            'contamination_perc': 1.5,
+            'completeness_perc': 95.0,  # all pass
+            'contamination_perc': 1.5,  # 002 passes
             'workspace_name': self.wsName,
         })
+        expected = {
+            'filtered_obj_name': 'Epsilon',
+            'retained_bin_IDs': {'002': True},
+            'removed_bin_IDs': {'001': True, '003': True}
+        }
 
-        self.assertEqual(contig_filtering_results['filtered_obj_name'], 'Epsilon')
-        self.assertEqual(
-            sorted(contig_filtering_results['retained_bin_IDs'].keys()),
-            ['001', '002']
-        )
-        self.assertEqual(
-            contig_filtering_results['removed_bin_IDs'].keys(),
-            ['003']
-        )
-        self.assertTrue('filtered_obj_ref' in contig_filtering_results)
-        # summary file has been created
-        self.assertTrue(os.path.exists(run_config['summary_file_path']))
-        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
+        self.check_filtered_bins(cmu, run_config, results, expected)
 
     def test_02_filter_binned_contigs_some_others_HQ(self):
 
@@ -976,51 +1011,36 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         contig_filtering_results = cmu._filter_binned_contigs({
             'input_ref': self.binned_contigs_ref,
             'output_filtered_binnedcontigs_obj_name': 'Gamma',
-            'completeness_perc': 97.0,
-            'contamination_perc': 2.5,
+            'completeness_perc': 97.0,  # 001 and 002 pass
+            'contamination_perc': 2.5,  # all pass
             'workspace_name': self.wsName,
         })
+        expected = {
+            'filtered_obj_name': 'Gamma',
+            'retained_bin_IDs': {'001': True, '002': True},
+            'removed_bin_IDs': {'003': True},
+        }
+        self.check_filtered_bins(cmu, run_config, results, expected)
 
-        self.assertEqual(contig_filtering_results['filtered_obj_name'], 'Gamma')
-        self.assertEqual(
-            sorted(contig_filtering_results['retained_bin_IDs'].keys()),
-            ['002','003']
-        )
-        self.assertEqual(
-            contig_filtering_results['removed_bin_IDs'].keys(),
-            ['001']
-        )
-        self.assertTrue('filtered_obj_ref' in contig_filtering_results)
-        # summary file has been created
-        self.assertTrue(os.path.exists(run_config['summary_file_path']))
-        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
-        # filtered bins dir has been created
-        self.assertTrue(os.path.exists(run_config['filtered_bins_dir']))
-        self.assertTrue(os.path.isfile(os.path.join(
-            run_config['filtered_bins_dir'], '002' + run_config['fasta_ext']
-        )))
-
-    def test_02_filter_binned_contigs_all_HQ(self):
-
-        self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs_all_HQ")
-        self.logger.info("=================================================================\n")
-
-        cmu = self.prep_filter_binned_contigs_dirs()
-        run_config = cmu.run_config()
-        # set filters so all will pass => returns none
-        self.assertIsNone(cmu._filter_binned_contigs({
-            'input_ref': self.binned_contigs_ref,
-            'output_filtered_binnedcontigs_obj_name': 'Octocat',
-            'completeness_perc': 95.0,
-            'contamination_perc': 2.0,
-            'workspace_name': self.wsName,
-        }))
-        # no summary file
-        self.assertFalse(os.path.exists(run_config['summary_file_path']))
-        self.assertTrue(hasattr(cmu, 'bin_stats_data'))
-
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+#     def test_05_write_tsv_output(self):
+#
+#         cmu = CheckMUtil(self.cfg, self.ctx)
+#         run_config = cmu.run_config()
+#         ob = cmu.outputbuilder
+#
+#         # set up some plots
+#
+#         demo_data = self.demo_bin_stats()
+#
+#
+#         with open(run_config['base_dir'], 'w', newline='') as tab_text_fh:
+#             tsv_writer = self.init_tsv_writer(tab_text_fh)
+#             self.write_tsv_headers(tsv_writer, results_filtered)
+#
+#             self.write_tsv_row(tsv_writer, bid, bin_stats[bid], results_filtered)
+#
+#
+#         self.assertIsInstance
 
     def test_05_outputbuilder(self):
 
@@ -1079,7 +1099,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             filtered_obj_info = {
                 'filtered_obj_ref': self.binned_contigs_ref,
                 'filtered_obj_name': 'Nancy Drew',
-                'removed_bin_IDs': ['002', '005', '033'],
+                'removed_bin_IDs': {'002': True, '005': True, '033': True},
             }
 
             result = cmu.outputbuilder.build_report(params, filtered_obj_info)
@@ -1434,6 +1454,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         os.remove(log_path)
         shutil.rmtree(input_dir)
         shutil.rmtree(output_dir)
+
+
+    def demo_bin_stats(self):
+        return {
+            'bin.002': {'GC std': 0.022204954407497902, '# genomes': 5449, 'Genome size': 605546, 'Longest contig': 7264, 'GCN0': ['PF00162', 'PF00298', 'PF00889', 'TIGR00615', 'PF03484', 'PF04983', 'PF01016', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF04997', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'TIGR00344', 'PF01281', 'PF00416', 'PF00831', 'TIGR00459', 'TIGR00755', 'PF04565', 'PF02367', 'PF11987', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'PF00366', 'TIGR02432', 'TIGR00460', 'PF00177', 'PF00828', 'PF03946', 'PF00886', 'TIGR03263', 'PF00333', 'PF00410', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'TIGR03594', 'PF08529', 'PF02130', 'PF04560', 'TIGR00922', 'TIGR02075', 'PF01000', 'TIGR00810', 'TIGR01079', 'PF01632', 'TIGR03723', 'PF00238', 'PF01121', 'PF01746', 'PF01195', 'PF00572', 'PF03719', 'PF00829', 'PF00861', 'PF00466', 'PF04998', 'PF06071', 'TIGR00855', 'TIGR00329', 'TIGR00084', 'TIGR00250', 'PF13184', 'PF04561', 'TIGR00019', 'PF00687', 'PF05697', 'PF00453', 'PF01250', 'PF08459', 'PF00318', 'PF05491', 'PF02978', 'PF00623'], 'GCN1': ['PF01509', 'PF01018', 'PF00189', 'PF01795', 'PF00252', 'TIGR00392', 'PF01668', 'PF00181', 'PF12344', 'PF01409', 'PF03947', 'PF00203', 'PF00237', 'PF00276', 'PF01649', 'PF06421', 'PF02912', 'PF02033', 'PF00573'], 'GCN2': [], 'marker lineage': 'k__Bacteria', 'GC': 0.28188279668266325, 'GCN4': [], '# scaffolds': 183, 'Completeness': 18.495297805642632, 'GCN3': [], 'GCN5+': [], '# contigs': 183, 'Translation table': 11, '# markers': 104, 'Coding density': 0.9122114587496243, 'Mean contig length': 3308.9945355191257, '# marker sets': 58, 'N50 (contigs)': 3222, '1': 19, '0': 85, '3': 0, '2': 0, 'Longest scaffold': 7264, '4': 0, '5+': 0, 'Contamination': 0.0, '# predicted genes': 621, 'N50 (scaffolds)': 3222, '# ambiguous bases': 0, 'Mean scaffold length': 3308.9945355191257},
+            'bin.009': {'GC std': 0.019068777402063024, '# genomes': 5449, 'Genome size': 373747, 'Longest contig': 7332, 'GCN0': ['PF01509', 'PF00162', 'PF00889', 'TIGR00615', 'PF03484', 'PF04983', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF04997', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'TIGR00344', 'PF00416', 'TIGR00459', 'TIGR00755', 'TIGR00392', 'PF04565', 'PF02367', 'PF01668', 'PF00181', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'TIGR02432', 'TIGR00460', 'PF00177', 'PF00828', 'PF00886', 'TIGR03263', 'PF00333', 'PF00410', 'PF12344', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'PF01409', 'TIGR03594', 'PF08529', 'PF02130', 'PF03947', 'PF04560', 'TIGR00922', 'TIGR02075', 'PF01000', 'TIGR00810', 'PF01632', 'TIGR03723', 'PF00203', 'PF01121', 'PF01746', 'PF01195', 'PF00572', 'PF03719', 'PF00861', 'PF00466', 'PF04998', 'PF06071', 'TIGR00855', 'TIGR00329', 'TIGR00084', 'TIGR00250', 'PF00276', 'PF13184', 'PF04561', 'PF00687', 'PF01649', 'PF06421', 'PF05697', 'PF00453', 'PF00318', 'PF02978', 'PF02912', 'PF00623', 'PF02033', 'PF00573'], 'GCN1': ['PF00298', 'PF01018', 'PF01016', 'PF00189', 'PF01795', 'PF01281', 'PF00831', 'PF00252', 'PF11987', 'PF00366', 'PF03946', 'TIGR01079', 'PF00238', 'PF00829', 'PF00237', 'TIGR00019', 'PF01250', 'PF08459', 'PF05491'], 'GCN2': [], 'marker lineage': 'k__Bacteria', 'GC': 0.6536159487567793, 'GCN4': [], '# scaffolds': 107, 'Completeness': 16.901776384535005, 'GCN3': [], 'GCN5+': [], '# contigs': 107, 'Translation table': 11, '# markers': 104, 'Coding density': 0.8976179073009282, 'Mean contig length': 3492.96261682243, '# marker sets': 58, 'N50 (contigs)': 3305, '1': 19, '0': 85, '3': 0, '2': 0, 'Longest scaffold': 7332, '4': 0, '5+': 0, 'Contamination': 0.0, '# predicted genes': 444, 'N50 (scaffolds)': 3305, '# ambiguous bases': 0, 'Mean scaffold length': 3492.96261682243},
+            'bin.006': {'GC std': 0.0180666565004557, '# genomes': 5449, 'Genome size': 520659, 'Longest contig': 25878, 'GCN0': ['PF00162', 'TIGR00615', 'PF00416', 'TIGR00459', 'TIGR00392', 'PF01668', 'TIGR02432', 'TIGR00460', 'PF00886', 'TIGR03263', 'PF01409', 'TIGR03594', 'PF08529', 'TIGR02075', 'TIGR03723', 'PF01121', 'PF01746', 'PF01195', 'PF00466', 'TIGR00855', 'TIGR00329', 'PF13184', 'PF00687', 'PF02978', 'PF02912'], 'GCN1': ['PF01509', 'PF00298', 'PF01018', 'PF00889', 'PF03484', 'PF04983', 'PF01016', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'PF00189', 'TIGR00344', 'PF01795', 'PF01281', 'PF00831', 'PF00252', 'TIGR00755', 'PF04565', 'PF02367', 'PF00181', 'PF11987', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'PF00366', 'PF00177', 'PF00828', 'PF03946', 'PF00333', 'PF00410', 'PF12344', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'PF02130', 'PF03947', 'PF04560', 'TIGR00922', 'PF01000', 'TIGR00810', 'TIGR01079', 'PF01632', 'PF00238', 'PF00203', 'PF00572', 'PF03719', 'PF00829', 'PF00861', 'PF00237', 'PF04998', 'PF06071', 'TIGR00084', 'TIGR00250', 'PF00276', 'PF04561', 'TIGR00019', 'PF01649', 'PF06421', 'PF05697', 'PF00453', 'PF01250', 'PF08459', 'PF00318', 'PF05491', 'PF00623', 'PF02033', 'PF00573'], 'GCN2': ['PF04997'], 'marker lineage': 'k__Bacteria', 'GC': 0.3391874528242093, 'GCN4': [], '# scaffolds': 75, 'Completeness': 66.32183908045978, 'GCN3': [], 'GCN5+': [], '# contigs': 75, 'Translation table': 11, '# markers': 104, 'Coding density': 0.8351224121738028, 'Mean contig length': 6942.12, '# marker sets': 58, 'N50 (contigs)': 7985, '1': 78, '0': 25, '3': 0, '2': 1, 'Longest scaffold': 25878, '4': 0, '5+': 0, 'Contamination': 0.15673981191222572, '# predicted genes': 614, 'N50 (scaffolds)': 7985, '# ambiguous bases': 0, 'Mean scaffold length': 6942.12},
+        }
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

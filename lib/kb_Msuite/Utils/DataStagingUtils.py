@@ -3,8 +3,7 @@ import glob
 import re
 import subprocess
 
-from kb_Msuite.Utils.Logger import Base, LogMixin
-
+from kb_Msuite.Utils.Utils import Base, LogMixin
 
 class DataStagingUtils(Base, LogMixin):
 
