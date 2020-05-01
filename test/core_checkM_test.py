@@ -28,15 +28,7 @@ from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
 from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
-from kb_Msuite.Utils.Logger import LogMixin
-
-TEST_DATA = {
-
-
-
-
-
-}
+from kb_Msuite.Utils.Utils import LogMixin
 
 def print_method_name(method):
     def wrapper(*args, **kwargs):
