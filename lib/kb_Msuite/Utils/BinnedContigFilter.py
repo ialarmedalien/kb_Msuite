@@ -73,7 +73,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         retained_bin_IDs = dict()
         removed_bin_IDs = dict()
 
-        (summary_fh, summary_writer) = self.init_summary_file()
+        (summary_fh, summary_writer) = self._init_summary_writer()
 
         with open(run_config['bin_stats_ext_file'], 'r') as bin_stats_fh:
             for bin_stats_line in bin_stats_fh:
