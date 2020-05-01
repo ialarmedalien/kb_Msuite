@@ -13,7 +13,7 @@ from decimal import Decimal
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
 
-class DataStagingUtils(Base, LogMixin, TSVMixin):
+class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
     def __init__(self, checkMUtil_obj):
         self.checkMUtil = checkMUtil_obj
