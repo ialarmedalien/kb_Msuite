@@ -170,12 +170,6 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                     if removed_bins:
                         bin_stats[bid]['QA Pass'] = False if bin_id in removed_bins else True
 
-                    self.logger.debug({
-                        'bid': bid,
-                        'bin_id': bin_id,
-                        'bin_stats': bin_stats[bid]
-                    })
-
                     # create the dist plot page
                     plot_file = os.path.join(plots_dir, str(bid) + self.PLOT_FILE_EXT)
                     bin_stats[bid]['Has Plot File'] = False
@@ -198,7 +192,11 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                         })
 
                     self.write_tsv_row(tsv_writer, bid, bin_stats[bid], results_filtered)
-                    html_index_fh.write({'bin_id': bin_id, 'bin_stats': bin_stats[bid]})
+                    self.logger.debug({
+                        'bid': bid,
+                        'bin_id': bin_id,
+                        'bin_stats': bin_stats[bid]
+                    })
 
         return html_files
 
