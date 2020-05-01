@@ -1,6 +1,5 @@
 import os
 import shutil
-import ast
 import json
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
