@@ -43,7 +43,7 @@ def print_method_name(method):
 
 TEST_DATA = {
 
-    assembly_list: [
+    'assembly_list': [
         {
             # example assembly
             'path': 'assembly.fasta',
@@ -63,18 +63,18 @@ TEST_DATA = {
         },
     ],
 
-    assemblyset_list: [
+    'assemblyset_list': [
         {
             'name': 'TEST_ASSEMBLY_SET',
             'items': [
-                {'ref': self.assembly_OK_ref, 'label': 'assembly_1'},
-                {'ref': self.assembly_dodgy_ref, 'label': 'assembly_2'}
+                {'ref': 'something', 'label': 'assembly_1'},
+                {'ref': 'something', 'label': 'assembly_2'}
             ],
             'attr': 'assembly_set_ref',
         }
     ],
 
-    genome_list: [
+    'genome_list': [
         {
             'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
 
@@ -84,7 +84,7 @@ TEST_DATA = {
 
         }
     ],
-    genomeset_list: [
+    'genomeset_list': [
     ]
 }
 
@@ -246,7 +246,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'output_object_name': 'TEST_ASSEMBLY_SET',
             'data': {
                 'description': 'test assembly set',
-                'items': assembly_items,
+                'items': assemblyset['items'],
             },
         })
         self.assembly_set_ref = saved_assembly_set['set_ref']
@@ -359,6 +359,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info({'Saved Genome': genome_data})
 
     def _prep_genomeset(self, genomeset):
+        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
+         WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
 
         obj_info = self.wsClient.save_objects({
             'workspace': self.refdata_ws_info[1],
@@ -384,9 +386,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     def prep_genomes(self):
 
         ''' add a couple of genomes and create a genome set '''
-
-        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
-         WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = list(range(11))  # object_info tuple
 
         # upload a few genomes
         self.genome_refs = []
@@ -786,7 +785,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'genome_empty', 'genome_set_empty')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu.run_config()
+    #    run_config = cmu.run_config()
         dsu = cmu.datastagingutils
 
         err_str = 'Assembly or ContigSet is empty in filename: '
@@ -795,7 +794,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         # assemblyset errors:
 
-        err_str = ' is empty for fasta_path: '
     #    raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
         # with self.assertRaisesRegex(ValueError, err_str):
         #     dsu.stage_input(self.ref_does_not_exist)
@@ -821,7 +819,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.require_data('binned_contigs_empty')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu.run_config()
+        cmu.run_config()
         dsu = cmu.datastagingutils
 
         err_str = 'Binned Assembly is empty for fasta_path: '
@@ -1091,7 +1089,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         )
         # check that the summary file is as expected
         self.assertEqual(
-                open(run_config['summary_file_path']), 'r').read(),
+                open(run_config['summary_file_path'], 'r').read(),
                 open(expected_content_file, 'r').read()
             )
 
