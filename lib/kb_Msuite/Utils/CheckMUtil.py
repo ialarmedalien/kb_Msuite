@@ -37,7 +37,7 @@ class CheckMUtil(Base, LogMixin):
         # init logger
         logging.basicConfig(
             level=logging.DEBUG,
-            format='%(name)s %(levelname)s %(func)s %(lineno)s %(message)s'
+            format='%(name)s %(levelname)s %(message)s'
         )
 
     def client(self, client_name):
