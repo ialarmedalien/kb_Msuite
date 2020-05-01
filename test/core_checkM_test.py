@@ -972,7 +972,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         for id in expected['retained_bin_IDs'].keys():
             self.assertTrue(os.path.isfile(os.path.join(
                 run_config['filtered_bins_dir'],
-                run_config['bin_basename'] + '.' + id + '.' run_config['fasta_ext']
+                run_config['bin_basename'] + '.' + id + '.' + run_config['fasta_ext']
             )))
 
     def test_02_filter_binned_contigs_some_HQ(self):
