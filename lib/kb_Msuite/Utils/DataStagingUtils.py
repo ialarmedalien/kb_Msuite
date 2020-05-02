@@ -81,7 +81,7 @@ class DataStagingUtils(Base, LogMixin):
             'obj_type': obj_type,
         }
 
-    def process_assembly_contigset(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
+    def process_assembly_contigset(self, input_ref, input_dir, fasta_ext, obj_name, obj_type=None):
         '''
         Given the input parameters, saves the assembly or contigset in the designated
         input directory with the name <object_name>.<fasta_ext>
@@ -92,7 +92,9 @@ class DataStagingUtils(Base, LogMixin):
         self.client('AssemblyUtil').get_assembly_as_fasta({'ref': input_ref, 'filename': filename})
 
         if not os.path.isfile(filename):
-            raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
+            raise ValueError(
+                'Error generating fasta file from an Assembly or ContigSet with AssemblyUtil'
+            )
         # make sure fasta file isn't empty
         min_fasta_len = 1
         if not self.fasta_seq_len_at_least(filename, min_fasta_len):
@@ -104,7 +106,7 @@ class DataStagingUtils(Base, LogMixin):
 
     def process_assembly_set(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
         '''
-        Given an assemblyset,
+        Given an assemblyset, retrieve the sequence of each member and save it to input_dir
 
         '''
 
@@ -119,23 +121,31 @@ class DataStagingUtils(Base, LogMixin):
 
         self.logger.debug({'assembly_set_obj': assembly_set_obj})
 
+        # 'assembly_set_obj' = {
+        #     'data': {
+        #         'description': 'test assembly set',
+        #         'items': [{
+        #             'label': 'assembly_1',
+        #             'ref': '49697/1/1',
+        #             'info': [1, 'Test.Assembly', 'KBaseGenomeAnnotations.Assembly-6.0', '2020-04-29T18:03:17+0000', 1, 'ialarmedalien', 49697, 'test_kb_Msuite_refdata_1588183380977', '656b6409ed3b7ffdfa00247f9834c717', 208652, {'GC content': '0.45594', 'Size': '8397583', 'N Contigs': '922', 'MD5': 'bc1005f1fc28e132389f017ba9c42897'}]
+        #         },
+        #         {
+        #             'label': 'assembly_2',
+        #             'ref': '49697/2/1',
+        #             'info': [2, 'Dodgy_Contig.Assembly', 'KBaseGenomeAnnotations.Assembly-6.0', '2020-04-29T18:03:42+0000', 1, 'ialarmedalien', 49697, 'test_kb_Msuite_refdata_1588183380977', '5294dba9811f03769dac2b8104cfbc45', 752, {'GC content': '0.63818', 'Size': '7360', 'N Contigs': '1', 'MD5': 'c586bdf420a97d2a5ea75dac3b0f25cc'}]
+        #         }]
+        #     },
+        #     'info': [3, 'TEST_ASSEMBLY_SET', 'KBaseSets.AssemblySet-2.1', '2020-04-29T18:03:45+0000', 1, 'ialarmedalien', 49697, 'test_kb_Msuite_refdata_1588183380977', 'd1a2540c6db724e77b32885cfb26fab2', 127, {'item_count': '2', 'description': 'test assembly set'}]
+        # }
+
         for assembly_item in assembly_set_obj['data']['items']:
             assembly_ref = assembly_item['ref']
-            assembly_info = None
-            # assembly obj info
-            try:
-                assembly_info = self.client('Workspace').get_object_info_new({
-                    'objects': [{'ref': assembly_ref}]
-                })[0]
-            except Exception as e:
-                raise ValueError('Unable to get object from workspace: (' + assembly_ref + '): ' + str(e))
-
+            assembly_info = assembly_item['info']
             self.logger.debug({'assembly info': assembly_info})
             assembly_name = self.workspacehelper.get_ws_obj_name(object_info=assembly_info)
-            assembly_type = self.workspacehelper.get_ws_obj_type(object_info=assembly_info)
 
             # process this with the standard assembly processing
-            self.process_assembly_contigset(assembly_ref, input_dir, fasta_ext, assembly_name, assembly_type)
+            self.process_assembly_contigset(assembly_ref, input_dir, fasta_ext, assembly_name)
 
         return True
 
@@ -164,65 +174,64 @@ class DataStagingUtils(Base, LogMixin):
 
     def process_genome_genome_set(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
-        genome_obj_names = []
-        genome_sci_names = []
-        genome_assembly_refs = []
+        genome_set_refs = []
 
         if obj_type == 'KBaseGenomes.Genome':
-            genomeSet_refs = [input_ref]
+            genome_set_refs = [input_ref]
         else:  # get genomeSet_refs from GenomeSet object
-            genomeSet_refs = []
+            genome_set_refs = []
             genomeSet_object = self.workspacehelper.get_obj_from_workspace(input_ref)
+            # self.logger.debug({'genomeset_object': genomeSet_object})
 
-            self.logger.debug({'genomeset_object': genomeSet_object})
             # iterate through genomeSet members
             for genome_id in list(genomeSet_object['elements'].keys()):
                 if 'ref' not in genomeSet_object['elements'][genome_id] or \
                   genomeSet_object['elements'][genome_id]['ref'] is None or \
                   genomeSet_object['elements'][genome_id]['ref'] == '':
-                    raise ValueError('genome_ref not found for genome_id: ' + str(genome_id) + ' in genomeSet: ' + str(input_ref))
-                else:
-                    genomeSet_refs.append(genomeSet_object['elements'][genome_id]['ref'])
+                    raise ValueError(
+                        'genome_ref not found for genome_id: ' + str(genome_id)
+                        + ' in genomeSet: ' + str(input_ref)
+                    )
+
+                genome_set_refs.append(genomeSet_object['elements'][genome_id]['ref'])
 
         # genome obj data
-        for i, this_input_ref in enumerate(genomeSet_refs):
+        for genome_ref in genome_set_refs:
 
-            objects = self.client('Workspace').get_objects2({'objects': [{'ref': this_input_ref}]})['data']
+            objects = self.client('Workspace').get_objects2({
+                'objects': [{'ref': genome_ref}]
+            })['data']
             self.logger.debug({'genome_object': objects})
             genome_obj = objects[0]['data']
             genome_obj_info = objects[0]['info']
-            genome_obj_names.append(genome_obj_info[1])
-            genome_sci_names.append(genome_obj['scientific_name'])
+            genome_name = self.workspacehelper.get_ws_obj_name(genome_obj_info)
+            genome_sci_name = genome_obj['scientific_name']
 
-            # Get genome_assembly_ref
+            genome_str = self.genome_data_format(genome_name, genome_sci_name, input_ref)
+
+            # Get genome assembly_ref
             if ('contigset_ref' not in genome_obj or genome_obj['contigset_ref'] is None) \
-               and ('assembly_ref' not in genome_obj or genome_obj['assembly_ref'] is None):
-                msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" MISSING BOTH contigset_ref AND assembly_ref. Cannot process. Exiting."
+              and ('assembly_ref' not in genome_obj or genome_obj['assembly_ref'] is None):
+                msg = genome_str + " MISSING BOTH contigset_ref AND assembly_ref. " \
+                    + "Cannot process. Exiting."
                 raise ValueError(msg)
-                continue
-            elif 'assembly_ref' in genome_obj and genome_obj['assembly_ref'] is not None:
-                msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" USING assembly_ref: "+str(genome_obj['assembly_ref'])
-                self.logger.info(msg)
-                genome_assembly_refs.append(genome_obj['assembly_ref'])
-            elif 'contigset_ref' in genome_obj and genome_obj['contigset_ref'] is not None:
-                msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" USING contigset_ref: "+str(genome_obj['contigset_ref'])
-                self.logger.info(msg)
-                genome_assembly_refs.append(genome_obj['contigset_ref'])
 
-        # create file data (name for file is what's reported in results)
-        for ass_i, assembly_ref in enumerate(genome_assembly_refs):
+            if 'assembly_ref' in genome_obj and genome_obj['assembly_ref'] is not None:
+                obj_ref = genome_obj['assembly_ref']
+                msg = genome_str + " USING assembly_ref: "
+            elif 'contigset_ref' in genome_obj and genome_obj['contigset_ref'] is not None:
+                obj_ref = genome_obj['contigset_ref']
+                msg = genome_str + " USING contigset_ref: "
+
+            self.logger.info(msg + str(obj_ref))
             # this can be processed as an assembly now
-            self.process_assembly_contigset(assembly_ref, input_dir, fasta_ext, genome_obj_names[ass_i], 'Assembly')
-            # filename = os.path.join(input_dir, this_name + '.' + fasta_ext)
-            # self.client('AssemblyUtil').get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
-            # if not os.path.isfile(filename):
-            #     raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
-            # # make sure fasta file isn't empty
-            # min_fasta_len = 1
-            # if not self.fasta_seq_len_at_least(filename, min_fasta_len):
-            #     raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
+            self.process_assembly_contigset(obj_ref, input_dir, fasta_ext, genome_name)
 
         return True
+
+    def genome_data_format(self, genome_name, genome_sci_name, input_ref):
+
+        return 'Genome ' + genome_name + " (ref:" + input_ref + ") " + genome_sci_name
 
     def fasta_seq_len_at_least(self, fasta_path, min_fasta_len=1):
         '''
@@ -266,10 +275,10 @@ class DataStagingUtils(Base, LogMixin):
         '''
         files = glob.glob(os.path.join(folder, '*.' + extension))
         cat_cmd = ['cat'] + files
-        fasta_file_handle = open(output_fasta_file, 'w')
-        p = subprocess.Popen(cat_cmd, cwd=self.scratch, stdout=fasta_file_handle, shell=False)
+        fasta_fh = open(output_fasta_file, 'w')
+        p = subprocess.Popen(cat_cmd, cwd=self.scratch, stdout=fasta_fh, shell=False)
         exitCode = p.wait()
-        fasta_file_handle.close()
+        fasta_fh.close()
 
         if exitCode != 0:
             raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
@@ -279,8 +288,6 @@ class DataStagingUtils(Base, LogMixin):
 
         bin_fasta_files = dict()
         for (dirpath, dirnames, filenames) in os.walk(search_dir):
-            # DEBUG
-            # self.logger.debug({'dirpath': dirpath, 'dirnames': dirnames, 'filenames': filenames})
             for filename in filenames:
                 if not os.path.isfile(os.path.join(search_dir, filename)):
                     continue

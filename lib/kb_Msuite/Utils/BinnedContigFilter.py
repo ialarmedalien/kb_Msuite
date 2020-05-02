@@ -27,7 +27,8 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         run_config = self.run_config()
 
-        obj_type = obj_info['obj_type'] if obj_info else self.workspacehelper.get_ws_obj_type(params['input_ref'])
+        obj_type = obj_info['obj_type'] if obj_info \
+            else self.workspacehelper.get_ws_obj_type(params['input_ref'])
 
         self.logger.debug({'obj_type': obj_type})
 
@@ -40,14 +41,10 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         bin_fasta_files_by_bin_ID = self.datastagingutils.get_bin_fasta_files(
             run_config['input_dir'], run_config['fasta_ext']
         )
-
-        self.logger.debug({"bin_fasta_files_by_bin_ID": bin_fasta_files_by_bin_ID})
-
         if not bin_fasta_files_by_bin_ID:
             return None
 
         bin_IDs = sorted(bin_fasta_files_by_bin_ID.keys())
-
         self.logger.debug({"bin_IDs": bin_IDs})
 
         # fetch the existing binned_contig object
@@ -76,7 +73,10 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         removed_bin_IDs = dict()
 
         # write summary file for just those bins present in bin_dir
-        self.logger.info("writing filtered binned contigs summary file " + run_config['summary_file_path'] + '-new')
+        self.logger.info(
+            "writing filtered binned contigs summary file "
+            + run_config['summary_file_path'] + '-new'
+        )
 
         with open(run_config['summary_file_path'] + '-new', 'w', newline='') as summary_fh:
             summary_writer = self._init_summary_writer(summary_fh)
@@ -126,8 +126,10 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
                     # copy filtered bin scaffold files to filtered dir
                     src_path = bin_fasta_files_by_bin_ID[bin_ID]
-                    dst_path = os.path.join(filtered_bins_dir,
-                        bin_basename + '.' + str(bin_ID) + '.' + fasta_ext_bc)
+                    dst_path = os.path.join(
+                        filtered_bins_dir,
+                        bin_basename + '.' + str(bin_ID) + '.' + fasta_ext_bc
+                    )
 
                     self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
 
@@ -144,8 +146,10 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         missing_ids = [bin_ID for bin_ID in bin_IDs if bin_ID not in bin_stats_data]
         if missing_ids:
-            raise ValueError("The following Bin IDs are missing from the checkM output: "
-                + ", ".join(sorted(missing_ids)))
+            raise ValueError(
+                "The following Bin IDs are missing from the checkM output: "
+                + ", ".join(sorted(missing_ids))
+            )
 
         self.bin_stats_data = bin_stats_data
 
@@ -173,10 +177,16 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         }
 
     def log_contamination_fail(self, bin_ID, value, threshold):
-        self.logger.info("Bin " + bin_ID + ": contamination of " + str(value) + " above thresh " + str(threshold))
+        self.logger.info(
+            "Bin " + bin_ID + ": contamination of " + str(value)
+            + " above thresh " + str(threshold)
+        )
 
     def log_completeness_fail(self, bin_ID, value, threshold):
-        self.logger.info("Bin " + bin_ID + ": completeness of " + str(value) + " below thresh " + str(threshold))
+        self.logger.info(
+            "Bin " + bin_ID + ": completeness of " + str(value)
+            + " below thresh " + str(threshold)
+        )
 
     def _init_summary_writer(self, summary_fh):
 
@@ -189,12 +199,16 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         run_config = self.run_config()
         bin_summary_info = {}
+        bin_basename = run_config['bin_basename']
+        fasta_ext = run_config['fasta_ext']
+
+        self.logger.debug({'binned_contig_obj_keys': binned_contig_obj.keys()})
 
         for bin_item in binned_contig_obj['bins']:
 
-            bin_ID = self.checkMUtil.clean_bin_ID(bin_item['bid'], run_config['fasta_ext'])
+            bin_ID = self.checkMUtil.clean_bin_ID(bin_item['bid'], )
             bin_summary_info[bin_ID] = {
-                'name': ".".join([run_config['bin_basename'], str(bin_ID), run_config['fasta_ext']]),
+                'name': ".".join([bin_basename, str(bin_ID), fasta_ext]),
                 'cov':  str(round(100.0 * float(bin_item['cov']), 1)) + '%',
                 'sum_contig_len': str(bin_item['sum_contig_len']),
                 'gc':   str(round(100.0 * float(bin_item['gc']), 1)),
