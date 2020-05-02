@@ -201,7 +201,7 @@ class DataStagingUtils(Base, LogMixin):
             objects = self.client('Workspace').get_objects2({
                 'objects': [{'ref': genome_ref}]
             })['data']
-            self.logger.debug({'genome_object': objects})
+            # self.logger.debug({'genome_object': objects})
             genome_obj = objects[0]['data']
             genome_obj_info = objects[0]['info']
             genome_name = self.workspacehelper.get_ws_obj_name(object_info=genome_obj_info)
