@@ -155,7 +155,8 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                 + ", ".join(sorted(missing_ids))
             )
 
-        self.bin_stats_data = bin_stats_data
+        setattr(self, 'bin_stats_data', bin_stats_data)
+        # self.bin_stats_data = bin_stats_data
 
         self.logger.debug({
             'retained_bin_IDs': retained_bin_IDs,
@@ -170,7 +171,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
             return None
 
         # create BinnedContig object from filtered bins
-        self.build_bin_summary_file_from_binnedcontigs_obj(params, retained_bin_IDs)
+        # self.build_bin_summary_file_from_binnedcontigs_obj(params, binned_contig_obj, retained_bin_IDs)
         new_binned_contigs_info = self.save_binned_contigs(
             params, binned_contig_obj['assembly_ref']
         )
@@ -227,7 +228,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         return bin_summary_info
 
-    def build_bin_summary_file_from_binnedcontigs_obj(self, params, retained_bin_IDs):
+    def build_bin_summary_file_from_binnedcontigs_obj(self, params, binned_contig_obj, retained_bin_IDs):
 
         run_config = self.run_config()
         fasta_ext = run_config['fasta_ext']
@@ -247,7 +248,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         self.logger.debug({'filtered_bin_IDs': filtered_bin_IDs})
         self.logger.debug({'retained_bin_IDs': retained_bin_IDs})
 
-        bin_summary_info = self.extract_binned_contigs_data(params)
+        bin_summary_info = self.extract_binned_contigs_data(binned_contig_obj)
         # bin_summary_info = dict()
 
         # # fetch the existing binned_contig object
