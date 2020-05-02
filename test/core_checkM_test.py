@@ -73,7 +73,6 @@ TEST_DATA = {
             'attr': 'assembly_set_ref',
         }
     ],
-
     'genome_list': [
         {
             'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
@@ -217,7 +216,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         '''
 
-        assembly_file_path = os.path.join(self.test_data_dir, assembly['path'])
+        assembly_file_path = os.path.join(self.test_data_dir, "assemblies", assembly['path'])
         if not os.path.exists(assembly_file_path):
             shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
 
@@ -343,19 +342,19 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         return True
 
-    def _prep_genome(self, genome_filename):
+    def _prep_genome(self, genome):
 
-        genome_file_path = os.path.join(self.test_data_dir, genome_filename)
+        genome_file_path = os.path.join(self.test_data_dir, genome['path'])
         if not os.path.exists(genome_file_path):
-            shutil.copy(os.path.join("data", "genomes", genome_filename), genome_file_path)
+            shutil.copy(os.path.join("data", "genomes", genome['path']), genome_file_path)
 
         genome_data = self.gfu.genbank_to_genome({
             'file': {'path': genome_file_path},
             'workspace_name': self.refdata_ws_info[1],
-            'genome_name': genome_filename,
+            'genome_name': genome['name'],
             'generate_ids_if_needed': 1,
         })
-        self.genome_refs.append(genome_data['genome_ref'])
+        setattr(self, genome['attr'], genome_data['genome_ref'])
         self.logger.info({'Saved Genome': genome_data})
 
     def _prep_genomeset(self, genomeset):
@@ -389,12 +388,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         # upload a few genomes
         self.genome_refs = []
-        genomes = [
-            'GCF_000022285.1_ASM2228v1_genomic.gbff',
-            'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
-        ]
-        for genome_filename in genomes:
-            self._prep_genome(genome_filename)
+        genomes = [{
+            'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
+            'name': 'Genome.2_5MB',
+            'attr': 'genome_d_ref',
+        },{
+            'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
+            'name': 'Genome.3_4MB',
+            'attr': 'genome_c_ref',
+        }]
+
+        for genome in genomes:
+            self._prep_genome(genome)
 
         self.logger.info({'genome_refs': self.genome_refs})
 
@@ -547,6 +552,48 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         self.prep_ref_data()
+
+        new_assemblies = [
+        {
+            'attr': 'assembly_empty_ref',
+            'name': 'Assembly.Empty',
+            'path': 'empty_assembly.fasta',
+        },{
+            'attr': 'assembly_virus_ref',
+            'name': 'Virus.Assembly.1KB',
+            'path': 'GCF_002817975.1_ASM281797v1_genomic.fna',
+        },{
+            'attr': 'assembly_a_ref',
+            'name': 'Assembly.A.176KB',
+            'path': 'GCF_001274515.1_ASM127451v1_genomic.fna',
+        },{
+            'attr': 'assembly_b_ref',
+            'name': 'Assembly.B.654KB',
+            'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
+        }]
+
+        for assembly in new_assemblies:
+            self._prep_assembly(assembly)
+
+        new_genomes = [{
+            'path': 'empty_genomic.gbff',
+            'name': 'Empty_Genome',
+            'attr': 'genome_empty_ref',
+        },{
+            'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff'
+            'name': 'Virus.Genome.4KB',
+            'attr': 'genome_virus_ref',
+        },{
+            'path': 'GCF_001274515.1_ASM127451v1_genomic.gbff',
+            'name': 'Genome.A.469KB',
+            'attr': 'genome_a_ref',
+        },{
+            'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff'
+            'name': 'Genome.B.1_6MB',
+            'attr': 'genome_b_ref',
+        }]
+        for genome in new_genomes:
+            self._prep_genomes(genome)
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         # run config not yet initialised
