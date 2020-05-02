@@ -1169,9 +1169,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #         with open(run_config['base_dir'], 'w', newline='') as tab_text_fh:
 #             tsv_writer = self.init_tsv_writer(tab_text_fh)
 #             self.write_tsv_headers(tsv_writer, results_filtered)
-#
 #             self.write_tsv_row(tsv_writer, bid, bin_stats[bid], results_filtered)
-#
 #
 #         self.assertIsInstance
 
