@@ -1283,7 +1283,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
-    def test_checkM_lineage_wf_full_app_single_assembly(self):
+    def notest_checkM_lineage_wf_full_app_single_assembly(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_full_app_single_assembly")
         self.logger.info("=================================================================\n")
@@ -1343,7 +1343,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
-    def test_checkM_lineage_wf_full_app_binned_contigs(self):
+    def notest_checkM_lineage_wf_full_app_binned_contigs(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_full_app_binned_contigs")
         self.logger.info("=================================================================\n")
@@ -1490,7 +1490,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
-    def test_checkM_lineage_wf_withFilter_binned_contigs(self):
+    def notest_checkM_lineage_wf_withFilter_binned_contigs(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
         self.logger.info("=================================================================\n")
@@ -1530,7 +1530,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Uncomment to skip this test
     @unittest.skip("skipped test_checkM_local_function_wiring")
     # missing test data for this custom test
-    def test_checkM_local_function_wiring(self):
+    def notest_checkM_local_function_wiring(self):
 
         # run checkM lineage_wf app on a single assembly
         tetra_file = os.path.join(self.scratch, 'tetra_test.tsv')

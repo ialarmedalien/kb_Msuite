@@ -29,12 +29,12 @@ class DataStagingUtils(Base, LogMixin):
         '''
         Stage input based on an input data reference for CheckM
 
-        This method creates a directory in the scratch area with the set of Fasta files, names
-        will have the fasta_ext run_config (run_config['fasta_ext']) parameter tacked on.
+        This method creates an input directory in the scratch area with the set of FASTA files
+        File names will have the fasta extension (from run_config['fasta_ext']) tacked on.
 
             ex:
 
-            staged_input = stage_input('124/15/1', 'fna')
+            staged_input = stage_input('124/15/1')
 
             staged_input
             {"input_dir": '...'}
@@ -82,12 +82,15 @@ class DataStagingUtils(Base, LogMixin):
         }
 
     def process_assembly_contigset(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
-
-        auClient = self.client('AssemblyUtil')
+        '''
+        Given the input parameters, saves the assembly or contigset in the designated
+        input directory with the name <object_name>.<fasta_ext>
+        '''
 
         # create file data
         filename = os.path.join(input_dir, obj_name + '.' + fasta_ext)
-        auClient.get_assembly_as_fasta({'ref': input_ref, 'filename': filename})
+        self.client('AssemblyUtil').get_assembly_as_fasta({'ref': input_ref, 'filename': filename})
+
         if not os.path.isfile(filename):
             raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
         # make sure fasta file isn't empty
@@ -100,21 +103,23 @@ class DataStagingUtils(Base, LogMixin):
         return True
 
     def process_assembly_set(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
+        '''
+        Given an assemblyset,
 
-        setAPI_Client = self.client('SetAPI')
-        auClient = self.client('AssemblyUtil')
+        '''
 
         # read assemblySet
         try:
-            assemblySet_obj = setAPI_Client.get_assembly_set_v1({
+            assembly_set_obj = self.client('SetAPI').get_assembly_set_v1({
                     'ref': input_ref,
-                    'include_item_info': 1
+                    'include_item_info': 1,
                 })
         except Exception as e:
             raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
 
-        for assembly_item in assemblySet_obj['data']['items']:
+        self.logger.debug({'assembly_set_obj': assembly_set_obj})
 
+        for assembly_item in assembly_set_obj['data']['items']:
             assembly_ref = assembly_item['ref']
             assembly_info = None
             # assembly obj info
@@ -124,57 +129,31 @@ class DataStagingUtils(Base, LogMixin):
                 })[0]
             except Exception as e:
                 raise ValueError('Unable to get object from workspace: (' + assembly_ref + '): ' + str(e))
+
             self.logger.debug({'assembly info': assembly_info})
-            assembly_name = assembly_info[1]
-            filename = os.path.join(input_dir, assembly_name + '.' + fasta_ext)
-            auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
+            assembly_name = self.workspacehelper.get_ws_obj_name(object_info=assembly_info)
+            assembly_type = self.workspacehelper.get_ws_obj_type(object_info=assembly_info)
 
-            if not os.path.isfile(filename):
-                raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
-            # make sure fasta file isn't empty
-            min_fasta_len = 1
-            if not self.fasta_seq_len_at_least(filename, min_fasta_len):
-                raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
-
-            self.logger.info('saved ' + assembly_name + ' to ' + filename)
-#             assembly_refs.append(this_assembly_ref)
-#             assembly_names.append(this_assembly_name)
-#
-#         self.logger.debug({'assembly_refs': assembly_refs, 'assembly_names': assembly_names})
-
-#         create file data (name for file is what's reported in results)
-#         for ass_i, assembly_ref in enumerate(assembly_refs):
-#             this_name = assembly_names[ass_i]
-#             filename = os.path.join(input_dir, this_name + '.' + fasta_ext)
-#             auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
-#             self.logger.debug('ass ref: ' + assembly_ref + '; filename: ' + filename)
-#
-#             if not os.path.isfile(filename):
-#                 raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
-#             make sure fasta file isn't empty
-#             min_fasta_len = 1
-#             if not self.fasta_seq_len_at_least(filename, min_fasta_len):
-#                 raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
+            # process this with the standard assembly processing
+            self.process_assembly_contigset(assembly_ref, input_dir, fasta_ext, assembly_name, assembly_type)
 
         return True
 
     def process_binned_contigs(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
-        mguClient = self.client('MetagenomeUtils')
-
         # download the bins as fasta and set the input folder name
-        file_result = mguClient.binned_contigs_to_file({
+        file_result = self.client('MetagenomeUtils').binned_contigs_to_file({
             'input_ref': input_ref,
             'save_to_shock': 0,
         })
         bin_file_dir = file_result['bin_file_directory']
-        self.logger.info('Renaming ' + bin_file_dir + ' to ' + input_dir)
+        self.logger.debug('Renaming ' + bin_file_dir + ' to ' + input_dir)
         os.rename(bin_file_dir, input_dir)
-        # make sure fasta file isn't empty
         self.set_fasta_file_extensions(input_dir, fasta_ext)
         for (dirpath, dirnames, filenames) in os.walk(input_dir):
             for fasta_file in filenames:
                 fasta_path = os.path.join(input_dir, fasta_file)
+                # make sure fasta file isn't empty
                 min_fasta_len = 1
                 if not self.fasta_seq_len_at_least(fasta_path, min_fasta_len):
                     raise ValueError('Binned Assembly is empty for fasta_path: ' + str(fasta_path))
@@ -184,8 +163,6 @@ class DataStagingUtils(Base, LogMixin):
         return True
 
     def process_genome_genome_set(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
-
-        auClient = self.client('AssemblyUtil')
 
         genome_obj_names = []
         genome_sci_names = []
@@ -211,6 +188,7 @@ class DataStagingUtils(Base, LogMixin):
         for i, this_input_ref in enumerate(genomeSet_refs):
 
             objects = self.client('Workspace').get_objects2({'objects': [{'ref': this_input_ref}]})['data']
+            self.logger.debug({'genome_object': objects})
             genome_obj = objects[0]['data']
             genome_obj_info = objects[0]['info']
             genome_obj_names.append(genome_obj_info[1])
@@ -233,15 +211,16 @@ class DataStagingUtils(Base, LogMixin):
 
         # create file data (name for file is what's reported in results)
         for ass_i, assembly_ref in enumerate(genome_assembly_refs):
-            this_name = genome_obj_names[ass_i]
-            filename = os.path.join(input_dir, this_name + '.' + fasta_ext)
-            auClient.get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
-            if not os.path.isfile(filename):
-                raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
-            # make sure fasta file isn't empty
-            min_fasta_len = 1
-            if not self.fasta_seq_len_at_least(filename, min_fasta_len):
-                raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
+            # this can be processed as an assembly now
+            self.process_assembly_contigset(assembly_ref, input_dir, fasta_ext, genome_obj_names[ass_i], 'Assembly')
+            # filename = os.path.join(input_dir, this_name + '.' + fasta_ext)
+            # self.client('AssemblyUtil').get_assembly_as_fasta({'ref': assembly_ref, 'filename': filename})
+            # if not os.path.isfile(filename):
+            #     raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
+            # # make sure fasta file isn't empty
+            # min_fasta_len = 1
+            # if not self.fasta_seq_len_at_least(filename, min_fasta_len):
+            #     raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
 
         return True
 
