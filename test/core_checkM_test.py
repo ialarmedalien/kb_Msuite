@@ -389,7 +389,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # upload a few genomes
         self.genome_refs = []
         genomes = [{
-            'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
+            'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
             'name': 'Genome.2_5MB',
             'attr': 'genome_d_ref',
         },{
