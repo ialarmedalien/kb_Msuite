@@ -589,7 +589,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         expected = [
             ['bin.056.fasta', '056', '056.fasta'],
-            ['assembly.fasta', 'assembly', 'fasta'],
+            ['assembly.fasta', 'assembly', 'fasta'],  # super dodgy!
             ['../../this.is.fake', '../../this.is.fake', '../../this.is.fake'],
         ]
 
@@ -785,18 +785,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_01_data_staging_things_are_empty(self):
+    # def test_01_data_staging_things_are_empty(self):
 
-        self.require_data('assembly_empty', 'assembly_set_empty',
-            'genome_empty', 'genome_set_empty')
+    #     self.require_data('assembly_empty', 'assembly_set_empty',
+    #         'genome_empty', 'genome_set_empty')
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
-    #    run_config = cmu.run_config()
-        dsu = cmu.datastagingutils
+    #     cmu = CheckMUtil(self.cfg, self.ctx)
+    #     cmu.run_config()
+    #     dsu = cmu.datastagingutils
 
-        err_str = 'Assembly or ContigSet is empty in filename: '
-        with self.assertRaisesRegex(ValueError, err_str):
-            dsu.stage_input(self.assembly_empty)
+    #     err_str = 'Assembly or ContigSet is empty in filename: '
+    #     with self.assertRaisesRegex(ValueError, err_str):
+    #         dsu.stage_input(self.assembly_empty)
 
         # assemblyset errors:
 
@@ -822,7 +822,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def test_01_data_staging_binned_contigs_empty(self):
 
-        self.require_data('binned_contigs_empty')
+        self.require_data('binned_contigs_empty_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.run_config()
@@ -830,7 +830,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         err_str = 'Binned Assembly is empty for fasta_path: '
         with self.assertRaisesRegex(ValueError, err_str):
-            dsu.stage_input(self.binned_contigs_empty)
+            dsu.stage_input(self.binned_contigs_empty_ref)
 
     def test_01_data_staging_assembly_strange_fasta_ext(self):
 
@@ -862,7 +862,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.require_data('assembly_set_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu._set_run_config()
+        run_config = cmu.run_config()
         dsu = cmu.datastagingutils
         staged_input = dsu.stage_input(self.assembly_set_ref)
         self.assertEqual(

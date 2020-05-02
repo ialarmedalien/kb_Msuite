@@ -231,7 +231,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
     def write_tsv_row(self, tsv_writer, bid, bin_stats, results_filtered):
 
-        row = [bid]
+        row = []
         fields = self.get_fields(results_filtered)
         for f in fields:
             if f['id'] in bin_stats:
