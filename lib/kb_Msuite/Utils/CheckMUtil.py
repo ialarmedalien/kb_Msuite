@@ -2,7 +2,7 @@
 import time
 import os
 import subprocess
-import re
+# import re
 import logging
 import ast
 
@@ -305,12 +305,12 @@ class CheckMUtil(Base, LogMixin):
 
         return command
 
-    def clean_bin_ID(self, bin_id, extension=None):
+    # def clean_bin_ID(self, bin_id, extension=None):
 
-        if extension:
-            bin_id = bin_id.replace('.' + extension, '')
+    #     if extension:
+    #         bin_id = bin_id.replace('.' + extension, '')
 
-        return re.sub('^[^\.]+\.', '', bin_id)
+    #     return re.sub('^[^\.]+\.', '', bin_id)
 
     def read_bin_stats_file(self):
         run_config = self.run_config()

@@ -52,7 +52,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         # fetch the existing binned_contig object
         binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
-        bin_summary_info = self.fetch_binned_contigs_data(params)
+        bin_summary_info = self.extract_binned_contigs_data(params)
         bin_stats_raw_data = self.checkMUtil.read_bin_stats_file()
 
         # read CheckM stats to get completeness and contamination scores
@@ -228,7 +228,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         self.logger.debug({'filtered_bin_IDs': filtered_bin_IDs})
         self.logger.debug({'retained_bin_IDs': retained_bin_IDs})
 
-        bin_summary_info = self.fetch_binned_contigs_data(params)
+        bin_summary_info = self.extract_binned_contigs_data(params)
         # bin_summary_info = dict()
 
         # # fetch the existing binned_contig object

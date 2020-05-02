@@ -587,9 +587,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             '../../this.is.fake',
         ]
 
-        for bid in bin_ids:
-            self.logger.info(cmu.clean_bin_ID(bid, 'fasta'))
-            self.logger.info(cmu.clean_bin_ID(bid))
+        expected = [
+            ['bin.056.fasta', '056', '056.fasta'],
+            ['assembly.fasta', 'assembly', 'fasta'],
+            ['../../this.is.fake', '../../this.is.fake', '../../this.is.fake'],
+        ]
+
+        for bid in expected:
+            self.assertEqual(cmu.clean_bin_ID(bid[0], 'fasta'), bid[1])
+            self.logger.info(cmu.clean_bin_ID(bid[0]), bid[2])
 
     def test_00_workspace_helper(self):
 
