@@ -118,10 +118,14 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                 self.logger.debug({'event': 'bin_stats_read', bin_ID: bin_stats_data[bin_ID]})
 
                 if not bin_is_HQ:
-                    self.logger.info("Bin " + bin_ID + " didn't pass QC filters. Skipping.")
+                    self.logger.info(
+                        "Bin " + bin_ID + " didn't pass QC filters. Skipping."
+                    )
                     removed_bin_IDs[bin_ID] = True
                 else:
-                    self.logger.info("Bin " + bin_ID + " passed QC filters. Adding to new BinnedContigs")
+                    self.logger.info(
+                        "Bin " + bin_ID + " passed QC filters. Adding to new BinnedContigs"
+                    )
                     retained_bin_IDs[bin_ID] = True
 
                     # copy filtered bin scaffold files to filtered dir
@@ -133,7 +137,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
                     self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
 
-                    if bin_summary_info[bin_ID]:
+                    if bin_ID in bin_summary_info:
                         summary_writer.writerow([
                             bin_summary_info[bin_ID]['name'],
                             bin_summary_info[bin_ID]['cov'],
@@ -167,7 +171,9 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         # create BinnedContig object from filtered bins
         self.build_bin_summary_file_from_binnedcontigs_obj(params, retained_bin_IDs)
-        new_binned_contigs_info = self.save_binned_contigs(params, binned_contig_obj['assembly_ref'])
+        new_binned_contigs_info = self.save_binned_contigs(
+            params, binned_contig_obj['assembly_ref']
+        )
 
         return {
             'filtered_obj_name': new_binned_contigs_info['obj_name'],
@@ -205,8 +211,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         self.logger.debug({'binned_contig_obj_keys': binned_contig_obj.keys()})
 
         for bin_item in binned_contig_obj['bins']:
-
-            bin_ID = self.checkMUtil.clean_bin_ID(bin_item['bid'], )
+            bin_ID = self.checkMUtil.clean_bin_ID(bin_item['bid'], fasta_ext)
             bin_summary_info[bin_ID] = {
                 'name': ".".join([bin_basename, str(bin_ID), fasta_ext]),
                 'cov':  str(round(100.0 * float(bin_item['cov']), 1)) + '%',

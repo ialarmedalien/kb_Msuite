@@ -204,7 +204,7 @@ class DataStagingUtils(Base, LogMixin):
             self.logger.debug({'genome_object': objects})
             genome_obj = objects[0]['data']
             genome_obj_info = objects[0]['info']
-            genome_name = self.workspacehelper.get_ws_obj_name(genome_obj_info)
+            genome_name = self.workspacehelper.get_ws_obj_name(object_info=genome_obj_info)
             genome_sci_name = genome_obj['scientific_name']
 
             genome_str = self.genome_data_format(genome_name, genome_sci_name, input_ref)
