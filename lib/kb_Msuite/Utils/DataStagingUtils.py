@@ -283,17 +283,3 @@ class DataStagingUtils(Base, LogMixin):
         if exitCode != 0:
             raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
                              'Exit Code: ' + str(exitCode))
-
-    def get_bin_fasta_files(self, search_dir, fasta_ext):
-
-        bin_fasta_files = dict()
-        for (dirpath, dirnames, filenames) in os.walk(search_dir):
-            for filename in filenames:
-                if not os.path.isfile(os.path.join(search_dir, filename)):
-                    continue
-                if filename.endswith('.' + fasta_ext):
-                    bin_ID = self.checkMUtil.clean_bin_ID(filename, fasta_ext)
-                    bin_fasta_files[bin_ID] = os.path.join(search_dir, filename)
-                    # self.logger.debug("ACCEPTED: "+bin_ID+" FILE:"+filename)  # DEBUG
-
-        return bin_fasta_files

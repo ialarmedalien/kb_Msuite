@@ -200,20 +200,11 @@ class CheckMUtil(Base, LogMixin):
         command = self._build_command(subcommand, options)
         run_config = self.run_config()
 
-#         log_output_file = None
-#         log_output_filename = None
-#         if dropOutput:
-
         log_output_filename = os.path.join(run_config['base_dir'], subcommand + '.log')
 
         self.logger.debug('run_checkM: Running: ' + ' '.join(command) + '\n\n')
         self.logger.debug('sending log output to ' + log_output_filename)
         with open(log_output_filename, 'w') as log_output_file:
-
-            # current_tree = subprocess.run(['tree', run_config['base_dir']],
-            #     stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-            # log_output_file.write(current_tree.stdout)
-            # log_output_file.write("\n\n\n")
 
             p = subprocess.Popen(
                 command, cwd=self.scratch, shell=False,
@@ -222,14 +213,6 @@ class CheckMUtil(Base, LogMixin):
     #             p = subprocess.Popen(command, cwd=self.scratch, shell=False)
 
             exitCode = p.wait()
-
-#             current_tree = subprocess.run(['tree', run_config['base_dir']],
-#                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-#             log_output_file.write("\n\n\n")
-#             log_output_file.write(current_tree.stdout)
-
-#         if log_output_file:
-#             log_output_file.close()
 
         self.logger.info(
             'Executed command: ' + ' '.join(command) + '\n' + 'Exit Code: ' + str(exitCode)
@@ -305,13 +288,6 @@ class CheckMUtil(Base, LogMixin):
 
         return command
 
-    # def clean_bin_ID(self, bin_id, extension=None):
-
-    #     if extension:
-    #         bin_id = bin_id.replace('.' + extension, '')
-
-    #     return re.sub('^[^\.]+\.', '', bin_id)
-
     def read_bin_stats_file(self):
         run_config = self.run_config()
         stats_file = run_config['bin_stats_ext_file']
@@ -322,15 +298,15 @@ class CheckMUtil(Base, LogMixin):
             self.logger.warning('No stats file found (looking at: ' + stats_file + ')')
             return bin_stats
 
-        with open(stats_file) as lf:
-            for line in lf:
+        with open(stats_file) as stats_fh:
+            for line in stats_fh:
                 if not line:
                     continue
                 if line.startswith('#'):
                     continue
                 col = line.split('\t')
-                bin_id = str(col[0])
+                bid = str(col[0])
                 data = ast.literal_eval(col[1])
-                bin_stats[bin_id] = data
+                bin_stats[bid] = data
 
         return bin_stats

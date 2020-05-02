@@ -44,8 +44,8 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         self.logger.info('Packaging output directory')
         output_packages = [{
-            'name': 'full_output',
-            'path': run_config['output_dir'],
+            'path':        run_config['output_dir'],
+            'name':        'full_output',
             'description': 'Full output of CheckM',
         }]
 
@@ -67,25 +67,25 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 #             os.makedirs(crit_out_dir)
 
             output_packages.append({
-                'name': run_config['tab_text_file_name'],
-                'path': run_config['tab_text_file'],
+                'path':         run_config['tab_text_file'],
+                'name':         run_config['tab_text_file_name'],
                 'description': 'TSV Summary Table from CheckM',
             })
 
             if 'save_plots_dir' in params:
                 self.logger.info('packaging output plots directory')
                 output_packages.append({
-                    'name': 'plots',
-                    'path': run_config['plots_dir'],
-                    'description': 'Output plots from CheckM',
+                    'path':         run_config['plots_dir'],
+                    'name':         'plots',
+                    'description':  'Output plots from CheckM',
                 })
             else:
                 self.logger.info('not packaging output plots directory')
 
             if binned_contig_obj_ref:
                 report_params['objects_created'] = [{
-                    'ref':          binned_contig_obj_ref,
-                    'description':  'HQ BinnedContigs ' + filtered_obj_info['filtered_obj_name']
+                    'ref':         binned_contig_obj_ref,
+                    'description': 'HQ BinnedContigs ' + filtered_obj_info['filtered_obj_name']
                 }]
 
         else:
@@ -158,43 +158,38 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
             tsv_writer = self.init_tsv_writer(tab_text_fh)
             self.write_tsv_headers(tsv_writer, results_filtered)
 
-            # init html_file output
-            with open(html_index_file, 'w') as html_index_fh:
+            for bin_ID in sorted(bin_stats.keys()):
+                bin_stats[bin_ID]['Bin Name'] = bin_ID
 
-                for bid in sorted(bin_stats.keys()):
-                    bin_id = self.checkMUtil.clean_bin_ID(bid)
-                    bin_stats[bid]['Bin Name'] = bin_id
-                    if removed_bins:
-                        bin_stats[bid]['QA Pass'] = False if bin_id in removed_bins else True
-
-                    # create the dist plot page
-                    plot_file = os.path.join(plots_dir, str(bid) + self.PLOT_FILE_EXT)
-                    bin_stats[bid]['Has Plot File'] = False
-                    if os.path.isfile(plot_file):
-                        bin_stats[bid]['Has Plot File'] = True
-                        html_dir_plot_file = os.path.join(
-                            html_plots_dir, str(bid) + self.PLOT_FILE_EXT
-                        )
-                        # copy it to the html_plot
-                        self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
-                        html_files.append({
-                            'template': {
-                                'template_data_json': json.dumps({
-                                    'bin_id': bin_id,
-                                    'plot_file_ext': self.PLOT_FILE_EXT,
-                                }),
-                                'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
-                            },
-                            'name': bin_id + '.html',
-                        })
-
-                    self.write_tsv_row(tsv_writer, bid, bin_stats[bid], results_filtered)
-                    self.logger.debug({
-                        'event': 'tsv_row_data',
-                        'bid': bid,
-                        'bin_id': bin_id,
-                        'bin_stats': bin_stats[bid]
+                clean_bin_ID = self.checkMUtil.clean_bin_ID(bin_ID)
+                # create the dist plot page
+                plot_file = os.path.join(plots_dir, str(bin_ID) + self.PLOT_FILE_EXT)
+                bin_stats[bin_ID]['Has Plot File'] = False
+                if os.path.isfile(plot_file):
+                    bin_stats[bin_ID]['Has Plot File'] = True
+                    html_dir_plot_file = os.path.join(
+                        html_plots_dir, str(bin_ID) + self.PLOT_FILE_EXT
+                    )
+                    # copy it to the html_plot
+                    self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
+                    html_files.append({
+                        'template': {
+                            'template_data_json': json.dumps({
+                                'bin_id':         bin_ID,
+                                'plot_file_ext':  self.PLOT_FILE_EXT,
+                            }),
+                            'template_file': os.path.join(tmpl_dest_dir, 'dist_html_page.tt'),
+                        },
+                        'name': bin_ID + '.html',
                     })
+
+                self.write_tsv_row(tsv_writer, bin_stats[bin_ID], results_filtered)
+                self.logger.debug({
+                    'event': 'tsv_row_data',
+                    'bin_ID': bin_ID,
+                    'clean_bin_ID': clean_bin_ID,
+                    'bin_stats': bin_stats[bin_ID]
+                })
 
         return html_files
 
@@ -227,7 +222,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         headers = [f.get('display', f['id']) for f in tsv_fields]
         tsv_writer.writerow(headers)
 
-    def write_tsv_row(self, tsv_writer, bid, bin_stats, results_filtered):
+    def write_tsv_row(self, tsv_writer, bin_stats, results_filtered):
 
         row = []
         fields = self.get_fields(results_filtered)

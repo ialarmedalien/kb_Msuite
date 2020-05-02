@@ -18,6 +18,8 @@ class Base(object):
         if extension:
             bin_id = bin_id.replace('.' + extension, '')
 
+        return bin_id
+
         return re.sub(r'^[^.]+.', '', bin_id)
 
 
