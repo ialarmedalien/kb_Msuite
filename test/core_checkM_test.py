@@ -392,7 +392,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
             'name': 'Genome.2_5MB',
             'attr': 'genome_d_ref',
-        },{
+        }, {
             'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
             'name': 'Genome.3_4MB',
             'attr': 'genome_c_ref',
@@ -558,15 +558,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'attr': 'assembly_empty_ref',
             'name': 'Assembly.Empty',
             'path': 'empty_assembly.fasta',
-        },{
+        }, {
             'attr': 'assembly_virus_ref',
             'name': 'Virus.Assembly.1KB',
             'path': 'GCF_002817975.1_ASM281797v1_genomic.fna',
-        },{
+        }, {
             'attr': 'assembly_a_ref',
             'name': 'Assembly.A.176KB',
             'path': 'GCF_001274515.1_ASM127451v1_genomic.fna',
-        },{
+        }, {
             'attr': 'assembly_b_ref',
             'name': 'Assembly.B.654KB',
             'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
@@ -579,16 +579,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'path': 'empty_genomic.gbff',
             'name': 'Empty_Genome',
             'attr': 'genome_empty_ref',
-        },{
-            'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff'
+        }, {
+            'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff',
             'name': 'Virus.Genome.4KB',
             'attr': 'genome_virus_ref',
-        },{
+        }, {
             'path': 'GCF_001274515.1_ASM127451v1_genomic.gbff',
             'name': 'Genome.A.469KB',
             'attr': 'genome_a_ref',
-        },{
-            'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff'
+        }, {
+            'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff',
             'name': 'Genome.B.1_6MB',
             'attr': 'genome_b_ref',
         }]
@@ -627,16 +627,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         cmu = CheckMUtil(self.cfg, self.ctx)
 
-        # bin_id = re.sub('^[^\.]+\.', '', bid)
-        bin_ids = [
-            'bin.056.fasta',
-            'assembly.fasta',
-            '../../this.is.fake',
-        ]
-
         expected = [
-            ['bin.056.fasta', '056', '056.fasta'],
-            ['assembly.fasta', 'assembly', 'fasta'],  # super dodgy!
+            ['bin.056.fasta', 'bin.056', 'bin.056.fasta'],
+            ['assembly.fasta', 'assembly', 'assembly.fasta'],  # super dodgy!
             ['../../this.is.fake', '../../this.is.fake', '../../this.is.fake'],
         ]
 
