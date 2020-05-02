@@ -52,8 +52,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         # fetch the existing binned_contig object
         binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
-        self.logger.debug({'binned_contig_obj': binned_contig_obj})
-        bin_summary_info = self.extract_binned_contigs_data(params)
+        bin_summary_info = self.extract_binned_contigs_data(binned_contig_obj=)
         bin_stats_raw_data = self.checkMUtil.read_bin_stats_file()
 
         # read CheckM stats to get completeness and contamination scores

@@ -164,8 +164,6 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                 for bid in sorted(bin_stats.keys()):
                     bin_id = self.checkMUtil.clean_bin_ID(bid)
                     bin_stats[bid]['Bin Name'] = bin_id
-
-                    # bin_id = re.sub('^[^\.]+\.', '', bid)
                     if removed_bins:
                         bin_stats[bid]['QA Pass'] = False if bin_id in removed_bins else True
 
