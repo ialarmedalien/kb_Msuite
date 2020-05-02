@@ -155,7 +155,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                 + ", ".join(sorted(missing_ids))
             )
 
-        setattr(self, 'bin_stats_data', bin_stats_data)
+        setattr(self.checkMUtil, 'bin_stats_data', bin_stats_data)
         # self.bin_stats_data = bin_stats_data
 
         self.logger.debug({
