@@ -562,10 +562,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         new_assemblies = [
         {
-            'attr': 'assembly_empty_ref',
-            'name': 'Assembly.Empty',
-            'path': 'empty_assembly.fasta',
-        }, {
+        #     'attr': 'assembly_empty_ref',
+        #     'name': 'Assembly.Empty',
+        #     'path': 'empty_assembly.fasta',
+        # }, {
             'attr': 'assembly_virus_ref',
             'name': 'Virus.Assembly.1KB',
             'path': 'GCF_002817975.1_ASM281797v1_genomic.fna',
@@ -583,10 +583,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self._prep_assembly(assembly)
 
         new_genomes = [{
-            'path': 'empty_genomic.gbff',
-            'name': 'Empty_Genome',
-            'attr': 'genome_empty_ref',
-        }, {
             'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff',
             'name': 'Virus.Genome.4KB',
             'attr': 'genome_virus_ref',
@@ -598,6 +594,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff',
             'name': 'Genome.B.1_6MB',
             'attr': 'genome_b_ref',
+        }, {
+            'path': 'empty_genomic.gbff',
+            'name': 'Empty_Genome',
+            'attr': 'genome_empty_ref',
         }]
         for genome in new_genomes:
             self._prep_genome(genome)
