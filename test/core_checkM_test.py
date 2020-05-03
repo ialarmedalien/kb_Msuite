@@ -71,6 +71,7 @@ TEST_DATA = {
             'attr': 'assembly_b_ref',
             'name': 'Assembly.B.654KB',
             'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
+        }
     ],
 
     'assemblyset_list': [
@@ -103,7 +104,7 @@ TEST_DATA = {
             'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff',
             'name': 'Genome.B.1_6MB',
             'attr': 'genome_b_ref',
-        }, {
+        }
     ],
     'genomeset_list': [
     ]
@@ -582,6 +583,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         }]
         for genome in new_genomes:
             self._prep_genome(genome)
+
         cmu = CheckMUtil(self.cfg, self.ctx)
         # run config not yet initialised
         self.assertFalse(hasattr(cmu, '_run_config'))
