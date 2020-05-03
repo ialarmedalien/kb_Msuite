@@ -576,19 +576,23 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.prep_ref_data()
 
-        new_assemblies = [{
-            'attr': 'assembly_empty_ref',
-            'name': 'Assembly.Empty',
-            'path': 'empty_assembly.fasta',
-        }]
+        new_assemblies = [
+            {
+                'attr': 'assembly_empty_ref',
+                'name': 'Assembly.Empty',
+                'path': 'empty_assembly.fasta',
+            }
+        ]
         for assembly in new_assemblies:
             self._prep_assembly(assembly)
 
-       new_genomes = [{
-            'path': 'empty_genomic.gbff',
-            'name': 'Empty_Genome',
-            'attr': 'genome_empty_ref',
-        }]
+       new_genomes = [
+            {
+                'path': 'empty_genomic.gbff',
+                'name': 'Empty_Genome',
+                'attr': 'genome_empty_ref',
+            }
+        ]
         for genome in new_genomes:
             self._prep_genome(genome)
 
