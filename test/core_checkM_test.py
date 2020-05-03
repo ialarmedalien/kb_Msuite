@@ -624,7 +624,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertNotEqual(base_dir, cmu.run_config()['base_dir'])
 
 #   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
-    def test_00_clean_bin_id(self):
+    def notest00_clean_bin_id(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 00_clean_bin_id")
         self.logger.info("=================================================================\n")
@@ -641,7 +641,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self.assertEqual(cmu.clean_bin_ID(bid[0], 'fasta'), bid[1])
             self.logger.info(cmu.clean_bin_ID(bid[0]), bid[2])
 
-    def test_00_workspace_helper(self):
+    def notest00_workspace_helper(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 00_workspace_helper")
@@ -711,7 +711,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.workspacehelper.get_obj_from_workspace('ROTFLMAO')
 
-    def test_00_init_client(self):
+    def notest00_init_client(self):
 
         ''' check client initialisation '''
         self.logger.info("=================================================================")
@@ -783,7 +783,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #   also test:
 #   - empty versions of each of these
 
-    def test_01_data_staging(self):
+    def notest01_data_staging(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging")
@@ -809,7 +809,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    def test_01_data_staging_assembly(self):
+    def notest01_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assembly")
@@ -829,7 +829,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    # def test_01_data_staging_things_are_empty(self):
+    # def notest01_data_staging_things_are_empty(self):
 
     #     self.require_data('assembly_empty', 'assembly_set_empty',
     #         'genome_empty', 'genome_set_empty')
@@ -864,7 +864,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" MISSING BOTH contigset_ref AND assembly_ref. Cannot process. Exiting."
         # raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
 
-    def test_01_data_staging_binned_contigs_empty(self):
+    def notest01_data_staging_binned_contigs_empty(self):
 
         self.require_data('binned_contigs_empty_ref')
 
@@ -876,7 +876,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         with self.assertRaisesRegex(ValueError, err_str):
             dsu.stage_input(self.binned_contigs_empty_ref)
 
-    def test_01_data_staging_assembly_strange_fasta_ext(self):
+    def notest01_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assembly_strange_fasta_ext")
@@ -897,7 +897,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_01_data_staging_assemblyset(self):
+    def notest01_data_staging_assemblyset(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assemblyset")
@@ -920,7 +920,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_01_data_staging_binned_contigs(self):
+    def notest01_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_binned_contigs")
@@ -951,7 +951,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_01_data_staging_genome(self):
+    def notest01_data_staging_genome(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_genome")
@@ -975,7 +975,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.check_data_staging_results(run_config, ['GCF_001439985.1_wTPRE_1.0_genomic.gbff'])
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_01_data_staging_genome_set(self):
+    def notest01_data_staging_genome_set(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_genome_set")
@@ -1001,7 +1001,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_02_filter_binned_contigs(self):
+    def notest02_filter_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs")
@@ -1054,7 +1054,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         return cmu
 
-    def test_02_filter_binned_contigs_checkM_missing_IDs(self):
+    def notest02_filter_binned_contigs_checkM_missing_IDs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_checkM_missing_IDs")
@@ -1080,7 +1080,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_02_filter_binned_contigs_no_HQ(self):
+    def notest02_filter_binned_contigs_no_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_no_HQ")
@@ -1102,7 +1102,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_02_filter_binned_contigs_all_HQ(self):
+    def notest02_filter_binned_contigs_all_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_all_HQ")
@@ -1153,7 +1153,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         #
 
-    def test_02_filter_binned_contigs_some_HQ(self):
+    def notest02_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_some_HQ")
@@ -1176,7 +1176,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
 
-    def test_02_filter_binned_contigs_some_others_HQ(self):
+    def notest02_filter_binned_contigs_some_others_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_some_others_HQ")
@@ -1217,7 +1217,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #
 #         self.assertIsInstance
 
-    def test_05_outputbuilder(self):
+    def notest05_outputbuilder(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 05_outputbuilder")
@@ -1303,7 +1303,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(run_config['base_dir'])
 
-    def test_05_outputbuilder_no_checkM_output(self):
+    def notest05_outputbuilder_no_checkM_output(self):
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
@@ -1600,7 +1600,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_local_method()")
-    def test_03_local_method(self):
+    def notest03_local_method(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_local_method")
         self.logger.info("=================================================================\n")
