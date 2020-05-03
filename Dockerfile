@@ -1,5 +1,4 @@
 FROM kbase/sdkbase2:python
-MAINTAINER KBase Developer
 
 # install cython that pysam likes
 RUN apt-get update && apt-get install -y build-essential wget

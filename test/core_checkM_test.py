@@ -27,6 +27,7 @@ from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
 from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
+from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
 from kb_Msuite.Utils.Utils import LogMixin
 
 
@@ -49,18 +50,27 @@ TEST_DATA = {
             'path': 'assembly.fasta',
             'name': 'Test.Assembly',
             'attr': 'assembly_OK_ref',
-        },
-        {
+        }, {
             # contig that breaks checkm v1.0.7 reduced_tree (works on v1.0.8)
             'path': 'offending_contig_67815-67907.fa',
             'name': 'Dodgy_Contig.Assembly',
             'attr': 'assembly_dodgy_ref',
-        },
-        {
+        }, {
             'path': 'mini_assembly.fasta',
             'name': 'MiniAssembly',
             'attr': 'assembly_mini_ref',
-        },
+        }, {
+            'attr': 'assembly_virus_ref',
+            'name': 'Virus.Assembly.1KB',
+            'path': 'GCF_002817975.1_ASM281797v1_genomic.fna',
+        }, {
+            'attr': 'assembly_a_ref',
+            'name': 'Assembly.A.176KB',
+            'path': 'GCF_001274515.1_ASM127451v1_genomic.fna',
+        }, {
+            'attr': 'assembly_b_ref',
+            'name': 'Assembly.B.654KB',
+            'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
     ],
 
     'assemblyset_list': [
@@ -81,7 +91,19 @@ TEST_DATA = {
         {
             'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
 
-        }
+        },{
+            'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff',
+            'name': 'Virus.Genome.4KB',
+            'attr': 'genome_virus_ref',
+        }, {
+            'path': 'GCF_001274515.1_ASM127451v1_genomic.gbff',
+            'name': 'Genome.A.469KB',
+            'attr': 'genome_a_ref',
+        }, {
+            'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff',
+            'name': 'Genome.B.1_6MB',
+            'attr': 'genome_b_ref',
+        }, {
     ],
     'genomeset_list': [
     ]
@@ -183,6 +205,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'genome_set_ref': '49697/11/1',
             'assembly_mini_ref': '49697/12/1',
             'binned_contigs_mini_ref': '49697/13/1',
+            'assembly_virus_ref': '49697/14/1',
+            'assembly_a_ref': '49697/15/1',,
+            'assembly_b_ref': '49697/16/1',
+            'genome_virus_ref': '49697/18/1',
+            'genome_a_ref': '49697/20/1',
+            'genome_b_ref': '49697/22/1',
         }
 
         for key, value in saved_refs.items():
@@ -243,42 +271,23 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         '''
         saved_assembly_set = self.setAPI.save_assembly_set_v1({
             'workspace_name': self.refdata_ws_info[1],
-            'output_object_name': 'TEST_ASSEMBLY_SET',
+            'output_object_name': assemblyset['name'],
             'data': {
                 'description': 'test assembly set',
                 'items': assemblyset['items'],
             },
         })
+        setattr(self, assemblyset['attr'], saved_assembly_set['set_ref'])
         self.assembly_set_ref = saved_assembly_set['set_ref']
         self.logger.info({
-            'assembly_set_ref': self.assembly_set_ref,
+            assemblyset['attr']: getattr(self, assemblyset['attr'],
             'Saved AssemblySet': saved_assembly_set,
         })
 
     def prep_assemblies(self):
         ''' prepare the assemblies and assembly set '''
 
-        assembly_list = [
-            {
-                # example assembly
-                'path': 'assembly.fasta',
-                'name': 'Test.Assembly',
-                'attr': 'assembly_OK_ref',
-            },
-            {
-                # contig that breaks checkm v1.0.7 reduced_tree (works on v1.0.8)
-                'path': 'offending_contig_67815-67907.fa',
-                'name': 'Dodgy_Contig.Assembly',
-                'attr': 'assembly_dodgy_ref',
-            },
-            {
-                'path': 'mini_assembly.fasta',
-                'name': 'MiniAssembly',
-                'attr': 'assembly_mini_ref',
-            },
-        ]
-
-        for assembly in assembly_list:
+        for assembly in TEST_DATA['assembly_list']:
             self._prep_assembly(assembly)
 
         assemblyset_list = [
@@ -559,46 +568,20 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         new_assemblies = [
         {
-        #     'attr': 'assembly_empty_ref',
-        #     'name': 'Assembly.Empty',
-        #     'path': 'empty_assembly.fasta',
-        # }, {
-            'attr': 'assembly_virus_ref',
-            'name': 'Virus.Assembly.1KB',
-            'path': 'GCF_002817975.1_ASM281797v1_genomic.fna',
-        }, {
-            'attr': 'assembly_a_ref',
-            'name': 'Assembly.A.176KB',
-            'path': 'GCF_001274515.1_ASM127451v1_genomic.fna',
-        }, {
-            'attr': 'assembly_b_ref',
-            'name': 'Assembly.B.654KB',
-            'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
+            'attr': 'assembly_empty_ref',
+            'name': 'Assembly.Empty',
+            'path': 'empty_assembly.fasta',
         }]
-
         for assembly in new_assemblies:
             self._prep_assembly(assembly)
 
-        new_genomes = [{
-            'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff',
-            'name': 'Virus.Genome.4KB',
-            'attr': 'genome_virus_ref',
-        }, {
-            'path': 'GCF_001274515.1_ASM127451v1_genomic.gbff',
-            'name': 'Genome.A.469KB',
-            'attr': 'genome_a_ref',
-        }, {
-            'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff',
-            'name': 'Genome.B.1_6MB',
-            'attr': 'genome_b_ref',
-        }, {
+       new_genomes = [{
             'path': 'empty_genomic.gbff',
             'name': 'Empty_Genome',
             'attr': 'genome_empty_ref',
         }]
         for genome in new_genomes:
             self._prep_genome(genome)
-
         cmu = CheckMUtil(self.cfg, self.ctx)
         # run config not yet initialised
         self.assertFalse(hasattr(cmu, '_run_config'))
@@ -612,6 +595,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'datastagingutils': DataStagingUtils,
             'outputbuilder': OutputBuilder,
             'workspacehelper': WorkspaceHelper,
+            'binnedcontigfilter': BinnedContigFilter,
         }
         for attr, type in obj_name_to_type.items():
             self.assertTrue(hasattr(cmu, attr))

@@ -57,9 +57,9 @@ FEATURES             Location/Qualifiers
      source          1..1
                      /organism="Wolbachia sp. wRi"
                      /mol_type="genomic DNA"
-                     /strain="wRi"
+                     /strain="minimum"
                      /host="Drosophila simulans Riverside"
                      /db_xref="taxon:66084"
 ORIGIN
-        1
+        1 a
 //
