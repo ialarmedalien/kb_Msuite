@@ -576,6 +576,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.prep_ref_data()
 
+        new_genomes = [
+            {
+                'path': 'empty_genomic.gbff',
+                'name': 'Empty_Genome',
+                'attr': 'genome_empty_ref',
+            }
+        ]
+        for genome in new_genomes:
+            self._prep_genome(genome)
+
         new_assemblies = [
             {
                 'attr': 'assembly_empty_ref',
@@ -585,16 +595,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         ]
         for assembly in new_assemblies:
             self._prep_assembly(assembly)
-
-       new_genomes = [
-            {
-                'path': 'empty_genomic.gbff',
-                'name': 'Empty_Genome',
-                'attr': 'genome_empty_ref',
-            }
-        ]
-        for genome in new_genomes:
-            self._prep_genome(genome)
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         # run config not yet initialised
