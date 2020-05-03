@@ -576,15 +576,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.prep_ref_data()
 
-        new_genomes = [
-            {
-                'path': 'empty_genomic.gbff',
-                'name': 'Empty_Genome',
-                'attr': 'genome_empty_ref',
-            }
-        ]
-        for genome in new_genomes:
-            self._prep_genome(genome)
+        # new_genomes = [
+        #     {
+        #         'path': 'empty_genomic.gbff',
+        #         'name': 'Empty_Genome',
+        #         'attr': 'genome_empty_ref',
+        #     }
+        # ]
+        # for genome in new_genomes:
+        #     self._prep_genome(genome)
 
         new_assemblies = [
             {
