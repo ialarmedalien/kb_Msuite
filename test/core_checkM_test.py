@@ -227,7 +227,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         })
         setattr(self, assembly['attr'], saved_assembly)
         self.logger.info({
-            self.assembly['attr']: saved_assembly,
+            getattr(self, assembly['attr']): saved_assembly,
             assembly['attr']: saved_assembly,
         })
 
