@@ -218,7 +218,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         assembly_file_path = os.path.join(self.test_data_dir, "assemblies", assembly['path'])
         if not os.path.exists(assembly_file_path):
-            shutil.copy(os.path.join("data", assembly['path']), assembly_file_path)
+            shutil.copy(os.path.join("data", "assemblies", assembly['path']), assembly_file_path)
 
         saved_assembly = self.au.save_assembly_from_fasta({
             'file': {'path': assembly_file_path},
@@ -227,6 +227,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         })
         setattr(self, assembly['attr'], saved_assembly)
         self.logger.info({
+            self.assembly['attr']: saved_assembly,
             assembly['attr']: saved_assembly,
         })
 
@@ -355,7 +356,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'generate_ids_if_needed': 1,
         })
         setattr(self, genome['attr'], genome_data['genome_ref'])
-        self.logger.info({'Saved Genome': genome_data})
+        self.logger.info({
+            'Saved Genome': genome_data,
+            getattr(self, genome['attr']): genome_data['genome_ref'],
+        })
 
     def _prep_genomeset(self, genomeset):
         [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
@@ -593,7 +597,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'attr': 'genome_b_ref',
         }]
         for genome in new_genomes:
-            self._prep_genomes(genome)
+            self._prep_genome(genome)
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         # run config not yet initialised
