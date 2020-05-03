@@ -557,6 +557,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.prep_ref_data()
 
+        shutil.copytree(os.path.join("data", "assemblies"), os.path.join(self.test_data_dir, "assemblies"))
+        shutil.copytree(os.path.join("data", "genomes"), os.path.join(self.test_data_dir, "genomes"))
+
         new_assemblies = [
         {
             'attr': 'assembly_empty_ref',
