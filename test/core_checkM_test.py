@@ -160,7 +160,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         # refdata WS
         cls.refdata_wsName = 'test_kb_Msuite_refdata_1588183380977'
-        cls.refdata_ws_info = [49697, 'test_kb_Msuite_refdata_1588183380977', 'ialarmedalien', '2020-04-29T18:03:01+0000', 0, 'a', 'n', 'unlocked', {}]
+        cls.refdata_ws_info = [
+            49697,
+            'test_kb_Msuite_refdata_1588183380977',
+            'ialarmedalien',
+            '2020-04-29T18:03:01+0000',
+            0, 'a', 'n', 'unlocked', {}
+        ]
 
         cls.au = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
         cls.gfu = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
@@ -281,7 +287,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         setattr(self, assemblyset['attr'], saved_assembly_set['set_ref'])
         self.assembly_set_ref = saved_assembly_set['set_ref']
         self.logger.info({
-            assemblyset['attr']: getattr(self, assemblyset['attr'],
+            assemblyset['attr']: getattr(self, assemblyset['attr']),
             'Saved AssemblySet': saved_assembly_set,
         })
 
@@ -310,7 +316,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     def _prep_binned_contig(self, bc):
 
         binned_contigs_path = os.path.join(self.test_data_dir, bc['path'])
-        if not os.path.exists(binned_contigs_path) or not os.path.exists(os.path.join(binned_contigs_path, 'out_header.summary')):
+        if not os.path.exists(binned_contigs_path) or not os.path.exists(
+            os.path.join(binned_contigs_path, 'out_header.summary')
+        ):
             shutil.rmtree(binned_contigs_path, ignore_errors=True)
             shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
 
@@ -391,7 +399,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                     ]
                 }]
             })[0]
-        reference = str(obj_info[WSID_I]) + '/' + str(obj_info[OBJID_I]) + '/' + str(obj_info[VERSION_I])
+        reference = "/".join([
+                str(obj_info[WSID_I]), str(obj_info[OBJID_I]), str(obj_info[VERSION_I])])
         setattr(self, genomeset['attr'], reference)
 
         self.logger.info({'Genome set ref': self.genome_set_ref})
@@ -567,8 +576,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.prep_ref_data()
 
-        new_assemblies = [
-        {
+        new_assemblies = [{
             'attr': 'assembly_empty_ref',
             'name': 'Assembly.Empty',
             'path': 'empty_assembly.fasta',
