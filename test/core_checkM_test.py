@@ -79,7 +79,7 @@ TEST_DATA = {
             'name': 'TEST_ASSEMBLY_SET',
             'items': [
                 {'ref': 'something', 'label': 'assembly_1'},
-                {'ref': 'something', 'label': 'assembly_2'}
+                {'ref': 'something', 'label': 'assembly_2'},
             ],
             'attr': 'assembly_set_ref',
         }
@@ -92,7 +92,7 @@ TEST_DATA = {
         {
             'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
 
-        },{
+        }, {
             'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff',
             'name': 'Virus.Genome.4KB',
             'attr': 'genome_virus_ref',
@@ -207,7 +207,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'assembly_mini_ref': '49697/12/1',
             'binned_contigs_mini_ref': '49697/13/1',
             'assembly_virus_ref': '49697/14/1',
-            'assembly_a_ref': '49697/15/1',,
+            'assembly_a_ref': '49697/15/1',
             'assembly_b_ref': '49697/16/1',
             'genome_virus_ref': '49697/18/1',
             'genome_a_ref': '49697/20/1',
