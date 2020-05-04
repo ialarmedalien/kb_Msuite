@@ -17,7 +17,7 @@ def clean_up_bin_ID(bin_id, extension=None):
     return re.sub(r'^[^.]+.', '', bin_id)
 
 
-sub _check_extension(extension):
+def _check_extension(extension):
     # ensure that the extension does not start with '.'
     if extension[0] == '.':
         return extension[1:]
