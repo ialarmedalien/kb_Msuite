@@ -97,7 +97,7 @@ class DataStagingUtils(Base, LogMixin):
         # make sure fasta file isn't empty
         min_fasta_len = 1
         if not fasta_seq_len_at_least(filename, min_fasta_len):
-            raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
+            raise ValueError('Assembly or ContigSet empty: ' + str(filename))
 
         self.logger.debug('Saved assembly or contigset to ' + filename)
 

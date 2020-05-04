@@ -309,13 +309,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         assembly_list = TEST_DATA['assembly_list']
 
-        for assembly in assembly_list:
-            self._prep_assembly(assembly)
+        # for assembly in assembly_list:
+        #     self._prep_assembly(assembly)
 
         assemblyset_list = [
             {
                 'name': 'Small_Assembly_Set',
-                'attr': 'assembly_set_ref',
+                'attr': 'assembly_set_small_ref',
                 'items': [{
                     'ref': getattr(self, a['attr']),
                     'label': a['name'],
@@ -439,7 +439,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             }
 
         self._prep_genomeset({
-            'name': 'test_genomeset_1',
+            'name': 'Small_GenomeSet',
             'attr': 'genome_set_ref',
             'data': genome_set,
         })
@@ -575,7 +575,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         self.prep_ref_data()
-
+        self.prep_assemblies()
         # new_genomes = [
         #     {
         #         'path': 'empty_genomic.gbff',
@@ -632,12 +632,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected = [
             ['bin.056.fasta', 'bin.056', 'bin.056.fasta'],
             ['assembly.fasta', 'assembly', 'assembly.fasta'],
-            ['../../this.is.fake', '../../this.is.fake', '../../this.is.fake'],
+            ['../../this.is.fake', '../../this.is.fake', '../../this.is'],
         ]
 
         for bid in expected:
             clean_ID = clean_up_bin_ID(bid[0], 'fasta')
             self.assertEqual(clean_ID, bid[1])
+            clean_ID = clean_up_bin_ID(bid[0], '.fasta')
+            self.assertEqual(clean_ID, bid[1])
+            clean_ID = clean_up_bin_ID(bid[0], '.fake')
+            self.assertEqual(clean_ID, bid[2])
 
     def test_00_workspace_helper(self):
 
@@ -919,7 +923,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING 01_data_staging")
         self.logger.info("=================================================================\n")
 
-        self.require_data('report_ref')
+        self.require_data('report_ref', 'binned_contigs_empty_ref')
 
         cmu = self.prep_checkMUtil()
 
@@ -928,16 +932,25 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input(self.report_ref)
 
-        self.clean_up_cmu(cmu)
+        # empty input files/objects:
+        # empty assembly
+        with self.subTest('empty assembly'):
+            err_msg = r'Assembly or ContigSet empty: .*?empty_assembly'
+            with self.assertRaisesRegexp(ValueError, err_msg)
+                cmu.datastagingutils.stage_input(self.assembly_empty_ref)
 
-    def test_01_data_staging_binned_contigs_empty(self):
+        with self.subTest('empty assembly in assemblyset'):
+        # assembly set with empty assembly therein
+            err_msg = r'Assembly or ContigSet empty: .*?empty_assembly'
+            with self.assertRaisesRegexp(ValueError, err_msg)
+                cmu.datastagingutils.stage_input(self.assembly_set_empty_ref)
 
-        self.require_data('binned_contigs_empty_ref')
-        cmu = self.prep_checkMUtil()
+        with self.subTest('One empty assembly in BinnedContigs'):
+            err_str = 'Binned Assembly is empty for fasta_path: '
+            with self.assertRaisesRegex(ValueError, err_str):
+                cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
 
-        err_str = 'Binned Assembly is empty for fasta_path: '
-        with self.assertRaisesRegex(ValueError, err_str):
-            cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
+        # cannot create an empty genome object
 
         self.clean_up_cmu(cmu)
 
@@ -1116,7 +1129,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             }
         )
         self.check_data_staging_results(run_config, [
-            'GCF_000022285.1_ASM2228v1_genomic.gbff', 'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
+            'GCF_000022285.1_ASM2228v1_genomic.gbff',
+            'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
         ])
 
         self.clean_up_cmu(cmu)
@@ -1200,8 +1214,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             )
             Path(bid_path).touch(exist_ok=True)
 
-        err_str = "The following Bin IDs are missing from the checkM output: "
-        + ", ".join(missing_ids)
+        err_str = "The following Bin IDs are missing from the checkM output: " + \
+            ", ".join(missing_ids)
         with self.assertRaisesRegex(ValueError, err_str):
             cmu.binnedcontigfilter.filter_binned_contigs({
                 'input_ref': self.binned_contigs_ref,
@@ -1302,8 +1316,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected = {
             'filtered_obj_name': 'Epsilon',
             'retained_bin_IDs': {'out_header.002': True},
-            'removed_bin_IDs': {'out_header.001': True, 'out_header.003': True}
+            'removed_bin_IDs':  {'out_header.001': True, 'out_header.003': True}
         }
+        self.check_filtered_bins(cmu, run_config, results, expected)
         self.clean_up_cmu(cmu)
 
     def test_02_filter_binned_contigs_some_others_HQ(self):
@@ -1325,7 +1340,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected = {
             'filtered_obj_name': 'Gamma',
             'retained_bin_IDs': {'out_header.001': True, 'out_header.002': True},
-            'removed_bin_IDs': {'out_header.003': True},
+            'removed_bin_IDs':  {'out_header.003': True},
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
         self.clean_up_cmu(cmu)
@@ -1384,8 +1399,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
                 'html_links': [
                     'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                    'bin002.html', 'bin005.html', 'bin006.html',
-                    'bin009.html', 'bin014.html', 'bin033.html',
+                    'out_header.002.html', 'out_header.005.html', 'out_header.006.html',
+                    'out_header.009.html', 'out_header.014.html', 'out_header.033.html',
                 ],
             }
             self.check_report(result, expected_results)
@@ -1426,8 +1441,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'file_links': ['CheckM_summary_table.tsv', 'full_output'],
                 'html_links': [
                     'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                    'bin002.html', 'bin005.html', 'bin006.html',
-                    'bin009.html', 'bin014.html', 'bin033.html',
+                    'out_header.002.html', 'out_header.005.html', 'out_header.006.html',
+                    'out_header.009.html', 'out_header.014.html', 'out_header.033.html',
                 ],
                 'objects_created': [{
                     'ref': filtered_obj_info['filtered_obj_ref'],
