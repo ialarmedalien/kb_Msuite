@@ -790,7 +790,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def test_fileutils_fasta_seq_len_at_least(self):
 
-        assembly_dir = os.path.join(self.test_data_dir, 'assemblies')
+        assembly_dir = os.path.join('data', 'assemblies')
         empty_assembly_path = os.path.join(assembly_dir, 'empty_assembly.fasta')
         one_nt_assembly_path = os.path.join(assembly_dir, '1_nt_assembly.fasta')
         big_assembly_path = os.path.join(assembly_dir, 'assembly.fasta')
@@ -844,7 +844,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # no files with the new extension (yet)
         self.assertEqual({}, get_fasta_files(test_dir, '007'))
 
-        set_fasta_file_extensions(test_dir, '.007')
+        set_fasta_file_extensions(test_dir, '007')
         # expect 1 - 9 to have the extension .007
         new_dir_inventory = {}
         n = 0

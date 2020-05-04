@@ -17,8 +17,18 @@ def clean_up_bin_ID(bin_id, extension=None):
     return re.sub(r'^[^.]+.', '', bin_id)
 
 
+sub _check_extension(extension):
+    # ensure that the extension does not start with '.'
+    if extension[0] == '.':
+        return extension[1:]
+
+    return extension
+
+
 # requires clean_bin_id
-def get_fasta_files(search_dir, fasta_ext):
+def get_fasta_files(search_dir, extension):
+
+    fasta_ext = _check_extension(extension)
     fasta_files = dict()
     for (dirpath, dirnames, filenames) in os.walk(search_dir):
         for filename in filenames:
@@ -49,7 +59,7 @@ def fasta_seq_len_at_least(fasta_path, min_fasta_len=1):
     return False
 
 
-def set_fasta_file_extensions(folder, new_extension):
+def set_fasta_file_extensions(folder, extension):
     '''
     Renames all detected fasta files in folder to the specified extension.
     fasta files are detected based on its existing extension, which must be one of:
@@ -58,6 +68,7 @@ def set_fasta_file_extensions(folder, new_extension):
     Note that this is probably not well behaved if the operation will rename to a
     file that already exists
     '''
+    new_extension = _check_extension(extension)
     extensions = ['.fasta', '.fas', '.fa', '.fsa', '.seq', '.fna', '.ffn', '.faa', '.frn']
 
     for file in os.listdir(folder):
@@ -71,11 +82,12 @@ def set_fasta_file_extensions(folder, new_extension):
             )
 
 
-def cat_fasta_files(folder, extension, output_fasta_file, cwd):
+def cat_fasta_files(folder, fasta_ext, output_fasta_file, cwd):
     '''
     Given a folder of fasta files with the specified extension, cat them together
     using 'cat' into the target new_fasta_file
     '''
+    extension = _check_extension(fasta_ext)
     files = glob.glob(os.path.join(folder, '*.' + extension))
     cat_cmd = ['cat'] + files
     fasta_fh = open(output_fasta_file, 'w')
