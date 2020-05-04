@@ -33,7 +33,6 @@ from kb_Msuite.Utils.Utils import LogMixin
 from kb_Msuite.Utils.FileUtils import clean_up_bin_ID, fasta_seq_len_at_least, get_fasta_files, set_fasta_file_extensions, read_bin_stats_file
 
 
-
 def print_method_name(method):
     def wrapper(*args, **kwargs):
         method_name = method.__name__
@@ -936,13 +935,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # empty assembly
         with self.subTest('empty assembly'):
             err_msg = r'Assembly or ContigSet empty: .*?empty_assembly'
-            with self.assertRaisesRegexp(ValueError, err_msg)
+            with self.assertRaisesRegexp(ValueError, err_msg):
                 cmu.datastagingutils.stage_input(self.assembly_empty_ref)
 
         with self.subTest('empty assembly in assemblyset'):
-        # assembly set with empty assembly therein
+            # assembly set with empty assembly therein
             err_msg = r'Assembly or ContigSet empty: .*?empty_assembly'
-            with self.assertRaisesRegexp(ValueError, err_msg)
+            with self.assertRaisesRegexp(ValueError, err_msg):
                 cmu.datastagingutils.stage_input(self.assembly_set_empty_ref)
 
         with self.subTest('One empty assembly in BinnedContigs'):
