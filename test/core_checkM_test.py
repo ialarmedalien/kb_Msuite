@@ -77,7 +77,7 @@ TEST_DATA = {
             'path': 'mini_assembly.fasta',
             'name': 'MiniAssembly',
             'attr': 'assembly_mini_ref',
-        }, {
+        },
     ],
     'genome_list': [
         {
@@ -113,7 +113,7 @@ TEST_DATA = {
             'path': 'binned_contigs_mini',
             'name': 'Mini_Binned_Contigs',
         },
-    ]
+    ],
 }
 
 
