@@ -1,7 +1,7 @@
 import os
 
 from kb_Msuite.Utils.Utils import Base, LogMixin
-from kb_Msuite.Utils.FileUtils import set_fasta_file_extensions, fasta_seq_len_at_least
+from kb_Msuite.Utils.FileUtils import set_fasta_file_extensions, fasta_seq_len_at_least, cat_fasta_files
 
 
 class DataStagingUtils(Base, LogMixin):
@@ -73,7 +73,7 @@ class DataStagingUtils(Base, LogMixin):
         type_to_method[obj_type](input_ref, input_dir, fasta_ext, obj_name, obj_type)
 
         # create summary fasta file with all bins
-        self.cat_fasta_files(input_dir, fasta_ext, all_seq_fasta, self.scratch)
+        cat_fasta_files(input_dir, fasta_ext, all_seq_fasta, self.scratch)
 
         return {
             'obj_name': obj_name,
