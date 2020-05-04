@@ -60,6 +60,7 @@ TEST_DATA = {
             'name': 'Assembly.B.654KB',
             'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
         }, {
+            # THIS IS NOT EMPTY! IT HAS ONE NT IN IT
             'attr': 'assembly_empty_ref',
             'name': 'Assembly.Empty',
             'path': 'empty_assembly.fasta',
@@ -216,6 +217,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'assembly_mini_ref': '49697/12/1',
             # assembly set
             'assembly_set_ref': '49697/3/1',
+            'assembly_set_small_ref': '49697/24/1',
+            'assembly_set_with_empty_ref': '49697/25/1',
             # binned contigs
             'binned_contigs_ref': '49697/4/1',
             'binned_contigs_empty_ref': '49697/5/1',
@@ -308,8 +311,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         assembly_list = TEST_DATA['assembly_list']
 
-        # for assembly in assembly_list:
-        #     self._prep_assembly(assembly)
+        for assembly in assembly_list:
+            self._prep_assembly(assembly)
 
         assemblyset_list = [
             {
@@ -423,9 +426,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         genome_list = TEST_DATA['genome_list']
 
-        # upload a few genomes
-        for genome in genome_list:
-            self._prep_genome(genome)
+        # # upload a few genomes
+        # for genome in genome_list:
+        #     self._prep_genome(genome)
 
         # create a genomeSet
         genome_set = {
@@ -439,7 +442,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self._prep_genomeset({
             'name': 'Small_GenomeSet',
-            'attr': 'genome_set_ref',
+            'attr': 'genome_set_small_ref',
             'data': genome_set,
         })
 
@@ -574,7 +577,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         self.prep_ref_data()
-        self.prep_assemblies()
+        self.prep_genomes()
         # new_genomes = [
         #     {
         #         'path': 'empty_genomic.gbff',
@@ -932,24 +935,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 cmu.datastagingutils.stage_input(self.report_ref)
 
         # empty input files/objects:
-        # empty assembly
-        with self.subTest('empty assembly'):
-            err_msg = r'Assembly or ContigSet empty: .*?empty_assembly'
-            with self.assertRaisesRegexp(ValueError, err_msg):
-                cmu.datastagingutils.stage_input(self.assembly_empty_ref)
-
-        with self.subTest('empty assembly in assemblyset'):
-            # assembly set with empty assembly therein
-            err_msg = r'Assembly or ContigSet empty: .*?empty_assembly'
-            with self.assertRaisesRegexp(ValueError, err_msg):
-                cmu.datastagingutils.stage_input(self.assembly_set_empty_ref)
-
+        # cannot create an empty assembly or an empty genome object
+        # can create a binnedcontigs obj with an empty assembly
         with self.subTest('One empty assembly in BinnedContigs'):
             err_str = 'Binned Assembly is empty for fasta_path: '
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
-
-        # cannot create an empty genome object
 
         self.clean_up_cmu(cmu)
 
@@ -1104,7 +1095,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'obj_type': 'KBaseGenomes.Genome',
             }
         )
-        self.check_data_staging_results(cmu.run_config(), [test_genome['path']])
+        self.check_data_staging_results(cmu.run_config(), [test_genome['name']])
 
         self.clean_up_cmu(cmu)
 
@@ -1114,23 +1105,22 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("RUNNING 01_data_staging_genome_set")
         self.logger.info("=================================================================\n")
 
-        self.require_data('genome_set_ref')
+        self.require_data('genome_set_small_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu._set_run_config()
+
+        genome_list = TEST_DATA['genome_list'][0:2]
 
         staged_input = cmu.datastagingutils.stage_input(self.genome_set_ref)
         self.assertEqual(
             staged_input,
             {
-                'obj_name': 'test_genomeset_1',
+                'obj_name': 'Small_GenomeSet',
                 'obj_type': 'KBaseSearch.GenomeSet',
             }
         )
-        self.check_data_staging_results(run_config, [
-            'GCF_000022285.1_ASM2228v1_genomic.gbff',
-            'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
-        ])
+        self.check_data_staging_results(run_config, [g['name'] for g in genome_list])
 
         self.clean_up_cmu(cmu)
 
@@ -1213,7 +1203,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             )
             Path(bid_path).touch(exist_ok=True)
 
-        err_str = "The following Bin IDs are missing from the checkM output: " + \
+        err_str = "The following bin IDs are missing from the checkM output: " + \
             ", ".join(missing_ids)
         with self.assertRaisesRegex(ValueError, err_str):
             cmu.binnedcontigfilter.filter_binned_contigs({
@@ -1291,7 +1281,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         for id in expected['retained_bin_IDs'].keys():
             self.assertTrue(os.path.isfile(os.path.join(
                 run_config['filtered_bins_dir'],
-                run_config['bin_basename'] + '.' + id + '.' + run_config['fasta_ext']
+                'out_header' + '.' + id + '.' + run_config['fasta_ext']
             )))
 
         #
