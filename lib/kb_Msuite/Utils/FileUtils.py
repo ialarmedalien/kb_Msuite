@@ -65,6 +65,9 @@ def fasta_seq_len_at_least(fasta_path, min_fasta_len=1):
     '''
     counts the number of non-header, non-whitespace characters in a FASTA file
     '''
+    if min_fasta_len < 1:
+        raise ValueError('Minimum length must be 1 or greater')
+
     seq_len = 0
     with open(fasta_path, 'r') as fasta_handle:
         for line in fasta_handle:

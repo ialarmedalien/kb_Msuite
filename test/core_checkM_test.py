@@ -49,19 +49,6 @@ TEST_DATA = {
 
     'assembly_list': [
         {
-            'path': 'assembly.fasta',
-            'name': 'Test.Assembly',
-            'attr': 'assembly_OK_ref',
-        }, {
-            # contig that breaks checkm v1.0.7 reduced_tree (works on v1.0.8)
-            'path': 'offending_contig_67815-67907.fa',
-            'name': 'Dodgy_Contig.Assembly',
-            'attr': 'assembly_dodgy_ref',
-        }, {
-            'path': 'mini_assembly.fasta',
-            'name': 'MiniAssembly',
-            'attr': 'assembly_mini_ref',
-        }, {
             'attr': 'assembly_virus_ref',
             'name': 'Virus.Assembly.1KB',
             'path': 'GCF_002817975.1_ASM281797v1_genomic.fna',
@@ -77,7 +64,20 @@ TEST_DATA = {
             'attr': 'assembly_empty_ref',
             'name': 'Assembly.Empty',
             'path': 'empty_assembly.fasta',
-        },
+        }, {
+            'path': 'assembly.fasta',
+            'name': 'Test.Assembly',
+            'attr': 'assembly_OK_ref',
+        }, {
+            # contig that breaks checkm v1.0.7 reduced_tree (works on v1.0.8)
+            'path': 'offending_contig_67815-67907.fa',
+            'name': 'Dodgy_Contig.Assembly',
+            'attr': 'assembly_dodgy_ref',
+        }, {
+            'path': 'mini_assembly.fasta',
+            'name': 'MiniAssembly',
+            'attr': 'assembly_mini_ref',
+        }, {
     ],
     'genome_list': [
         {
@@ -307,19 +307,27 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     def prep_assemblies(self):
         ''' prepare the assemblies and assembly set '''
 
-        for assembly in TEST_DATA['assembly_list']:
-            self._prep_assembly(assembly)
+        assembly_list = TEST_DATA['assembly_list']
 
-        # TODO: dynamic prep of assemblyset
+        for assembly in assembly_list:
+            self._prep_assembly(assembly)
 
         assemblyset_list = [
             {
-                'name': 'TEST_ASSEMBLY_SET',
-                'items': [
-                    {'ref': self.assembly_OK_ref, 'label': 'assembly_1'},
-                    {'ref': self.assembly_dodgy_ref, 'label': 'assembly_2'}
-                ],
+                'name': 'Small_Assembly_Set',
                 'attr': 'assembly_set_ref',
+                'items': [{
+                    'ref': getattr(self, a['attr']),
+                    'label': a['name'],
+                } for a in assembly_list[0:2]],
+            },
+            {
+                'name': 'Assembly_Set_with_Empty',
+                'attr': 'assembly_set_with_empty_ref',
+                'items': [{
+                    'ref': getattr(self, a['attr']),
+                    'label': a['name'],
+                } for a in assembly_list[2:4]],
             }
         ]
 
@@ -421,22 +429,19 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             self._prep_genome(genome)
 
         # create a genomeSet
-        # TODO: dynamic genomeset creation
-        genome_scinames = dict()
-        for genome_i, genome_ref in enumerate(self.genome_refs):
-            genome_scinames[genome_ref] = 'Genus species str. ' + str(genome_i)
-
-        testGS = {
+        genome_set = {
             'description': 'genomeSet for testing',
-            'elements': dict()
+            'elements': {},
         }
-        for genome_ref in self.genome_refs:
-            testGS['elements'][genome_scinames[genome_ref]] = {'ref': genome_ref}
+        for genome in genome_list[0:2]:
+            genome_set['elements'][genome['name']] = {
+                'ref': getattr(self, genome['attr'])
+            }
 
         self._prep_genomeset({
             'name': 'test_genomeset_1',
             'attr': 'genome_set_ref',
-            'data': testGS,
+            'data': genome_set,
         })
 
         return True
@@ -815,9 +820,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertTrue(
             fasta_seq_len_at_least(big_assembly_path, 2)
         )
-        self.assertTrue(
+
+        with self.assertRaises(ValueError, 'Minimum length must be 1 or greater'):
             fasta_seq_len_at_least(empty_assembly_path, 0)
-        )
 
     def test_fileutils_set_fasta_file_extensions(self):
 
@@ -884,7 +889,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # non-existent file: return empty dict
         self.assertEqual({}, read_bin_stats_file('/path/to/pretend/file'))
 
-
     def notest_fileutils_cat_fasta_files(self):
         #, folder, extension, output_fasta_file):
         '''
@@ -928,21 +932,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    def test_01_data_staging_assembly(self):
+    def test_01_data_staging_binned_contigs_empty(self):
 
-        self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_data_staging_assembly")
-        self.logger.info("=================================================================\n")
-
-        self.require_data('assembly_mini_ref')
+        self.require_data('binned_contigs_empty_ref')
         cmu = self.prep_checkMUtil()
 
-        staged_input = cmu.datastagingutils.stage_input(self.assembly_mini_ref)
-        self.assertEqual(
-            staged_input,
-            {'obj_name': 'MiniAssembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
-        )
-        self.check_data_staging_results(cmu.run_config(), ['MiniAssembly'])
+        err_str = 'Binned Assembly is empty for fasta_path: '
+        with self.assertRaisesRegex(ValueError, err_str):
+            cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
 
         self.clean_up_cmu(cmu)
 
@@ -981,14 +978,21 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" MISSING BOTH contigset_ref AND assembly_ref. Cannot process. Exiting."
         # raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
 
-    def test_01_data_staging_binned_contigs_empty(self):
+    def test_01_data_staging_assembly(self):
 
-        self.require_data('binned_contigs_empty_ref')
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_data_staging_assembly")
+        self.logger.info("=================================================================\n")
+
+        self.require_data('assembly_mini_ref')
         cmu = self.prep_checkMUtil()
 
-        err_str = 'Binned Assembly is empty for fasta_path: '
-        with self.assertRaisesRegex(ValueError, err_str):
-            cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
+        staged_input = cmu.datastagingutils.stage_input(self.assembly_mini_ref)
+        self.assertEqual(
+            staged_input,
+            {'obj_name': 'MiniAssembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
+        )
+        self.check_data_staging_results(cmu.run_config(), ['MiniAssembly'])
 
         self.clean_up_cmu(cmu)
 
@@ -1070,10 +1074,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         test_genome = TEST_DATA['genome_list'][0]
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        cmu.fasta_extension = 'strange_fasta_extension'
-        run_config = cmu._set_run_config()
-
+        cmu = self.prep_checkMUtil()
         staged_input = cmu.datastagingutils.stage_input(getattr(self, test_genome['attr']))
         self.assertEqual(
             staged_input,
@@ -1111,7 +1112,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_filter_binned_contigs(self):
+    def test_02_filter_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs")
@@ -1165,7 +1166,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         return cmu
 
-    def notest_02_filter_binned_contigs_checkM_missing_IDs(self):
+    def test_02_filter_binned_contigs_checkM_missing_IDs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_checkM_missing_IDs")
@@ -1191,7 +1192,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def notest_02_filter_binned_contigs_no_HQ(self):
+    def test_02_filter_binned_contigs_no_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_no_HQ")
@@ -1213,7 +1214,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def notest_02_filter_binned_contigs_all_HQ(self):
+    def test_02_filter_binned_contigs_all_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_all_HQ")
@@ -1264,7 +1265,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         #
 
-    def notest_02_filter_binned_contigs_some_HQ(self):
+    def test_02_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_some_HQ")
@@ -1287,7 +1288,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
 
-    def notest_02_filter_binned_contigs_some_others_HQ(self):
+    def test_02_filter_binned_contigs_some_others_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_some_others_HQ")
@@ -1327,6 +1328,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #             self.write_tsv_row(tsv_writer, bid, bin_stats[bid], results_filtered)
 #
 #         self.assertIsInstance
+
+    # def test_05_outputbuilder_build_html_output_for_lineage_wf(self):
+        # , bin_stats, params, removed_bins=None
+
 
     def notest_05_outputbuilder(self):
 
@@ -1414,7 +1419,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         shutil.rmtree(run_config['base_dir'])
 
-    def notest_05_outputbuilder_no_checkM_output(self):
+    def test_05_outputbuilder_no_checkM_output(self):
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
@@ -1433,6 +1438,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         }
         self.check_report(report, expected_results)
         shutil.rmtree(run_config['base_dir'])
+
 
     # Test 1: single assembly
     #

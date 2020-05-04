@@ -132,6 +132,8 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         html_index_file = os.path.join(html_dir, 'checkm_results.html')
 
+        results_filtered = 'results_filtered' in run_config
+
         html_files = [
             {
                 # checkm table:
@@ -150,8 +152,6 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                 'path': html_plots_dir,
             }
         ]
-
-        results_filtered = 'results_filtered' in run_config
 
         # init the TSV output file
         with open(run_config['tab_text_file'], 'w', newline='') as tab_text_fh:
@@ -197,17 +197,17 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         tsv_fields = [
             {'id': 'Bin Name'},
             {'id': 'marker lineage', 'display': 'Marker Lineage'},
-            {'id': '# genomes', 'display': '# Genomes'},
-            {'id': '# markers', 'display': '# Markers'},
-            {'id': '# marker sets', 'display': '# Marker Sets'},
+            {'id': '# genomes',      'display': '# Genomes'},
+            {'id': '# markers',      'display': '# Markers'},
+            {'id': '# marker sets',  'display': '# Marker Sets'},
             {'id': '0'},
             {'id': '1'},
             {'id': '2'},
             {'id': '3'},
             {'id': '4'},
             {'id': '5+'},
-            {'id': 'Completeness', 'round': 2},
-            {'id': 'Contamination', 'round': 2},
+            {'id': 'Completeness',   'round': 2},
+            {'id': 'Contamination',  'round': 2},
             {'id': 'Has Plot File'},
         ]
 
@@ -236,20 +236,3 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                 row.append('')
 
         tsv_writer.writerow(row)
-
-    # def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
-
-    #     src = os.path.join(src_folder, filename)
-    #     dest = os.path.join(dest_folder, filename)
-    #     os.makedirs(dest_folder, exist_ok=True)
-
-    #     return self._copy_file_new_name_ignore_errors(src, dest)
-
-    # def _copy_file_new_name_ignore_errors(self, source_path, destination_path):
-    #     # self.logger.debug('copying ' + source_path + ' to ' + destination_path)
-    #     try:
-    #         shutil.copy(source_path, destination_path)
-    #     except Exception as e:
-    #         # TODO: add error message reporting
-    #         self.logger.error('copy failed')
-    #         self.logger.error(e)
