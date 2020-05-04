@@ -5,6 +5,7 @@ import shutil
 from decimal import Decimal
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
+from kb_Msuite.Utils.FileUtils import get_fasta_files, clean_up_bin_ID, copy_file_new_name_ignore_errors, read_bin_stats_file
 
 
 class BinnedContigFilter(Base, LogMixin, TSVMixin):
@@ -39,16 +40,16 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
             return None
 
         # these IDs are stripped of their suffixes
-        bin_fasta_files_by_bin_ID = self.get_bin_fasta_files(
+        fasta_files_by_bin_ID = get_fasta_files(
             run_config['input_dir'], run_config['fasta_ext']
         )
-        if not bin_fasta_files_by_bin_ID:
+        if not fasta_files_by_bin_ID:
             return None
 
         # fetch the existing binned_contig object
         binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
         bin_summary_info = self.extract_binned_contigs_data(binned_contig_obj)
-        bin_stats_raw_data = self.checkMUtil.read_bin_stats_file()
+        bin_stats_raw_data = read_bin_stats_file(run_config['bin_stats_ext_file'])
 
         # read CheckM stats to get completeness and contamination scores
         test_completeness = False
@@ -114,13 +115,13 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                     # copy filtered file to filtered dir
                     # bin_ID is in the form bin.xxx.fasta; strip off the fasta_ext suffix
                     # and replace it with the binned contig extension
-                    clean_bin_ID = self.checkMUtil.clean_bin_ID(bin_ID, run_config['fasta_ext'])
+                    clean_bin_ID = clean_up_bin_ID(bin_ID, run_config['fasta_ext'])
                     new_file_name = str(clean_bin_ID) + '.' + fasta_ext_bc
 
-                    src_path = bin_fasta_files_by_bin_ID[bin_ID]
+                    src_path = fasta_files_by_bin_ID[bin_ID]
                     dst_path = os.path.join(filtered_bins_dir, new_file_name)
 
-                    self.outputbuilder._copy_file_new_name_ignore_errors(src_path, dst_path)
+                    copy_file_new_name_ignore_errors(src_path, dst_path)
 
                     # write the row data to the summary file
                     if bin_ID in bin_summary_info:
@@ -134,7 +135,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                         # wtf?
                         self.logger.error('No bin summary data found for ' + bin_ID)
 
-        missing_ids = [bin_ID for bin_ID in bin_fasta_files_by_bin_ID.keys()
+        missing_ids = [bin_ID for bin_ID in fasta_files_by_bin_ID.keys()
                        if bin_ID not in bin_stats]
         if missing_ids:
             raise ValueError(
@@ -198,7 +199,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         # bin_item['bid'] is the full file name
         for bin_item in binned_contig_obj['bins']:
-            bin_ID = self.checkMUtil.clean_bin_ID(bin_item['bid'], fasta_ext)
+            bin_ID = clean_up_bin_ID(bin_item['bid'], fasta_ext)
 
             bin_summary_info[bin_ID] = {
                 'cov':            str(round(100.0 * float(bin_item['cov']), 1)) + '%',
@@ -227,17 +228,3 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
             'obj_name': params['output_filtered_binnedcontigs_obj_name'],
             'obj_ref':  binned_contigs_ref['binned_contig_obj_ref'],
         }
-
-    def get_bin_fasta_files(self, search_dir, fasta_ext):
-
-        bin_fasta_files = dict()
-        for (dirpath, dirnames, filenames) in os.walk(search_dir):
-            for filename in filenames:
-                if not os.path.isfile(os.path.join(search_dir, filename)):
-                    continue
-                if filename.endswith('.' + fasta_ext):
-                    bin_ID = self.checkMUtil.clean_bin_ID(filename, fasta_ext)
-                    bin_fasta_files[bin_ID] = os.path.join(search_dir, filename)
-                    # self.logger.debug("ACCEPTED: "+bin_ID+" FILE:"+filename)  # DEBUG
-
-        return bin_fasta_files

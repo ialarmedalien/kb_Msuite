@@ -30,6 +30,9 @@ from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
 from kb_Msuite.Utils.Utils import LogMixin
 
+from kb_Msuite.Utils.FileUtils import clean_up_bin_ID, fasta_seq_len_at_least, get_fasta_files, set_fasta_file_extensions, read_bin_stats_file
+
+
 
 def print_method_name(method):
     def wrapper(*args, **kwargs):
@@ -46,7 +49,6 @@ TEST_DATA = {
 
     'assembly_list': [
         {
-            # example assembly
             'path': 'assembly.fasta',
             'name': 'Test.Assembly',
             'attr': 'assembly_OK_ref',
@@ -71,28 +73,14 @@ TEST_DATA = {
             'attr': 'assembly_b_ref',
             'name': 'Assembly.B.654KB',
             'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
-        }
-    ],
-
-    'assemblyset_list': [
-        {
-            'name': 'TEST_ASSEMBLY_SET',
-            'items': [
-                {'ref': 'something', 'label': 'assembly_1'},
-                {'ref': 'something', 'label': 'assembly_2'},
-            ],
-            'attr': 'assembly_set_ref',
-        }
+        }, {
+            'attr': 'assembly_empty_ref',
+            'name': 'Assembly.Empty',
+            'path': 'empty_assembly.fasta',
+        },
     ],
     'genome_list': [
         {
-            'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
-
-        },
-        {
-            'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
-
-        }, {
             'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff',
             'name': 'Virus.Genome.4KB',
             'attr': 'genome_virus_ref',
@@ -104,9 +92,27 @@ TEST_DATA = {
             'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff',
             'name': 'Genome.B.1_6MB',
             'attr': 'genome_b_ref',
-        }
+        }, {
+            'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
+            'name': 'Genome.C.3_4MB',
+            'attr': 'genome_c_ref',
+        }, {
+            'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
+            'name': 'Genome.D.2_5MB',
+            'attr': 'genome_d_ref',
+        },
     ],
-    'genomeset_list': [
+    'binned_contigs_list': [
+        {
+            'path': 'binned_contigs',
+            'name': 'Binned_Contigs',
+        }, {
+            'path': 'binned_contigs_empty',
+            'name': 'Binned_Contigs_Empty',
+        }, {
+            'path': 'binned_contigs_mini',
+            'name': 'Mini_Binned_Contigs',
+        },
     ]
 }
 
@@ -204,20 +210,27 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         saved_refs = {
             'assembly_OK_ref': '49697/1/1',
             'assembly_dodgy_ref': '49697/2/1',
-            'assembly_set_ref': '49697/3/1',
-            'binned_contigs_ref': '49697/4/1',
-            'binned_contigs_empty_ref': '49697/5/1',
-            'report_ref': '49697/6/1',
-            'genome_refs': ['49697/8/1', '49697/10/1'],
-            'genome_set_ref': '49697/11/1',
-            'assembly_mini_ref': '49697/12/1',
-            'binned_contigs_mini_ref': '49697/13/1',
-            'assembly_virus_ref': '49697/14/1',
             'assembly_a_ref': '49697/15/1',
             'assembly_b_ref': '49697/16/1',
+            'assembly_empty_ref': '49697/23/1',
+            'assembly_virus_ref': '49697/14/1',
+            'assembly_mini_ref': '49697/12/1',
+            # assembly set
+            'assembly_set_ref': '49697/3/1',
+            # binned contigs
+            'binned_contigs_ref': '49697/4/1',
+            'binned_contigs_empty_ref': '49697/5/1',
+            'binned_contigs_mini_ref': '49697/13/1',
+            # genomes
             'genome_virus_ref': '49697/18/1',
             'genome_a_ref': '49697/20/1',
             'genome_b_ref': '49697/22/1',
+            'genome_c_ref': '49697/8/1',
+            'genome_d_ref': '49697/10/1',
+            # genome set
+            'genome_set_ref': '49697/11/1',
+            # KBaseReport
+            'report_ref': '49697/6/1',
         }
 
         for key, value in saved_refs.items():
@@ -297,6 +310,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         for assembly in TEST_DATA['assembly_list']:
             self._prep_assembly(assembly)
 
+        # TODO: dynamic prep of assemblyset
+
         assemblyset_list = [
             {
                 'name': 'TEST_ASSEMBLY_SET',
@@ -337,25 +352,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def prep_binned_contigs(self):
 
-        if not hasattr(self, 'assembly_OK_ref'):
-            self.prep_assemblies()
+        # make sure we have assemblies loaded
+        for assembly in TEST_DATA['assembly_list']:
+            if not hasattr(self, assembly['attr']):
+                self.prep_assemblies()
+                break
 
         # some binned contigs
-        binned_contigs_list = [
-            {
-                'path': 'binned_contigs',
-                'name': 'Binned_Contigs',
-            },
-            {
-                'path': 'binned_contigs_empty',
-                'name': 'Binned_Contigs_Empty',
-            },
-            {
-                'path': 'binned_contigs_mini',
-                'name': 'Mini_Binned_Contigs',
-            }
-        ]
-
+        binned_contigs_list = TEST_DATA['binned_contigs_list']
         for binned_contig in binned_contigs_list:
             self._prep_binned_contig(binned_contig)
 
@@ -400,7 +404,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 }]
             })[0]
         reference = "/".join([
-                str(obj_info[WSID_I]), str(obj_info[OBJID_I]), str(obj_info[VERSION_I])])
+            str(obj_info[WSID_I]), str(obj_info[OBJID_I]), str(obj_info[VERSION_I])
+        ])
         setattr(self, genomeset['attr'], reference)
 
         self.logger.info({'Genome set ref': self.genome_set_ref})
@@ -409,24 +414,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         ''' add a couple of genomes and create a genome set '''
 
-        # upload a few genomes
-        self.genome_refs = []
-        genomes = [{
-            'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
-            'name': 'Genome.2_5MB',
-            'attr': 'genome_d_ref',
-        }, {
-            'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
-            'name': 'Genome.3_4MB',
-            'attr': 'genome_c_ref',
-        }]
+        genome_list = TEST_DATA['genome_list']
 
-        for genome in genomes:
+        # upload a few genomes
+        for genome in genome_list:
             self._prep_genome(genome)
 
-        self.logger.info({'genome_refs': self.genome_refs})
-
         # create a genomeSet
+        # TODO: dynamic genomeset creation
         genome_scinames = dict()
         for genome_i, genome_ref in enumerate(self.genome_refs):
             genome_scinames[genome_ref] = 'Genus species str. ' + str(genome_i)
@@ -586,15 +581,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # for genome in new_genomes:
         #     self._prep_genome(genome)
 
-        new_assemblies = [
-            {
-                'attr': 'assembly_empty_ref',
-                'name': 'Assembly.Empty',
-                'path': 'empty_assembly.fasta',
-            }
-        ]
-        for assembly in new_assemblies:
-            self._prep_assembly(assembly)
+        # new_assemblies = [
+        #     {
+        #         'attr': 'assembly_empty_ref',
+        #         'name': 'Assembly.Empty',
+        #         'path': 'empty_assembly.fasta',
+        #     }
+        # ]
+        # for assembly in new_assemblies:
+        #     self._prep_assembly(assembly)
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         # run config not yet initialised
@@ -621,25 +616,25 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertRegex(cmu.run_config()['base_dir'], r'run___last_chance_directory__\d+')
         self.assertNotEqual(base_dir, cmu.run_config()['base_dir'])
 
+        self.clean_up_cmu(cmu)
+
 #   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
-    def notest00_clean_bin_id(self):
+    def test00_fileutils_clean_up_bin_id(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 00_clean_bin_id")
         self.logger.info("=================================================================\n")
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
-
         expected = [
             ['bin.056.fasta', 'bin.056', 'bin.056.fasta'],
-            ['assembly.fasta', 'assembly', 'assembly.fasta'],  # super dodgy!
+            ['assembly.fasta', 'assembly', 'assembly.fasta'],
             ['../../this.is.fake', '../../this.is.fake', '../../this.is.fake'],
         ]
 
         for bid in expected:
-            self.assertEqual(cmu.clean_bin_ID(bid[0], 'fasta'), bid[1])
-            self.logger.info(cmu.clean_bin_ID(bid[0]), bid[2])
+            self.assertEqual(clean_up_bin_ID(bid[0], 'fasta'), bid[1])
+            self.logger.info(clean_up_bin_ID(bid[0]), bid[2])
 
-    def notest00_workspace_helper(self):
+    def test00_workspace_helper(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 00_workspace_helper")
@@ -709,7 +704,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.workspacehelper.get_obj_from_workspace('ROTFLMAO')
 
-    def notest00_init_client(self):
+        self.clean_up_cmu(cmu)
+
+    def test00_init_client(self):
 
         ''' check client initialisation '''
         self.logger.info("=================================================================")
@@ -770,7 +767,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
 #     Standard Single Assembly
 #     'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
-#     'KBaseGenomes.ContigSet': self.process_assembly_contigset, --- TODO
+#     'KBaseGenomes.ContigSet': self.process_assembly_contigset, -- TODO
 #     AssemblySet
 #     'KBaseSets.AssemblySet': self.process_assembly_set,
 #     Binned Contigs
@@ -781,7 +778,127 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #   also test:
 #   - empty versions of each of these
 
-    def notest01_data_staging(self):
+    def prep_checkMUtil(self):
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
+        return cmu
+
+    def clean_up_cmu(self, cmu):
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
+    def test_fileutils_fasta_seq_len_at_least(self):
+
+        assembly_dir = os.path.join(self.test_data_dir, 'assemblies')
+        empty_assembly_path = os.path.join(assembly_dir, 'empty_assembly.fasta')
+        one_nt_assembly_path = os.path.join(assembly_dir, '1_nt_assembly.fasta')
+        big_assembly_path = os.path.join(assembly_dir, 'assembly.fasta')
+
+        # default: min length 1
+        self.assertFalse(
+            fasta_seq_len_at_least(empty_assembly_path)
+        )
+        self.assertTrue(
+            fasta_seq_len_at_least(one_nt_assembly_path)
+        )
+        self.assertTrue(
+            fasta_seq_len_at_least(big_assembly_path)
+        )
+        # set the min length to 2
+        self.assertFalse(
+            fasta_seq_len_at_least(empty_assembly_path, 2)
+        )
+        self.assertFalse(
+            fasta_seq_len_at_least(one_nt_assembly_path, 2)
+        )
+        self.assertTrue(
+            fasta_seq_len_at_least(big_assembly_path, 2)
+        )
+        self.assertTrue(
+            fasta_seq_len_at_least(empty_assembly_path, 0)
+        )
+
+    def test_fileutils_set_fasta_file_extensions(self, folder, new_extension):
+
+        cmu = self.prep_checkMUtil()
+        test_dir = os.path.join(cmu.run_config()['scratch'], 'test_dir')
+        os.makedirs(test_dir, exist_ok=True)
+
+        extensions = ['.fasta', '.fas', '.fa', '.fsa', '.seq', '.fna', '.ffn', '.faa', '.frn']
+        invalid_ext = ['.jpg', '.fasta.tar.gz', '.fa.zip', '.fnaaaar']
+
+        dir_inventory = {}
+        n = 0
+        for ext in extensions + invalid_ext:
+            file_path = os.path.join(test_dir, 'file_00' + str(n) + ext)
+            Path(file_path).touch()
+            self.assertTrue(os.path.isfile(file_path))
+            dir_inventory['file_00' + str(n)] = file_path
+            n += 1
+
+        fasta_files_by_clean_bin_ID = get_fasta_files(test_dir, 'fasta')
+        self.assertEqual({'file_000': dir_inventory['file_000']}, fasta_files_by_clean_bin_ID)
+
+        # no files with the new extension (yet)
+        self.assertEqual({}, get_fasta_files(test_dir, '007'))
+
+        set_fasta_file_extensions(test_dir, '.007')
+        # expect 1 - 9 to have the extension .007
+        new_dir_inventory = {}
+        n = 0
+        for ext in extensions:
+            self.assertTrue(os.path.isfile(
+                os.path.join(test_dir, 'file_00' + str(n) + '.007'))
+            )
+            new_dir_inventory['file_00' + str(n)] = os.path.join(test_dir, 'file_00' + str(n) + '.007')
+            n += 1
+
+        for ext in invalid_ext:
+            pos = n - len(extensions)
+            self.assertTrue(os.path.isfile(
+                os.path.join(test_dir, 'file_00' + str(n) + invalid_ext[pos]))
+            )
+            n += 1
+
+        # ensure that we get the expected results from get_fasta_files
+        fasta_files_by_clean_bin_ID = get_fasta_files(test_dir, 'fasta')
+        self.assertEqual({}, get_fasta_files(test_dir, 'fasta'))
+        self.assertEqual(new_dir_inventory, get_fasta_files(test_dir, '007'))
+
+        # check that an error is thrown if the file already exists
+        new_file = os.path.join(test_dir, 'file_007.faa')
+        Path(os.path.join(test_dir, 'file_007.faa')).touch()
+        self.assertTrue(os.path.isfile(new_file))
+        self.assertTrue(os.path.isfile(os.path.join(test_dir, 'file_007.007')))
+
+        # TODO: this should throw an error!
+        set_fasta_file_extensions(test_dir, '.007')
+        self.assertFalse(os.path.exists(new_file))
+
+        self.clean_up_cmu(cmu)
+
+    def test_fileutils_read_bin_stats_file(self):
+
+        read_bin_stats_file('/path/to/pretend/file')
+
+    def notest_fileutils_cat_fasta_files(self, folder, extension, output_fasta_file):
+        '''
+        Given a folder of fasta files with the specified extension, cat them together
+        using 'cat' into the target new_fasta_file
+        '''
+        # files = glob.glob(os.path.join(folder, '*.' + extension))
+        # cat_cmd = ['cat'] + files
+        # fasta_fh = open(output_fasta_file, 'w')
+        # p = subprocess.Popen(cat_cmd, cwd=self.scratch, stdout=fasta_fh, shell=False)
+        # exitCode = p.wait()
+        # fasta_fh.close()
+
+        # if exitCode != 0:
+        #     raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
+        #                      'Exit Code: ' + str(exitCode))
+
+    def test01_data_staging(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging")
@@ -789,14 +906,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.require_data('report_ref')
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        # init the run_config
-        cmu.run_config()
+        cmu = self.prep_checkMUtil()
 
         with self.subTest('erroneous report object staging'):
             err_msg = 'Cannot stage fasta file input directory from type: '
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input(self.report_ref)
+
+        self.clean_up_cmu(cmu)
 
     def check_data_staging_results(self, run_config, filenames):
 
@@ -807,25 +924,23 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    def notest01_data_staging_assembly(self):
+    def test01_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assembly")
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_mini_ref')
+        cmu = self.prep_checkMUtil()
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu.run_config()
-        dsu = cmu.datastagingutils
-        staged_input = dsu.stage_input(self.assembly_mini_ref)
+        staged_input = cmu.datastagingutils.stage_input(self.assembly_mini_ref)
         self.assertEqual(
             staged_input,
             {'obj_name': 'MiniAssembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
         )
-        self.check_data_staging_results(run_config, ['MiniAssembly'])
+        self.check_data_staging_results(cmu.run_config(), ['MiniAssembly'])
 
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.clean_up_cmu(cmu)
 
     # def notest01_data_staging_things_are_empty(self):
 
@@ -862,19 +977,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" MISSING BOTH contigset_ref AND assembly_ref. Cannot process. Exiting."
         # raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
 
-    def notest01_data_staging_binned_contigs_empty(self):
+    def test01_data_staging_binned_contigs_empty(self):
 
         self.require_data('binned_contigs_empty_ref')
-
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        cmu.run_config()
-        dsu = cmu.datastagingutils
+        cmu = self.prep_checkMUtil()
 
         err_str = 'Binned Assembly is empty for fasta_path: '
         with self.assertRaisesRegex(ValueError, err_str):
-            dsu.stage_input(self.binned_contigs_empty_ref)
+            cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
 
-    def notest01_data_staging_assembly_strange_fasta_ext(self):
+        self.clean_up_cmu(cmu)
+
+    def test01_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assembly_strange_fasta_ext")
@@ -893,20 +1007,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         )
         self.check_data_staging_results(run_config, ['Test.Assembly'])
 
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.clean_up_cmu(cmu)
 
-    def notest01_data_staging_assemblyset(self):
+    def test01_data_staging_assemblyset(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assemblyset")
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_set_ref')
-
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu.run_config()
-        dsu = cmu.datastagingutils
-        staged_input = dsu.stage_input(self.assembly_set_ref)
+        cmu = self.prep_checkMUtil()
+        staged_input = cmu.datastagingutils.stage_input(self.assembly_set_ref)
         self.assertEqual(
             staged_input,
             {
@@ -914,11 +1025,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'obj_type': 'KBaseSets.AssemblySet',
             }
         )
-        self.check_data_staging_results(run_config, ['Test.Assembly', 'Dodgy_Contig.Assembly'])
+        self.check_data_staging_results(cmu.run_config(), ['Test.Assembly', 'Dodgy_Contig.Assembly'])
 
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.clean_up_cmu(cmu)
 
-    def notest01_data_staging_binned_contigs(self):
+    def test01_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_binned_contigs")
@@ -947,9 +1058,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 run_config['input_dir'], 'out_header.00' + number + '.' + run_config['fasta_ext']
             )))
 
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.clean_up_cmu(cmu)
 
-    def notest01_data_staging_genome(self):
+    def test01_data_staging_genome(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_genome")
@@ -957,23 +1068,26 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.require_data('genome_refs')
 
+        test_genome = TEST_DATA['genome_list'][0]
+
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.fasta_extension = 'strange_fasta_extension'
         run_config = cmu._set_run_config()
         dsu = cmu.datastagingutils
 
-        staged_input = dsu.stage_input(self.genome_refs[1])
+        staged_input = dsu.stage_input(getattr(self, test_genome['attr']))
         self.assertEqual(
             staged_input,
             {
-                'obj_name': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
+                'obj_name': test_genome['name'],
                 'obj_type': 'KBaseGenomes.Genome',
             }
         )
-        self.check_data_staging_results(run_config, ['GCF_001439985.1_wTPRE_1.0_genomic.gbff'])
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.check_data_staging_results(run_config, [test_genome['path']])
 
-    def notest01_data_staging_genome_set(self):
+        self.clean_up_cmu(cmu)
+
+    def test01_data_staging_genome_set(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_genome_set")
@@ -997,7 +1111,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'GCF_000022285.1_ASM2228v1_genomic.gbff', 'GCF_001439985.1_wTPRE_1.0_genomic.gbff'
         ])
 
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.clean_up_cmu(cmu)
 
     def notest02_filter_binned_contigs(self):
 
@@ -1023,7 +1137,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'input_ref': self.binned_contigs_ref,
             'output_filtered_binnedcontigs_obj_name': 'Alpha',
         }))
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
+        self.clean_up_cmu(cmu)
 
     def prep_filter_binned_contigs_dirs(self):
 

@@ -2,9 +2,7 @@
 import time
 import os
 import subprocess
-# import re
 import logging
-import ast
 
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
@@ -287,26 +285,3 @@ class CheckMUtil(Base, LogMixin):
             raise ValueError('Invalid or unsupported checkM subcommand: ' + str(subcommand))
 
         return command
-
-    def read_bin_stats_file(self):
-        run_config = self.run_config()
-        stats_file = run_config['bin_stats_ext_file']
-
-        bin_stats = dict()
-
-        if not os.path.isfile(stats_file):
-            self.logger.warning('No stats file found (looking at: ' + stats_file + ')')
-            return bin_stats
-
-        with open(stats_file) as stats_fh:
-            for line in stats_fh:
-                if not line:
-                    continue
-                if line.startswith('#'):
-                    continue
-                col = line.split('\t')
-                bid = str(col[0])
-                data = ast.literal_eval(col[1])
-                bin_stats[bid] = data
-
-        return bin_stats

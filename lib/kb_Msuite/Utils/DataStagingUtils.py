@@ -1,8 +1,7 @@
 import os
-import glob
-import subprocess
 
 from kb_Msuite.Utils.Utils import Base, LogMixin
+from kb_Msuite.Utils.FileUtils import set_fasta_file_extensions, fasta_seq_len_at_least
 
 
 class DataStagingUtils(Base, LogMixin):
@@ -74,7 +73,7 @@ class DataStagingUtils(Base, LogMixin):
         type_to_method[obj_type](input_ref, input_dir, fasta_ext, obj_name, obj_type)
 
         # create summary fasta file with all bins
-        self.cat_fasta_files(input_dir, fasta_ext, all_seq_fasta)
+        self.cat_fasta_files(input_dir, fasta_ext, all_seq_fasta, self.scratch)
 
         return {
             'obj_name': obj_name,
@@ -159,13 +158,13 @@ class DataStagingUtils(Base, LogMixin):
         bin_file_dir = file_result['bin_file_directory']
         self.logger.debug('Renaming ' + bin_file_dir + ' to ' + input_dir)
         os.rename(bin_file_dir, input_dir)
-        self.set_fasta_file_extensions(input_dir, fasta_ext)
+        set_fasta_file_extensions(input_dir, fasta_ext)
         for (dirpath, dirnames, filenames) in os.walk(input_dir):
             for fasta_file in filenames:
                 fasta_path = os.path.join(input_dir, fasta_file)
                 # make sure fasta file isn't empty
                 min_fasta_len = 1
-                if not self.fasta_seq_len_at_least(fasta_path, min_fasta_len):
+                if not fasta_seq_len_at_least(fasta_path, min_fasta_len):
                     raise ValueError('Binned Assembly is empty for fasta_path: ' + str(fasta_path))
                 self.logger.info('Processed valid binned contig file ' + fasta_path)
             break
@@ -233,53 +232,53 @@ class DataStagingUtils(Base, LogMixin):
 
         return 'Genome ' + genome_name + " (ref:" + input_ref + ") " + genome_sci_name
 
-    def fasta_seq_len_at_least(self, fasta_path, min_fasta_len=1):
-        '''
-        counts the number of non-header, non-whitespace characters in a FASTA file
-        '''
-        seq_len = 0
-        with open(fasta_path, 'r') as fasta_handle:
-            for line in fasta_handle:
-                line = line.strip()
-                if line.startswith('>'):
-                    continue
-                line = line.replace(' ', '')
-                seq_len += len(line)
-                if seq_len >= min_fasta_len:
-                    return True
-        return False
+    # def fasta_seq_len_at_least(self, fasta_path, min_fasta_len=1):
+    #     '''
+    #     counts the number of non-header, non-whitespace characters in a FASTA file
+    #     '''
+    #     seq_len = 0
+    #     with open(fasta_path, 'r') as fasta_handle:
+    #         for line in fasta_handle:
+    #             line = line.strip()
+    #             if line.startswith('>'):
+    #                 continue
+    #             line = line.replace(' ', '')
+    #             seq_len += len(line)
+    #             if seq_len >= min_fasta_len:
+    #                 return True
+    #     return False
 
-    def set_fasta_file_extensions(self, folder, new_extension):
-        '''
-        Renames all detected fasta files in folder to the specified extension.
-        fasta files are detected based on its existing extension, which must be one of:
-            ['.fasta', '.fas', '.fa', '.fsa', '.seq', '.fna', '.ffn', '.faa', '.frn']
+    # def set_fasta_file_extensions(self, folder, new_extension):
+    #     '''
+    #     Renames all detected fasta files in folder to the specified extension.
+    #     fasta files are detected based on its existing extension, which must be one of:
+    #         ['.fasta', '.fas', '.fa', '.fsa', '.seq', '.fna', '.ffn', '.faa', '.frn']
 
-        Note that this is probably not well behaved if the operation will rename to a
-        file that already exists
-        '''
-        extensions = ['.fasta', '.fas', '.fa', '.fsa', '.seq', '.fna', '.ffn', '.faa', '.frn']
+    #     Note that this is probably not well behaved if the operation will rename to a
+    #     file that already exists
+    #     '''
+    #     extensions = ['.fasta', '.fas', '.fa', '.fsa', '.seq', '.fna', '.ffn', '.faa', '.frn']
 
-        for file in os.listdir(folder):
-            if not os.path.isfile(os.path.join(folder, file)):
-                continue
-            filename, file_extension = os.path.splitext(file)
-            if file_extension in extensions:
-                os.rename(os.path.join(folder, file),
-                          os.path.join(folder, filename + '.' + new_extension))
+    #     for file in os.listdir(folder):
+    #         if not os.path.isfile(os.path.join(folder, file)):
+    #             continue
+    #         filename, file_extension = os.path.splitext(file)
+    #         if file_extension in extensions:
+    #             os.rename(os.path.join(folder, file),
+    #                       os.path.join(folder, filename + '.' + new_extension))
 
-    def cat_fasta_files(self, folder, extension, output_fasta_file):
-        '''
-        Given a folder of fasta files with the specified extension, cat them together
-        using 'cat' into the target new_fasta_file
-        '''
-        files = glob.glob(os.path.join(folder, '*.' + extension))
-        cat_cmd = ['cat'] + files
-        fasta_fh = open(output_fasta_file, 'w')
-        p = subprocess.Popen(cat_cmd, cwd=self.scratch, stdout=fasta_fh, shell=False)
-        exitCode = p.wait()
-        fasta_fh.close()
+    # def cat_fasta_files(self, folder, extension, output_fasta_file, cwd=elf.scratch):
+    #     '''
+    #     Given a folder of fasta files with the specified extension, cat them together
+    #     using 'cat' into the target new_fasta_file
+    #     '''
+    #     files = glob.glob(os.path.join(folder, '*.' + extension))
+    #     cat_cmd = ['cat'] + files
+    #     fasta_fh = open(output_fasta_file, 'w')
+    #     p = subprocess.Popen(cat_cmd, cwd=cwd, stdout=fasta_fh, shell=False)
+    #     exitCode = p.wait()
+    #     fasta_fh.close()
 
-        if exitCode != 0:
-            raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
-                             'Exit Code: ' + str(exitCode))
+    #     if exitCode != 0:
+    #         raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
+    #                          'Exit Code: ' + str(exitCode))

@@ -1,8 +1,8 @@
 import os
-import shutil
 import json
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
+from kb_Msuite.Utils.FileUtils import clean_up_bin_ID, copy_file_ignore_errors, copy_file_new_name_ignore_errors, read_bin_stats_file
 
 
 class OutputBuilder(Base, LogMixin, TSVMixin):
@@ -52,7 +52,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         if hasattr(self.checkMUtil, 'bin_stats_data'):
             bin_stats_data = self.checkMUtil.bin_stats_data
         else:
-            bin_stats_data = self.checkMUtil.read_bin_stats_file()
+            bin_stats_data = read_bin_stats_file(run_config['bin_stats_ext_file'])
 
         if bin_stats_data:
             self.logger.info('creating HTML and TSV summary tables')
@@ -128,7 +128,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
             tmpl_file = os.path.join(tmpl_dest_dir, tmpl)
             if not os.path.exists(tmpl_file) or not os.path.isfile(tmpl_file):
-                self._copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
+                copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
 
         html_index_file = os.path.join(html_dir, 'checkm_results.html')
 
@@ -161,7 +161,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
             for bin_ID in sorted(bin_stats.keys()):
                 bin_stats[bin_ID]['Bin Name'] = bin_ID
 
-                clean_bin_ID = self.checkMUtil.clean_bin_ID(bin_ID)
+                clean_bin_ID = clean_up_bin_ID(bin_ID)
                 # create the dist plot page
                 plot_file = os.path.join(plots_dir, str(bin_ID) + self.PLOT_FILE_EXT)
                 bin_stats[bin_ID]['Has Plot File'] = False
@@ -171,7 +171,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                         html_plots_dir, str(bin_ID) + self.PLOT_FILE_EXT
                     )
                     # copy it to the html_plot
-                    self._copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
+                    copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
                     html_files.append({
                         'template': {
                             'template_data_json': json.dumps({
@@ -237,19 +237,19 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         tsv_writer.writerow(row)
 
-    def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
+    # def _copy_file_ignore_errors(self, filename, src_folder, dest_folder):
 
-        src = os.path.join(src_folder, filename)
-        dest = os.path.join(dest_folder, filename)
-        os.makedirs(dest_folder, exist_ok=True)
+    #     src = os.path.join(src_folder, filename)
+    #     dest = os.path.join(dest_folder, filename)
+    #     os.makedirs(dest_folder, exist_ok=True)
 
-        return self._copy_file_new_name_ignore_errors(src, dest)
+    #     return self._copy_file_new_name_ignore_errors(src, dest)
 
-    def _copy_file_new_name_ignore_errors(self, source_path, destination_path):
-        # self.logger.debug('copying ' + source_path + ' to ' + destination_path)
-        try:
-            shutil.copy(source_path, destination_path)
-        except Exception as e:
-            # TODO: add error message reporting
-            self.logger.error('copy failed')
-            self.logger.error(e)
+    # def _copy_file_new_name_ignore_errors(self, source_path, destination_path):
+    #     # self.logger.debug('copying ' + source_path + ' to ' + destination_path)
+    #     try:
+    #         shutil.copy(source_path, destination_path)
+    #     except Exception as e:
+    #         # TODO: add error message reporting
+    #         self.logger.error('copy failed')
+    #         self.logger.error(e)
