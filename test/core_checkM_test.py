@@ -688,16 +688,24 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.workspacehelper.get_ws_obj_type(remove_module=True)
 
-            obj_type = cmu.workspacehelper.get_ws_obj_type(report_output['ref'])
+            obj_type = cmu.workspacehelper.get_ws_obj_type(
+                report_output['ref']
+            )
             self.assertEqual(obj_type, 'KBaseReport.Report')
 
-            obj_type = cmu.workspacehelper.get_ws_obj_type(object_info=ws_obj_info, remove_module=False)
+            obj_type = cmu.workspacehelper.get_ws_obj_type(
+                object_info=ws_obj_info, remove_module=False
+            )
             self.assertEqual(obj_type, 'KBaseReport.Report')
 
-            obj_type = cmu.workspacehelper.get_ws_obj_type(ref=report_output['ref'], remove_module=True)
+            obj_type = cmu.workspacehelper.get_ws_obj_type(
+                ref=report_output['ref'], remove_module=True
+            )
             self.assertEqual(obj_type, 'Report')
 
-            obj_type = cmu.workspacehelper.get_ws_obj_type(object_info=ws_obj_info, remove_module=True)
+            obj_type = cmu.workspacehelper.get_ws_obj_type(
+                object_info=ws_obj_info, remove_module=True
+            )
             self.assertEqual(obj_type, 'Report')
 
         with self.subTest('get obj from workspace'):
@@ -821,7 +829,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             fasta_seq_len_at_least(big_assembly_path, 2)
         )
 
-        with self.assertRaises(ValueError, 'Minimum length must be 1 or greater'):
+        with self.assertRaisesRegexp(ValueError, 'Minimum length must be 1 or greater'):
             fasta_seq_len_at_least(empty_assembly_path, 0)
 
     def test_fileutils_set_fasta_file_extensions(self):
@@ -854,10 +862,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         new_dir_inventory = {}
         n = 0
         for ext in extensions:
-            self.assertTrue(os.path.isfile(
-                os.path.join(test_dir, 'file_00' + str(n) + '.007'))
-            )
-            new_dir_inventory['file_00' + str(n)] = os.path.join(test_dir, 'file_00' + str(n) + '.007')
+            ext_file = os.path.join(test_dir, 'file_00' + str(n) + '.007')
+            self.assertTrue(os.path.isfile(ext_file))
+            new_dir_inventory['file_00' + str(n)] = ext_file
             n += 1
 
         for ext in invalid_ext:
@@ -890,7 +897,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertEqual({}, read_bin_stats_file('/path/to/pretend/file'))
 
     def notest_fileutils_cat_fasta_files(self):
-        #, folder, extension, output_fasta_file):
+        # folder, extension, output_fasta_file):
         '''
         Given a folder of fasta files with the specified extension, cat them together
         using 'cat' into the target new_fasta_file
@@ -923,15 +930,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.clean_up_cmu(cmu)
 
-    def check_data_staging_results(self, run_config, filenames):
-
-        self.assertTrue(os.path.isdir(run_config['input_dir']))
-        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
-        for name in filenames:
-            self.assertTrue(os.path.isfile(os.path.join(
-                run_config['input_dir'], name + '.' + run_config['fasta_ext'])
-            ))
-
     def test_01_data_staging_binned_contigs_empty(self):
 
         self.require_data('binned_contigs_empty_ref')
@@ -942,6 +940,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
 
         self.clean_up_cmu(cmu)
+
+    def check_data_staging_results(self, run_config, filenames):
+
+        self.assertTrue(os.path.isdir(run_config['input_dir']))
+        self.assertTrue(os.path.isfile(run_config['all_seq_fasta']))
+        for name in filenames:
+            self.assertTrue(os.path.isfile(os.path.join(
+                run_config['input_dir'], name + '.' + run_config['fasta_ext'])
+            ))
 
     # def notest_01_data_staging_things_are_empty(self):
 
@@ -1032,7 +1039,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'obj_type': 'KBaseSets.AssemblySet',
             }
         )
-        self.check_data_staging_results(cmu.run_config(), ['Test.Assembly', 'Dodgy_Contig.Assembly'])
+        self.check_data_staging_results(
+            cmu.run_config(), ['Test.Assembly', 'Dodgy_Contig.Assembly']
+        )
 
         self.clean_up_cmu(cmu)
 
@@ -1083,7 +1092,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'obj_type': 'KBaseGenomes.Genome',
             }
         )
-        self.check_data_staging_results(run_config, [test_genome['path']])
+        self.check_data_staging_results(cmu.run_config(), [test_genome['path']])
 
         self.clean_up_cmu(cmu)
 
@@ -1124,11 +1133,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cmu.run_config()
 
         # wrong type
-        self.assertIsNone(cmu.binnedcontigfilter.filter_binned_contigs({'input_ref': self.report_ref}))
-        self.assertIsNone(cmu.binnedcontigfilter.filter_binned_contigs({'input_ref': self.assembly_dodgy_ref}))
+        self.assertIsNone(
+            cmu.binnedcontigfilter.filter_binned_contigs({'input_ref': self.report_ref})
+        )
+        self.assertIsNone(
+            cmu.binnedcontigfilter.filter_binned_contigs({'input_ref': self.assembly_dodgy_ref})
+        )
 
         # no output_filtered_binnedcontigs_obj_name
-        self.assertIsNone(cmu.binnedcontigfilter.filter_binned_contigs({'input_ref': self.binned_contigs_ref}))
+        self.assertIsNone(
+            cmu.binnedcontigfilter.filter_binned_contigs({'input_ref': self.binned_contigs_ref})
+        )
 
         # empty input dir
         os.makedirs(cmu.run_config()['input_dir'], exist_ok=True)
@@ -1154,7 +1169,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # out_header.003  'Completeness': 96.34019795657727, 'Contamination': 1.7600574712643677,
         output_dir = run_config['output_dir']
         os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
-        shutil.copy(os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'), run_config['bin_stats_ext_file'])
+        shutil.copy(
+            os.path.join('data', 'filter_all_fail.bin_stats_ext.tsv'),
+            run_config['bin_stats_ext_file']
+        )
 
         os.makedirs(run_config['input_dir'], exist_ok=True)
         for bid in [1, 2, 3]:
@@ -1175,22 +1193,22 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cmu = self.prep_filter_binned_contigs_dirs()
         run_config = cmu.run_config()
 
-        missing_ids = ['000', '004']
+        missing_ids = ['out_header.000', 'out_header.004']
         for bid in missing_ids:
             bid_path = os.path.join(
-                run_config['input_dir'],
-                'out_header.' + str(bid) + '.' + run_config['fasta_ext']
+                run_config['input_dir'], bid + '.' + run_config['fasta_ext']
             )
             Path(bid_path).touch(exist_ok=True)
 
-        err_str = "The following Bin IDs are missing from the checkM output: " + ", ".join(missing_ids)
+        err_str = "The following Bin IDs are missing from the checkM output: "
+        + ", ".join(missing_ids)
         with self.assertRaisesRegex(ValueError, err_str):
             cmu.binnedcontigfilter.filter_binned_contigs({
                 'input_ref': self.binned_contigs_ref,
                 'output_filtered_binnedcontigs_obj_name': 'Beta',
             })
 
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.clean_up_cmu(cmu)
 
     def test_02_filter_binned_contigs_no_HQ(self):
 
@@ -1212,7 +1230,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertFalse(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.clean_up_cmu(cmu)
 
     def test_02_filter_binned_contigs_all_HQ(self):
 
@@ -1234,7 +1252,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.assertFalse(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+        self.clean_up_cmu(cmu)
 
     def check_filtered_bins(self, cmu, run_config, results, expected):
 
@@ -1283,10 +1301,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         })
         expected = {
             'filtered_obj_name': 'Epsilon',
-            'retained_bin_IDs': {'002': True},
-            'removed_bin_IDs': {'001': True, '003': True}
+            'retained_bin_IDs': {'out_header.002': True},
+            'removed_bin_IDs': {'out_header.001': True, 'out_header.003': True}
         }
-        self.check_filtered_bins(cmu, run_config, results, expected)
+        self.clean_up_cmu(cmu)
 
     def test_02_filter_binned_contigs_some_others_HQ(self):
 
@@ -1306,10 +1324,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         })
         expected = {
             'filtered_obj_name': 'Gamma',
-            'retained_bin_IDs': {'001': True, '002': True},
-            'removed_bin_IDs': {'003': True},
+            'retained_bin_IDs': {'out_header.001': True, 'out_header.002': True},
+            'removed_bin_IDs': {'out_header.003': True},
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
+        self.clean_up_cmu(cmu)
 
 #     def test_05_write_tsv_output(self):
 #
@@ -1331,7 +1350,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     # def test_05_outputbuilder_build_html_output_for_lineage_wf(self):
         # , bin_stats, params, removed_bins=None
-
 
     def notest_05_outputbuilder(self):
 
@@ -1389,11 +1407,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             filtered_obj_info = {
                 'filtered_obj_ref': self.binned_contigs_ref,
                 'filtered_obj_name': 'Nancy Drew',
-                'removed_bin_IDs': {'002': True, '005': True, '033': True},
+                'removed_bin_IDs': {
+                    'out_header.002': True,
+                    'out_header.005': True,
+                    'out_header.033': True
+                },
             }
 
             result = cmu.outputbuilder.build_report(params, filtered_obj_info)
-            self.assertEqual(set(result.keys()), set(['report_name', 'report_ref', 'binned_contig_obj_ref']))
+            self.assertEqual(
+                set(result.keys()),
+                set(['report_name', 'report_ref', 'binned_contig_obj_ref'])
+            )
 
             self.assertEqual(result['binned_contig_obj_ref'], self.binned_contigs_ref)
             expected_results = {
@@ -1439,12 +1464,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.check_report(report, expected_results)
         shutil.rmtree(run_config['base_dir'])
 
-
     # Test 1: single assembly
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
     def notest_checkM_lineage_wf_full_app_single_assembly(self):
+
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_full_app_single_assembly")
         self.logger.info("=================================================================\n")
@@ -1465,7 +1490,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'MiniAssembly.html'],
+            'html_links': [
+                'checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'MiniAssembly.html'
+            ],
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1495,7 +1522,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'something.html'],
+            'html_links': [
+                'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+                'something.html'
+            ],
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1583,7 +1613,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'assembly_1.html', 'assembly_2.html'],
+            'html_links': [
+                'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+                'assembly_1.html', 'assembly_2.html'
+            ],
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1612,7 +1645,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'GCF_0000222851_ASM2228v1_genomicgbff.html'],
+            'html_links': [
+                'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+                'GCF_0000222851_ASM2228v1_genomicgbff.html'
+            ],
         }
         # correct the file name!
         self.run_and_check_report(params, expected_results)
@@ -1642,7 +1678,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-            'html_links': ['checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'genome_1.html', 'genome_2.html'],
+            'html_links': [
+                'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+                'genome_1.html', 'genome_2.html'
+            ],
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1708,7 +1747,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         base_dir = os.path.dirname(__file__)
         test_data_dir = os.path.join(base_dir, 'data', 'example-bins')
         scratch_input_dir = os.path.join(self.scratch, 'lineage_wf_input_dir')
-        scratch_output_dir = os.path.join(self.scratch, 'lineage_wf_output_dir'+'_'+str(self.suffix))
+        scratch_output_dir = os.path.join(
+            self.scratch, 'lineage_wf_output_dir' + '_' + str(self.suffix)
+        )
         shutil.copytree(test_data_dir, scratch_input_dir)
         if not os.path.exists(scratch_output_dir):
             os.mkdir(scratch_output_dir)

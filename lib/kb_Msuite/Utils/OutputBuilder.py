@@ -158,6 +158,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
             tsv_writer = self.init_tsv_writer(tab_text_fh)
             self.write_tsv_headers(tsv_writer, results_filtered)
 
+            # bin_stats contains the FASTA file name without the extension
             for bin_ID in sorted(bin_stats.keys()):
                 bin_stats[bin_ID]['Bin Name'] = bin_ID
 

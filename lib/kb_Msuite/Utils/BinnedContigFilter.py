@@ -71,12 +71,12 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         removed_bin_IDs = dict()
 
         # write summary file for just those bins present in bin_dir
+        summary_file = run_config['summary_file_path']
         self.logger.info(
-            "writing filtered binned contigs summary file "
-            + run_config['summary_file_path']
+            "writing filtered binned contigs summary file to " + summary_file
         )
 
-        with open(run_config['summary_file_path'], 'w', newline='') as summary_fh:
+        with open(summary_file, 'w', newline='') as summary_fh:
             summary_writer = self._init_summary_writer(summary_fh)
 
             # the fasta extension is stripped from the file in bin_stats
@@ -113,10 +113,8 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                     retained_bin_IDs[bin_ID] = True
 
                     # copy filtered file to filtered dir
-                    # bin_ID is in the form bin.xxx.fasta; strip off the fasta_ext suffix
-                    # and replace it with the binned contig extension
-                    clean_bin_ID = clean_up_bin_ID(bin_ID, run_config['fasta_ext'])
-                    new_file_name = str(clean_bin_ID) + '.' + fasta_ext_bc
+                    # clean_bin_ID = clean_up_bin_ID(bin_ID, run_config['fasta_ext'])
+                    new_file_name = bin_ID + '.' + fasta_ext_bc
 
                     src_path = fasta_files_by_bin_ID[bin_ID]
                     dst_path = os.path.join(filtered_bins_dir, new_file_name)
@@ -139,7 +137,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                        if bin_ID not in bin_stats]
         if missing_ids:
             raise ValueError(
-                "The following Bin IDs are missing from the checkM output: "
+                "The following bin IDs are missing from the checkM output: "
                 + ", ".join(sorted(missing_ids))
             )
 
