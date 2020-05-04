@@ -207,6 +207,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def prep_ref_data(self):
 
+        self.prep_binned_contigs()
+        self.prep_genomes()
+        self.prep_report()
+        self.data_loaded = True
+        return True
+
         saved_refs = {
             'assembly_OK_ref': '49697/1/1',
             'assembly_dodgy_ref': '49697/2/1',
@@ -323,14 +329,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                     'label': a['name'],
                 } for a in assembly_list[0:2]],
             },
-            {
-                'name': 'Assembly_Set_with_Empty',
-                'attr': 'assembly_set_with_empty_ref',
-                'items': [{
-                    'ref': getattr(self, a['attr']),
-                    'label': a['name'],
-                } for a in assembly_list[2:4]],
-            }
         ]
 
         for assemblyset in assemblyset_list:
@@ -418,7 +416,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         ])
         setattr(self, genomeset['attr'], reference)
 
-        self.logger.info({'Genome set ref': self.genome_set_ref})
+        self.logger.info({genomeset['attr']: getattr(self, genomeset['attr'])})
 
     def prep_genomes(self):
 
@@ -426,9 +424,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         genome_list = TEST_DATA['genome_list']
 
-        # # upload a few genomes
-        # for genome in genome_list:
-        #     self._prep_genome(genome)
+        # upload a few genomes
+        for genome in genome_list:
+            self._prep_genome(genome)
 
         # create a genomeSet
         genome_set = {
@@ -577,7 +575,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         self.prep_ref_data()
-        self.prep_genomes()
         # new_genomes = [
         #     {
         #         'path': 'empty_genomic.gbff',
