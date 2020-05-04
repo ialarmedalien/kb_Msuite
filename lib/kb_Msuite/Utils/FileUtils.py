@@ -7,7 +7,7 @@ import shutil
 import subprocess
 
 
-def clean_up_bin_ID(self, bin_id, extension=None):
+def clean_up_bin_ID(bin_id, extension=None):
 
     if extension:
         bin_id = bin_id.replace('.' + extension, '')
@@ -18,7 +18,7 @@ def clean_up_bin_ID(self, bin_id, extension=None):
 
 
 # requires clean_bin_id
-def get_fasta_files(self, search_dir, fasta_ext):
+def get_fasta_files(search_dir, fasta_ext):
     fasta_files = dict()
     for (dirpath, dirnames, filenames) in os.walk(search_dir):
         for filename in filenames:
@@ -32,7 +32,7 @@ def get_fasta_files(self, search_dir, fasta_ext):
     return fasta_files
 
 
-def fasta_seq_len_at_least(self, fasta_path, min_fasta_len=1):
+def fasta_seq_len_at_least(fasta_path, min_fasta_len=1):
     '''
     counts the number of non-header, non-whitespace characters in a FASTA file
     '''
@@ -49,7 +49,7 @@ def fasta_seq_len_at_least(self, fasta_path, min_fasta_len=1):
     return False
 
 
-def set_fasta_file_extensions(self, folder, new_extension):
+def set_fasta_file_extensions(folder, new_extension):
     '''
     Renames all detected fasta files in folder to the specified extension.
     fasta files are detected based on its existing extension, which must be one of:
@@ -71,7 +71,7 @@ def set_fasta_file_extensions(self, folder, new_extension):
             )
 
 
-def cat_fasta_files(self, folder, extension, output_fasta_file, cwd):
+def cat_fasta_files(folder, extension, output_fasta_file, cwd):
     '''
     Given a folder of fasta files with the specified extension, cat them together
     using 'cat' into the target new_fasta_file
@@ -90,7 +90,7 @@ def cat_fasta_files(self, folder, extension, output_fasta_file, cwd):
         )
 
 
-def copy_file_ignore_errors(self, filename, src_folder, dest_folder):
+def copy_file_ignore_errors(filename, src_folder, dest_folder):
 
     src = os.path.join(src_folder, filename)
     dest = os.path.join(dest_folder, filename)
@@ -99,7 +99,7 @@ def copy_file_ignore_errors(self, filename, src_folder, dest_folder):
     return copy_file_new_name_ignore_errors(src, dest)
 
 
-def copy_file_new_name_ignore_errors(self, source_path, destination_path):
+def copy_file_new_name_ignore_errors(source_path, destination_path):
     # self.logger.debug('copying ' + source_path + ' to ' + destination_path)
     try:
         shutil.copy(source_path, destination_path)
