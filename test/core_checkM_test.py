@@ -1002,8 +1002,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.fasta_extension = 'strange_fasta_extension'
         run_config = cmu._set_run_config()
-        dsu = cmu.datastagingutils
-        staged_input = dsu.stage_input(self.assembly_OK_ref)
+        staged_input = cmu.datastagingutils.stage_input(self.assembly_OK_ref)
         self.assertEqual(
             staged_input,
             {'obj_name': 'Test.Assembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
@@ -1041,12 +1040,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.require_data('binned_contigs_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-        cmu.run_config()
-        dsu = cmu.datastagingutils
-
+        run_config = cmu.run_config()
         # test stage binned contigs
-        staged_input = dsu.stage_input(self.binned_contigs_ref)
-        run_config = dsu.run_config()
+        staged_input = cmu.datastagingutils.stage_input(self.binned_contigs_ref)
         # expect to get back {'obj_name': name, 'obj_type': type}
         self.assertEqual(staged_input, {
             'obj_name': 'Binned_Contigs',
@@ -1076,9 +1072,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.fasta_extension = 'strange_fasta_extension'
         run_config = cmu._set_run_config()
-        dsu = cmu.datastagingutils
 
-        staged_input = dsu.stage_input(getattr(self, test_genome['attr']))
+        staged_input = cmu.datastagingutils.stage_input(getattr(self, test_genome['attr']))
         self.assertEqual(
             staged_input,
             {
@@ -1100,9 +1095,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu._set_run_config()
-        dsu = cmu.datastagingutils
 
-        staged_input = dsu.stage_input(self.genome_set_ref)
+        staged_input = cmu.datastagingutils.stage_input(self.genome_set_ref)
         self.assertEqual(
             staged_input,
             {

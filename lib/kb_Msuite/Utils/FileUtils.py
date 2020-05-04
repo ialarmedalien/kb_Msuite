@@ -56,6 +56,9 @@ def fasta_seq_len_at_least(fasta_path, min_fasta_len=1):
             seq_len += len(line)
             if seq_len >= min_fasta_len:
                 return True
+
+    logger = logging.getLogger()
+    logger.warning({'min_length': min_fasta_len, 'seq_len': seq_len})
     return False
 
 
