@@ -631,8 +631,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         ]
 
         for bid in expected:
-            self.assertEqual(clean_up_bin_ID(bid[0], 'fasta'), bid[1])
-            self.logger.info(clean_up_bin_ID(bid[0]), bid[2])
+            clean_ID = clean_up_bin_ID(bid[0], 'fasta')
+            self.assertEqual(clean_ID, bid[1])
 
     def test_00_workspace_helper(self):
 
@@ -881,8 +881,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def test_fileutils_read_bin_stats_file(self):
 
-        # with self.assertRaisesRegex(FileNotFoundError, 'No such file or directory'):
-        read_bin_stats_file('/path/to/pretend/file')
+        # non-existent file: return empty dict
+        self.assertEqual({}, read_bin_stats_file('/path/to/pretend/file'))
+
 
     def notest_fileutils_cat_fasta_files(self):
         #, folder, extension, output_fasta_file):

@@ -2,19 +2,8 @@ import ast
 import glob
 import logging
 import os
-import re
 import shutil
 import subprocess
-
-
-def clean_up_bin_ID(bin_id, extension=None):
-
-    if extension:
-        bin_id = bin_id.replace('.' + extension, '')
-
-    return bin_id
-
-    return re.sub(r'^[^.]+.', '', bin_id)
 
 
 def _check_extension(extension):
@@ -25,8 +14,38 @@ def _check_extension(extension):
     return extension
 
 
-# requires clean_bin_id
+def _logger(priority, message):
+
+    logger = logging.getLogger('kb_Msuite.FileUtils')
+    priority_to_val = {
+        'critical': 50,
+        'error': 40,
+        'warning': 30,
+        'warn': 30,
+        'info': 20,
+        'debug': 10
+    }
+    priority_numeric = priority_to_val[priority] if priority in priority_to_val else 0
+    logger.log(priority_numeric, message)
+
+
+def clean_up_bin_ID(bin_id, extension=None):
+    '''
+    remove the specified extension from a string
+    '''
+    if extension and len(extension) > 0:
+        extension = _check_extension(extension)
+        bin_id = bin_id.replace('.' + extension, '')
+
+    return bin_id
+
+    # return re.sub(r'^[^.]+.', '', bin_id)
+
+
 def get_fasta_files(search_dir, extension):
+    '''
+    find all files with extension `extension` in the directory `search_dir`
+    '''
 
     fasta_ext = _check_extension(extension)
     fasta_files = dict()
@@ -37,7 +56,7 @@ def get_fasta_files(search_dir, extension):
             if filename.endswith('.' + fasta_ext):
                 bin_ID = clean_up_bin_ID(filename, fasta_ext)
                 fasta_files[bin_ID] = os.path.join(search_dir, filename)
-                # self.logger.debug("ACCEPTED: "+bin_ID+" FILE:"+filename)  # DEBUG
+                # _logger('debug', "ACCEPTED: "+bin_ID+" FILE:"+filename)  # DEBUG
 
     return fasta_files
 
@@ -57,8 +76,13 @@ def fasta_seq_len_at_least(fasta_path, min_fasta_len=1):
             if seq_len >= min_fasta_len:
                 return True
 
-    logger = logging.getLogger()
-    logger.warning({'min_length': min_fasta_len, 'seq_len': seq_len})
+    _logger(
+        'warning',
+        {
+            'min_length': min_fasta_len,
+            'seq_len':    seq_len
+        }
+    )
     return False
 
 
@@ -68,8 +92,7 @@ def set_fasta_file_extensions(folder, extension):
     fasta files are detected based on its existing extension, which must be one of:
         ['.fasta', '.fas', '.fa', '.fsa', '.seq', '.fna', '.ffn', '.faa', '.frn']
 
-    Note that this is probably not well behaved if the operation will rename to a
-    file that already exists
+    Note that this WILL overwrite existing files if a file already exists with the same name
     '''
     new_extension = _check_extension(extension)
     extensions = ['.fasta', '.fas', '.fa', '.fsa', '.seq', '.fna', '.ffn', '.faa', '.frn']
@@ -79,6 +102,7 @@ def set_fasta_file_extensions(folder, extension):
             continue
         filename, file_extension = os.path.splitext(file)
         if file_extension in extensions:
+            # if os.path.exists(os.path.join(folder, filename + '.' + new_extension)):
             os.rename(
                 os.path.join(folder, file),
                 os.path.join(folder, filename + '.' + new_extension)
@@ -120,7 +144,11 @@ def copy_file_new_name_ignore_errors(source_path, destination_path):
         shutil.copy(source_path, destination_path)
     except Exception as e:
         # TODO: add error message reporting
-        # self.logger.error({'error': e})
+        _logger('error', {
+            'source': source_path,
+            'destination': destination_path,
+            'error': e,
+        })
         raise e
 
 
@@ -129,8 +157,7 @@ def read_bin_stats_file(stats_file):
     bin_stats = dict()
 
     if not os.path.isfile(stats_file):
-        logger = logging.getLogger()
-        logger.warning('No stats file found (looking at: ' + stats_file + ')')
+        _logger('warning', 'No stats file found (looking at: ' + stats_file + ')')
         return bin_stats
 
     with open(stats_file) as stats_fh:
