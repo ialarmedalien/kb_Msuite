@@ -883,7 +883,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         with self.assertRaisesRegex(FileNotFoundError, 'No such file or directory'):
             read_bin_stats_file('/path/to/pretend/file')
 
-    def notest_fileutils_cat_fasta_files(self)
+    def notest_fileutils_cat_fasta_files(self):
         #, folder, extension, output_fasta_file):
         '''
         Given a folder of fasta files with the specified extension, cat them together
