@@ -1112,7 +1112,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         genome_list = TEST_DATA['genome_list'][0:2]
 
-        staged_input = cmu.datastagingutils.stage_input(self.genome_set_ref)
+        staged_input = cmu.datastagingutils.stage_input(self.genome_set_small_ref)
         self.assertEqual(
             staged_input,
             {
@@ -1279,11 +1279,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         # filtered bins dir has been created
         self.assertTrue(os.path.exists(run_config['filtered_bins_dir']))
         for id in expected['retained_bin_IDs'].keys():
-            self.assertTrue(os.path.isfile(os.path.join(
-                run_config['filtered_bins_dir'],
-                'out_header' + '.' + id + '.' + run_config['fasta_ext']
-            )))
-
+            expected_path = os.path.join(
+                run_config['filtered_bins_dir'], id + '.' + run_config['fasta_ext']
+            )
+            self.assertTrue(os.path.isfile(expected_path))
         #
 
     def test_02_filter_binned_contigs_some_HQ(self):
