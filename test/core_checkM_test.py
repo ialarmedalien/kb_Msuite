@@ -60,11 +60,11 @@ TEST_DATA = {
             'name': 'Assembly.B.654KB',
             'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
         }, {
-            # THIS IS NOT EMPTY! IT HAS ONE NT IN IT
-            'attr': 'assembly_empty_ref',
-            'name': 'Assembly.Empty',
-            'path': 'empty_assembly.fasta',
-        }, {
+        #     # THIS IS NOT EMPTY! IT HAS ONE NT IN IT
+        #     'attr': 'assembly_empty_ref',
+        #     'name': 'Assembly.Empty',
+        #     'path': 'empty_assembly.fasta',
+        # }, {
             'path': 'assembly.fasta',
             'name': 'Test.Assembly',
             'attr': 'assembly_OK_ref',
@@ -207,12 +207,22 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def prep_ref_data(self):
 
-        self.prep_binned_contigs()
-        self.prep_genomes()
-        self.prep_report()
-        self.data_loaded = True
+        try:
+            # self.prep_binned_contigs()
+            self.prep_saved_ref_data()
+            self.prep_genomes()
+            # self.prep_report()
+            self.data_loaded = True
+        except Exception as e:
+            self.logger.error('Error loading ref data!')
+            self.logger.error(e)
+            import sys
+            sys.exit('Ref data could not be prepared. Dying.')
+            # exit the tests early
+
         return True
 
+    def load_saved_ref_data(self):
         saved_refs = {
             'assembly_OK_ref': '49697/1/1',
             'assembly_dodgy_ref': '49697/2/1',
