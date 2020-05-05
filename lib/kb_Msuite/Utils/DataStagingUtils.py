@@ -1,7 +1,11 @@
 import os
 
 from kb_Msuite.Utils.Utils import Base, LogMixin
-from kb_Msuite.Utils.FileUtils import set_fasta_file_extensions, fasta_seq_len_at_least, cat_fasta_files
+from kb_Msuite.Utils.FileUtils import (
+    set_fasta_file_extensions,
+    fasta_seq_len_at_least,
+    cat_fasta_files
+)
 
 
 class DataStagingUtils(Base, LogMixin):
@@ -119,23 +123,6 @@ class DataStagingUtils(Base, LogMixin):
             raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
 
         self.logger.debug({'assembly_set_obj': assembly_set_obj})
-
-        # 'assembly_set_obj' = {
-        #     'data': {
-        #         'description': 'test assembly set',
-        #         'items': [{
-        #             'label': 'assembly_1',
-        #             'ref': '49697/1/1',
-        #             'info': [1, 'Test.Assembly', 'KBaseGenomeAnnotations.Assembly-6.0', '2020-04-29T18:03:17+0000', 1, 'ialarmedalien', 49697, 'test_kb_Msuite_refdata_1588183380977', '656b6409ed3b7ffdfa00247f9834c717', 208652, {'GC content': '0.45594', 'Size': '8397583', 'N Contigs': '922', 'MD5': 'bc1005f1fc28e132389f017ba9c42897'}]
-        #         },
-        #         {
-        #             'label': 'assembly_2',
-        #             'ref': '49697/2/1',
-        #             'info': [2, 'Dodgy_Contig.Assembly', 'KBaseGenomeAnnotations.Assembly-6.0', '2020-04-29T18:03:42+0000', 1, 'ialarmedalien', 49697, 'test_kb_Msuite_refdata_1588183380977', '5294dba9811f03769dac2b8104cfbc45', 752, {'GC content': '0.63818', 'Size': '7360', 'N Contigs': '1', 'MD5': 'c586bdf420a97d2a5ea75dac3b0f25cc'}]
-        #         }]
-        #     },
-        #     'info': [3, 'TEST_ASSEMBLY_SET', 'KBaseSets.AssemblySet-2.1', '2020-04-29T18:03:45+0000', 1, 'ialarmedalien', 49697, 'test_kb_Msuite_refdata_1588183380977', 'd1a2540c6db724e77b32885cfb26fab2', 127, {'item_count': '2', 'description': 'test assembly set'}]
-        # }
 
         for assembly_item in assembly_set_obj['data']['items']:
             assembly_ref = assembly_item['ref']

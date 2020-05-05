@@ -30,7 +30,13 @@ from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
 from kb_Msuite.Utils.Utils import LogMixin
 
-from kb_Msuite.Utils.FileUtils import clean_up_bin_ID, fasta_seq_len_at_least, get_fasta_files, set_fasta_file_extensions, read_bin_stats_file
+from kb_Msuite.Utils.FileUtils import (
+    clean_up_bin_ID,
+    fasta_seq_len_at_least,
+    get_fasta_files,
+    set_fasta_file_extensions,
+    read_bin_stats_file
+)
 
 
 def print_method_name(method):
@@ -38,7 +44,7 @@ def print_method_name(method):
         method_name = method.__name__
         method_name.replace("test_", "")
         self.logger.info("=================================================================")
-        self.logger.info(("RUNNING " + method_name + "()"))
+        self.logger.info("RUNNING " + method_name)
         self.logger.info("=================================================================\n")
         return method(*args, **kwargs)
     return wrapper
@@ -59,11 +65,6 @@ TEST_DATA = {
             'name': 'Assembly.B.654KB',
             'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
         }, {
-        #     # THIS IS NOT EMPTY! IT HAS ONE NT IN IT
-        #     'attr': 'assembly_empty_ref',
-        #     'name': 'Assembly.Empty',
-        #     'path': 'empty_assembly.fasta',
-        # }, {
             'path': 'assembly.fasta',
             'name': 'Test.Assembly',
             'attr': 'assembly_OK_ref',
@@ -232,7 +233,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'assembly_mini_ref': '49697/12/1',
             # assembly set
             'assembly_set_ref': '49697/3/1',
-            'assembly_set_small_ref': '49697/24/1',
+            'assembly_set_smaller_ref': '49697/24/1',
             'assembly_set_with_empty_ref': '49697/25/1',
             # binned contigs
             'binned_contigs_ref': '49697/4/1',
@@ -246,7 +247,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'genome_d_ref': '49697/10/1',
             # genome set
             'genome_set_ref': '49697/11/1',
-            'genome_set_small_ref': '49697/26/7',
+            'genome_set_smaller_ref': '49697/26/7',
             # KBaseReport
             'report_ref': '49697/6/1',
         }
@@ -327,8 +328,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         assembly_list = TEST_DATA['assembly_list']
 
-        for assembly in assembly_list:
-            self._prep_assembly(assembly)
+        # for assembly in assembly_list:
+        #     self._prep_assembly(assembly)
 
         assemblyset_list = [
             {
@@ -337,7 +338,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 'items': [{
                     'ref': getattr(self, a['attr']),
                     'label': a['name'],
-                } for a in assembly_list[0:2]],
+                } for a in assembly_list[0:3]],
             },
         ]
 
@@ -435,15 +436,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         genome_list = TEST_DATA['genome_list']
 
         # upload a few genomes
-        for genome in genome_list:
-            self._prep_genome(genome)
+        # for genome in genome_list:
+        #     self._prep_genome(genome)
 
         # create a genomeSet
         genome_set = {
             'description': 'genomeSet for testing',
             'elements': {},
         }
-        for genome in genome_list[0:2]:
+        for genome in genome_list[0:3]:
             genome_set['elements'][genome['name']] = {
                 'ref': getattr(self, genome['attr'])
             }
@@ -585,6 +586,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         self.prep_ref_data()
+        self.prep_genomes()
+        self.prep_assemblies()
         # new_genomes = [
         #     {
         #         'path': 'empty_genomic.gbff',
@@ -1082,7 +1085,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu._set_run_config()
 
-        genome_list = TEST_DATA['genome_list'][0:2]
+        genome_list = TEST_DATA['genome_list'][0:3]
 
         staged_input = cmu.datastagingutils.stage_input(self.genome_set_small_ref)
         self.assertEqual(
@@ -1608,7 +1611,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'threads': 4
         }
 
-        html_files = [a['name'] + '.html' for a in TEST_DATA['assembly_list'][0:2]]
+        html_files = [a['name'] + '.html' for a in TEST_DATA['assembly_list'][0:3]]
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
@@ -1673,7 +1676,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'threads': 4
         }
 
-        html_files = [a['name'] + '.html' for a in TEST_DATA['genome_list'][0:2]]
+        html_files = [a['name'] + '.html' for a in TEST_DATA['genome_list'][0:3]]
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],

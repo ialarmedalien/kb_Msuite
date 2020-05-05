@@ -5,7 +5,12 @@ import shutil
 from decimal import Decimal
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
-from kb_Msuite.Utils.FileUtils import get_fasta_files, clean_up_bin_ID, copy_file_new_name_ignore_errors, read_bin_stats_file
+from kb_Msuite.Utils.FileUtils import (
+    get_fasta_files,
+    clean_up_bin_ID,
+    copy_file_new_name_ignore_errors,
+    read_bin_stats_file
+)
 
 
 class BinnedContigFilter(Base, LogMixin, TSVMixin):
@@ -34,7 +39,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         self.logger.debug({'obj_type': obj_type})
 
         if obj_type == 'KBaseMetagenomes.BinnedContigs' \
-          and 'output_filtered_binnedcontigs_obj_name' in params:
+         and 'output_filtered_binnedcontigs_obj_name' in params:
             run_config['results_filtered'] = True
         else:
             return None

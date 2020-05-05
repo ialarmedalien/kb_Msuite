@@ -2,7 +2,12 @@ import os
 import json
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
-from kb_Msuite.Utils.FileUtils import clean_up_bin_ID, copy_file_ignore_errors, copy_file_new_name_ignore_errors, read_bin_stats_file
+from kb_Msuite.Utils.FileUtils import (
+    clean_up_bin_ID,
+    copy_file_ignore_errors,
+    copy_file_new_name_ignore_errors,
+    read_bin_stats_file
+)
 
 
 class OutputBuilder(Base, LogMixin, TSVMixin):
