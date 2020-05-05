@@ -227,7 +227,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'assembly_dodgy_ref': '49697/2/1',
             'assembly_a_ref': '49697/15/1',
             'assembly_b_ref': '49697/16/1',
-            'assembly_empty_ref': '49697/23/1', # NOT EMPTY!!
+            'assembly_empty_ref': '49697/23/1',  # NOT EMPTY!!
             'assembly_virus_ref': '49697/14/1',
             'assembly_mini_ref': '49697/12/1',
             # assembly set
@@ -1323,8 +1323,31 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 #
 #         self.assertIsInstance
 
-    # def test_05_outputbuilder_build_html_output_for_lineage_wf(self):
-        # , bin_stats, params, removed_bins=None
+    # def test_05_outputbuilder_build_html_tsv_files(self):
+        # bin_stats, params, removed_bins=None
+
+        # bin_stats = {}
+
+    def notest_05_outputbuilder_genome_assembly_set(self):
+
+        self.require_data('genome_set_small_ref')
+
+        # cmu = CheckMUtil(self.cfg, self.ctx)
+        # # run_config = cmu.run_config()
+
+        # result = cmu.outputbuilder.build_report(params)
+        # self.assertEqual(set(result.keys()), set(['report_name', 'report_ref']))
+
+        # expected_results = {
+        #     'direct_html_link_index': 0,
+        #     'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
+        #     'html_links': [
+        #         'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+        #         'out_header.002.html', 'out_header.005.html', 'out_header.006.html',
+        #         'out_header.009.html', 'out_header.014.html', 'out_header.033.html',
+        #     ],
+        # }
+        # self.check_report(result, expected_results)
 
     def test_05_outputbuilder(self):
 
@@ -1417,7 +1440,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 for row in reader:
                     self.logger.debug({'row': row})
 
-        shutil.rmtree(run_config['base_dir'])
+        self.clean_up_cmu(cmu)
 
     def test_05_outputbuilder_no_checkM_output(self):
 
@@ -1437,7 +1460,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'text_message': 'CheckM did not produce any output.',
         }
         self.check_report(report, expected_results)
-        shutil.rmtree(run_config['base_dir'])
+        self.clean_up_cmu(cmu)
 
     # Test 1: single assembly
     #

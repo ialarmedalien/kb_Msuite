@@ -56,7 +56,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         if bin_stats_data:
             self.logger.info('creating HTML and TSV summary tables')
-            html_links = self.build_html_output_for_lineage_wf(bin_stats_data, params, removed_bins)
+            html_links = self.build_html_tsv_files(bin_stats_data, params, removed_bins)
             report_params['direct_html_link_index'] = 0
             report_params['html_links'] = html_links
 
@@ -107,11 +107,10 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         return returnVal
 
-    # requires the stats file - self.output_dir, 'storage', 'bin_stats_ext.tsv'
-    def build_html_output_for_lineage_wf(self, bin_stats, params, removed_bins=None):
+    def build_html_tsv_files(self, bin_stats, params, removed_bins=None):
 
         '''
-        Based on the output of CheckM lineage_wf, build an HTML report
+        Based on the output of CheckM lineage_wf, build the HTML and TSV output
         '''
         run_config = self.run_config()
         html_dir = run_config['html_dir']
@@ -129,8 +128,6 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
             tmpl_file = os.path.join(tmpl_dest_dir, tmpl)
             if not os.path.exists(tmpl_file) or not os.path.isfile(tmpl_file):
                 copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
-
-        html_index_file = os.path.join(html_dir, 'checkm_results.html')
 
         results_filtered = 'results_filtered' in run_config
 
@@ -183,6 +180,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                     'bin_stats': bin_stats[bin_ID]
                 })
 
+        fields = self.get_fields(results_filtered)
         # add in the checkm table:
         tmpl_data = {
             'template': {
