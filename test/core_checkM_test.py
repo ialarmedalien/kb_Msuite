@@ -625,6 +625,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         expected = [
             ['bin.056.fasta', 'bin.056', 'bin.056.fasta'],
+            ['out_header_05.fasta', 'out_header_05', 'out_header_05.fasta'],
             ['assembly.fasta', 'assembly', 'assembly.fasta'],
             ['../../this.is.fake', '../../this.is.fake', '../../this.is'],
         ]
@@ -776,19 +777,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 cmu.client(client)
             self.assertFalse(hasattr(cmu.client_util, '_' + client))
 
-#     Standard Single Assembly
-#     'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
-#     'KBaseGenomes.ContigSet': self.process_assembly_contigset, -- TODO
-#     AssemblySet
-#     'KBaseSets.AssemblySet': self.process_assembly_set,
-#     Binned Contigs
-#     'KBaseMetagenomes.BinnedContigs': self.process_binned_contigs,
-#     Genome and GenomeSet
-#     'KBaseGenomes.Genome': self.process_genome_genome_set,
-#     'KBaseSearch.GenomeSet': self.process_genome_genome_set,
-#   also test:
-#   - empty versions of each of these
-
     def prep_checkMUtil(self):
 
         cmu = CheckMUtil(self.cfg, self.ctx)
@@ -877,15 +865,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.assertEqual({}, get_fasta_files(test_dir, 'fasta'))
         self.assertEqual(new_dir_inventory, get_fasta_files(test_dir, '007'))
 
-        # check that an error is thrown if the file already exists
+        # check that set_fasta_file_extensions will happily overwrite an extant file
+        # TODO: it would be better if this complained, rather than automatically
+        # overwriting the file
         new_file = os.path.join(test_dir, 'file_007.faa')
         Path(os.path.join(test_dir, 'file_007.faa')).touch()
         self.assertTrue(os.path.isfile(new_file))
         self.assertTrue(os.path.isfile(os.path.join(test_dir, 'file_007.007')))
-
-        # TODO: this should throw an error!
         set_fasta_file_extensions(test_dir, '.007')
         self.assertFalse(os.path.exists(new_file))
+        self.assertTrue(os.path.isfile(os.path.join(test_dir, 'file_007.007')))
 
         self.clean_up_cmu(cmu)
 
@@ -913,7 +902,20 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         #     raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
         #                      'Exit Code: ' + str(exitCode))
 
-    def test_01_data_staging(self):
+    def notest_01_data_staging(self):
+
+        # Standard Single Assembly
+        # 'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
+        # 'KBaseGenomes.ContigSet': self.process_assembly_contigset, -- TODO
+        # AssemblySet
+        # 'KBaseSets.AssemblySet': self.process_assembly_set,
+        # Binned Contigs
+        # 'KBaseMetagenomes.BinnedContigs': self.process_binned_contigs,
+        # Genome and GenomeSet
+        # 'KBaseGenomes.Genome': self.process_genome_genome_set,
+        # 'KBaseSearch.GenomeSet': self.process_genome_genome_set,
+        # also test:
+        # - empty versions of each of these
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging")
@@ -947,7 +949,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    def test_01_data_staging_assembly(self):
+    def notest_01_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assembly")
@@ -965,7 +967,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_01_data_staging_assembly_strange_fasta_ext(self):
+    def notest_01_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assembly_strange_fasta_ext")
@@ -985,7 +987,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_01_data_staging_assemblyset(self):
+    def notest_01_data_staging_assemblyset(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_assemblyset")
@@ -1007,7 +1009,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_01_data_staging_binned_contigs(self):
+    def notest_01_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_binned_contigs")
@@ -1035,7 +1037,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_01_data_staging_genome(self):
+    def notest_01_data_staging_genome(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_genome")
@@ -1058,7 +1060,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_01_data_staging_genome_set(self):
+    def notest_01_data_staging_genome_set(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_genome_set")
@@ -1083,7 +1085,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_02_filter_binned_contigs(self):
+    def notest_02_filter_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs")
@@ -1146,7 +1148,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         return cmu
 
-    def test_02_filter_binned_contigs_checkM_missing_IDs(self):
+    def notest_02_filter_binned_contigs_checkM_missing_IDs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_checkM_missing_IDs")
@@ -1172,7 +1174,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_02_filter_binned_contigs_no_HQ(self):
+    def notest_02_filter_binned_contigs_no_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_no_HQ")
@@ -1194,7 +1196,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_02_filter_binned_contigs_all_HQ(self):
+    def notest_02_filter_binned_contigs_all_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_all_HQ")
@@ -1244,7 +1246,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             self.assertTrue(os.path.isfile(expected_path))
         #
 
-    def test_02_filter_binned_contigs_some_HQ(self):
+    def notest_02_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_some_HQ")
@@ -1268,7 +1270,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.check_filtered_bins(cmu, run_config, results, expected)
         self.clean_up_cmu(cmu)
 
-    def test_02_filter_binned_contigs_some_others_HQ(self):
+    def notest_02_filter_binned_contigs_some_others_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_filter_binned_contigs_some_others_HQ")
@@ -1306,7 +1308,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         return True
 
-    def test_05_write_tsv_output(self):
+    def test_05_write_tsv_headers(self):
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
@@ -1317,25 +1319,20 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             self.mimic_tsv_output(cmu, filename)
             # now read in the file and check the data is correct
             with open(filename, 'r') as tab_text_fh:
-                # read with the csv reader
-                tsv_reader = self.init_tsv_writer(tab_text_fh)
-                lines = []
-                for row in tsv_reader:
-                    lines.append(row)
+                lines = tab_text_fh.read().rstrip()
 
             self.logger.debug({'lines in unfiltered output': lines})
+            self.assertRegex(lines, r'Has Plot File$')
 
         with self.subTest('Output filtered'):
             run_config['results_filtered'] = True
             filename = os.path.join(run_config['base_dir'], 'tab_text_with_filter.tsv')
             self.mimic_tsv_output(cmu, filename)
-            with open(filename, 'r') as tab_text_fh:
-                tsv_reader = self.init_tsv_writer(tab_text_fh)
-                lines = []
-                for row in tsv_reader:
-                    lines.append(row)
+            with open(filename, 'r', newline='') as tab_text_fh:
+                lines = tab_text_fh.read().rstrip()
 
             self.logger.debug({'lines in filtered output': lines})
+            self.assertRegex(lines, r'QA Pass$')
 
     # def test_05_outputbuilder_build_html_tsv_files(self):
         # bin_stats, params, removed_bins=None
@@ -1348,8 +1345,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         cmu.run_config()
-        bin_stats_file = os.path.join('data', 'results', 'assemblyset', 'output', 'storage',
-            'bin_stats_ext.tsv'
+        bin_stats_file = os.path.join(
+            'data', 'results', 'assemblyset', 'output', 'storage', 'bin_stats_ext.tsv'
         )
         bin_stats = read_bin_stats_file(bin_stats_file)
         params = {}
@@ -1380,6 +1377,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
 
+        ids_in_bin_stats = ['002', '005', '006', '009', '014', '033']
+        dist_files = ['out_header.' + id + '.html' for id in ids_in_bin_stats]
         # lots of output:
         with self.subTest('lots of checkM output'):
             shutil.rmtree(run_config['base_dir'], ignore_errors=True)
@@ -1402,9 +1401,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
                 'html_links': [
                     'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                    'out_header.002.html', 'out_header.005.html', 'out_header.006.html',
-                    'out_header.009.html', 'out_header.014.html', 'out_header.033.html',
-                ],
+                ] + dist_files,
             }
             self.check_report(result, expected_results)
             # TODO: check the TSV file -- there should be one bin with a missing plot file
@@ -1444,9 +1441,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 'file_links': ['CheckM_summary_table.tsv', 'full_output'],
                 'html_links': [
                     'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                    'out_header.002.html', 'out_header.005.html', 'out_header.006.html',
-                    'out_header.009.html', 'out_header.014.html', 'out_header.033.html',
-                ],
+                ] + dist_files,
                 'objects_created': [{
                     'ref': filtered_obj_info['filtered_obj_ref'],
                     'description':  'HQ BinnedContigs ' + filtered_obj_info['filtered_obj_name'],

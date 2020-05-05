@@ -39,7 +39,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         self.logger.debug({'obj_type': obj_type})
 
         if obj_type == 'KBaseMetagenomes.BinnedContigs' \
-         and 'output_filtered_binnedcontigs_obj_name' in params:
+          and 'output_filtered_binnedcontigs_obj_name' in params:
             run_config['results_filtered'] = True
         else:
             return None

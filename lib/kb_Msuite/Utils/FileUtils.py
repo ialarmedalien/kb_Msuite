@@ -105,11 +105,12 @@ def set_fasta_file_extensions(folder, extension):
             continue
         filename, file_extension = os.path.splitext(file)
         if file_extension in extensions:
-            # if os.path.exists(os.path.join(folder, filename + '.' + new_extension)):
-            os.rename(
-                os.path.join(folder, file),
-                os.path.join(folder, filename + '.' + new_extension)
-            )
+            old_file = os.path.join(folder, file)
+            new_file = os.path.join(folder, filename + '.' + new_extension)
+            if os.path.exists(new_file):
+                _logger('warning', 'Existing file ' + new_file
+                        + ' has been overwritten by ' + old_file)
+            os.rename(old_file, new_file)
 
 
 def cat_fasta_files(folder, fasta_ext, output_fasta_file, cwd):
