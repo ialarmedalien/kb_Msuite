@@ -199,6 +199,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             print('Test workspace ' + cls.wsName + ' was deleted')
         pass
 
+    def getWsClient(self):
+        return self.__class__.wsClient
+
+    def getImpl(self):
+        return self.__class__.serviceImpl
+
+    def getContext(self):
+        return self.__class__.ctx
+
+    def getConfig(self):
+        return self.__class__.serviceImpl.config
+
     def require_data(self, *args):
         if self.data_loaded:
             return True
@@ -208,9 +220,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     def prep_ref_data(self):
 
         try:
-            # self.prep_binned_contigs()
             self.load_saved_ref_data()
+            # self.prep_binned_contigs()
             # self.prep_genomes()
+            # self.prep_assemblies()
             # self.prep_report()
             self.data_loaded = True
         except Exception as e:
@@ -234,6 +247,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             # assembly set
             'assembly_set_ref': '49697/3/1',
             'assembly_set_smaller_ref': '49697/24/1',
+            'assembly_set_small_ref': '49697/24/2',
             'assembly_set_with_empty_ref': '49697/25/1',
             # binned contigs
             'binned_contigs_ref': '49697/4/1',
@@ -248,6 +262,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             # genome set
             'genome_set_ref': '49697/11/1',
             'genome_set_smaller_ref': '49697/26/7',
+            'genome_set_small_ref': '49697/26/17',
             # KBaseReport
             'report_ref': '49697/6/1',
         }
@@ -259,18 +274,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.data_loaded = True
         return True
-
-    def getWsClient(self):
-        return self.__class__.wsClient
-
-    def getImpl(self):
-        return self.__class__.serviceImpl
-
-    def getContext(self):
-        return self.__class__.ctx
-
-    def getConfig(self):
-        return self.__class__.serviceImpl.config
 
     def _prep_assembly(self, assembly):
         '''
@@ -586,27 +589,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.logger.info("=================================================================\n")
 
         self.prep_ref_data()
-        self.prep_genomes()
-        self.prep_assemblies()
-        # new_genomes = [
-        #     {
-        #         'path': 'empty_genomic.gbff',
-        #         'name': 'Empty_Genome',
-        #         'attr': 'genome_empty_ref',
-        #     }
-        # ]
-        # for genome in new_genomes:
-        #     self._prep_genome(genome)
-
-        # new_assemblies = [
-        #     {
-        #         'attr': 'assembly_empty_ref',
-        #         'name': 'Assembly.Empty',
-        #         'path': 'empty_assembly.fasta',
-        #     }
-        # ]
-        # for assembly in new_assemblies:
-        #     self._prep_assembly(assembly)
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         # run config not yet initialised
@@ -911,6 +893,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         # non-existent file: return empty dict
         self.assertEqual({}, read_bin_stats_file('/path/to/pretend/file'))
+
+        # this could do with more testing...
 
     def notest_fileutils_cat_fasta_files(self):
         # folder, extension, output_fasta_file):
