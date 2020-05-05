@@ -45,7 +45,6 @@ def print_method_name(method):
 
 
 TEST_DATA = {
-
     'assembly_list': [
         {
             'attr': 'assembly_virus_ref',
@@ -210,7 +209,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         try:
             # self.prep_binned_contigs()
             self.load_saved_ref_data()
-            self.prep_genomes()
+            # self.prep_genomes()
             # self.prep_report()
             self.data_loaded = True
         except Exception as e:
@@ -228,7 +227,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'assembly_dodgy_ref': '49697/2/1',
             'assembly_a_ref': '49697/15/1',
             'assembly_b_ref': '49697/16/1',
-            'assembly_empty_ref': '49697/23/1',
+            'assembly_empty_ref': '49697/23/1', # NOT EMPTY!!
             'assembly_virus_ref': '49697/14/1',
             'assembly_mini_ref': '49697/12/1',
             # assembly set
@@ -247,6 +246,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'genome_d_ref': '49697/10/1',
             # genome set
             'genome_set_ref': '49697/11/1',
+            'genome_set_small_ref': '49697/26/7',
             # KBaseReport
             'report_ref': '49697/6/1',
         }
@@ -960,41 +960,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    # def notest_01_data_staging_things_are_empty(self):
-
-    #     self.require_data('assembly_empty', 'assembly_set_empty',
-    #         'genome_empty', 'genome_set_empty')
-
-    #     cmu = CheckMUtil(self.cfg, self.ctx)
-    #     cmu.run_config()
-    #     dsu = cmu.datastagingutils
-
-    #     err_str = 'Assembly or ContigSet is empty in filename: '
-    #     with self.assertRaisesRegex(ValueError, err_str):
-    #         dsu.stage_input(self.assembly_empty)
-
-        # assemblyset errors:
-
-    #    raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
-        # with self.assertRaisesRegex(ValueError, err_str):
-        #     dsu.stage_input(self.ref_does_not_exist)
-
-        # error fetching one of the assemblyset constituents from the WS
-        # raise ValueError('Unable to get object from workspace: (' + assembly_ref + '): ' + str(e))
-
-        # assembly util problem:
-        # raise ValueError('Error generating fasta file from an Assembly or ContigSet with AssemblyUtil')
-
-        # one of the assemblies is empty:
-        # with self.assertRaisesRegex(ValueError, err_str):
-        #     dsu.stage_input(self.assembly_empty)
-        #         raise ValueError('Assembly or ContigSet is empty in filename: ' + str(filename))
-
-        # empty genome / genome set
-        # raise ValueError('genome_ref not found for genome_id: ' + str(genome_id) + ' in genomeSet: ' + str(input_ref))
-        # msg = "Genome "+genome_obj_names[i]+" (ref:"+input_ref+") "+genome_sci_names[i]+" MISSING BOTH contigset_ref AND assembly_ref. Cannot process. Exiting."
-        # raise ValueError('Assembly or ContigSet is empty in filename: '+str(filename))
-
     def test_01_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
@@ -1361,7 +1326,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # def test_05_outputbuilder_build_html_output_for_lineage_wf(self):
         # , bin_stats, params, removed_bins=None
 
-    def notest_05_outputbuilder(self):
+    def test_05_outputbuilder(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 05_outputbuilder")
@@ -1477,11 +1442,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Test 1: single assembly
     #
     # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_assembly")
-    def notest_checkM_lineage_wf_full_app_single_assembly(self):
+    # HIDE @unittest.skip("skipped test_checkM_end_to_end_single_assembly")
+    def notest_checkM_end_to_end_single_assembly(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING checkM_lineage_wf_full_app_single_assembly")
+        self.logger.info("RUNNING checkM_end_to_end_single_assembly")
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_OK_ref')
@@ -1510,10 +1475,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Test 2: Regression test (CheckM <= v1.0.7) for single problem assembly
     #
     # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_problem_assembly")
-    def notest_checkM_lineage_wf_full_app_single_problem_assembly(self):
+    # HIDE @unittest.skip("skipped test_checkM_end_to_end_single_problem_assembly")
+    def notest_checkM_end_to_end_single_problem_assembly(self):
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING checkM_lineage_wf_full_app_single_problem_assembly")
+        self.logger.info("RUNNING checkM_end_to_end_single_problem_assembly")
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_dodgy_ref')
@@ -1543,10 +1508,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Test 3: binned contigs
     #
     # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs")
-    def notest_checkM_lineage_wf_full_app_binned_contigs(self):
+    # HIDE @unittest.skip("skipped test_checkM_end_to_end_binned_contigs")
+    def notest_checkM_end_to_end_binned_contigs(self):
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING checkM_lineage_wf_full_app_binned_contigs")
+        self.logger.info("RUNNING checkM_end_to_end_binned_contigs")
         self.logger.info("=================================================================\n")
 
         # Even with the reduced_tree option, this will take a long time and crash if your
@@ -1579,10 +1544,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Test 4: Regression test for empty binned contigs object
     #
     # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_binned_contigs_EMPTY")
-    def notest_checkM_lineage_wf_full_app_binned_contigs_EMPTY(self):
+    # HIDE @unittest.skip("skipped test_checkM_end_to_end_binned_contigs_EMPTY")
+    def notest_checkM_end_to_end_binned_contigs_EMPTY(self):
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING checkM_lineage_wf_full_app_binned_contigs_EMPTY")
+        self.logger.info("RUNNING checkM_end_to_end_binned_contigs_EMPTY")
         self.logger.info("=================================================================\n")
 
         self.require_data('binned_contigs_empty_ref')
@@ -1601,17 +1566,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Test 5: Assembly Set
     #
     # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_assemblySet")
-    def notest_checkM_lineage_wf_full_app_assemblySet(self):
+    # HIDE @unittest.skip("skipped test_checkM_end_to_end_assemblySet")
+    def test_checkM_end_to_end_assemblySet(self):
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING checkM_lineage_wf_full_app_assemblySet")
+        self.logger.info("RUNNING checkM_end_to_end_assemblySet")
         self.logger.info("=================================================================\n")
 
-        self.require_data('assembly_set_ref')
+        self.require_data('assembly_set_small_ref')
         # run checkM lineage_wf app on an assembly set
-        input_ref = self.assembly_set_ref
+        input_ref = self.assembly_set_small_ref
         params = {
-            'dir_name': 'assembly_set',
+            'dir_name': 'assembly_set_small',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -1620,13 +1585,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'threads': 4
         }
 
+        html_files = [a['name'] + '.html' for a in TEST_DATA['assembly_list'][0:2]]
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': [
                 'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                'assembly_1.html', 'assembly_2.html'
-            ],
+            ] + html_files,
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1634,10 +1599,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Test 6: Single Genome
     #
     # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_single_genome")
-    def notest_checkM_lineage_wf_full_app_single_genome(self):
+    # HIDE @unittest.skip("skipped test_checkM_end_to_end_single_genome")
+    def notest_checkM_end_to_end_single_genome(self):
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING checkM_lineage_wf_full_app_single_genome")
+        self.logger.info("RUNNING checkM_end_to_end_single_genome")
         self.logger.info("=================================================================\n")
 
         self.require_data('genome_refs')
@@ -1666,17 +1631,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Test 7: Genome Set
     #
     # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_genomeSet")
-    def notest_checkM_lineage_wf_full_app_genomeSet(self):
+    # HIDE @unittest.skip("skipped test_checkM_end_to_end_genomeSet")
+    def test_checkM_end_to_end_genomeSet(self):
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING checkM_lineage_wf_full_app_genomeSet")
+        self.logger.info("RUNNING checkM_end_to_end_genomeSet")
         self.logger.info("=================================================================\n")
 
-        self.require_data('genome_set_ref')
+        self.require_data('genome_set_small_ref')
         # run checkM lineage_wf app on a genome set
-        input_ref = self.genome_set_ref
+        input_ref = self.genome_set_small_ref
         params = {
-            'dir_name': 'genome_set',
+            'dir_name': 'genome_set_small',
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -1684,14 +1649,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
             'save_plots_dir': 1,
             'threads': 4
         }
-        # two genomes in the genome set
+
+        html_files = [a['name'] + '.html' for a in TEST_DATA['genome_list'][0:2]]
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': [
                 'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                'genome_1.html', 'genome_2.html'
-            ],
+            ] + html_files,
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1699,7 +1664,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     # Test 11: filter binned contigs to HQ binned contigs
     #
     # Uncomment to skip this test
-    # HIDE @unittest.skip("skipped test_checkM_lineage_wf_full_app_filter_binned_contigs")
+    # HIDE @unittest.skip("skipped test_checkM_end_to_end_filter_binned_contigs")
     def notest_checkM_lineage_wf_withFilter_binned_contigs(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
@@ -1798,9 +1763,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
     def demo_bin_stats(self):
         return {
-            'bin.002': {'GC std': 0.022204954407497902, '# genomes': 5449, 'Genome size': 605546, 'Longest contig': 7264, 'GCN0': ['PF00162', 'PF00298', 'PF00889', 'TIGR00615', 'PF03484', 'PF04983', 'PF01016', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF04997', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'TIGR00344', 'PF01281', 'PF00416', 'PF00831', 'TIGR00459', 'TIGR00755', 'PF04565', 'PF02367', 'PF11987', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'PF00366', 'TIGR02432', 'TIGR00460', 'PF00177', 'PF00828', 'PF03946', 'PF00886', 'TIGR03263', 'PF00333', 'PF00410', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'TIGR03594', 'PF08529', 'PF02130', 'PF04560', 'TIGR00922', 'TIGR02075', 'PF01000', 'TIGR00810', 'TIGR01079', 'PF01632', 'TIGR03723', 'PF00238', 'PF01121', 'PF01746', 'PF01195', 'PF00572', 'PF03719', 'PF00829', 'PF00861', 'PF00466', 'PF04998', 'PF06071', 'TIGR00855', 'TIGR00329', 'TIGR00084', 'TIGR00250', 'PF13184', 'PF04561', 'TIGR00019', 'PF00687', 'PF05697', 'PF00453', 'PF01250', 'PF08459', 'PF00318', 'PF05491', 'PF02978', 'PF00623'], 'GCN1': ['PF01509', 'PF01018', 'PF00189', 'PF01795', 'PF00252', 'TIGR00392', 'PF01668', 'PF00181', 'PF12344', 'PF01409', 'PF03947', 'PF00203', 'PF00237', 'PF00276', 'PF01649', 'PF06421', 'PF02912', 'PF02033', 'PF00573'], 'GCN2': [], 'marker lineage': 'k__Bacteria', 'GC': 0.28188279668266325, 'GCN4': [], '# scaffolds': 183, 'Completeness': 18.495297805642632, 'GCN3': [], 'GCN5+': [], '# contigs': 183, 'Translation table': 11, '# markers': 104, 'Coding density': 0.9122114587496243, 'Mean contig length': 3308.9945355191257, '# marker sets': 58, 'N50 (contigs)': 3222, '1': 19, '0': 85, '3': 0, '2': 0, 'Longest scaffold': 7264, '4': 0, '5+': 0, 'Contamination': 0.0, '# predicted genes': 621, 'N50 (scaffolds)': 3222, '# ambiguous bases': 0, 'Mean scaffold length': 3308.9945355191257},
-            'bin.009': {'GC std': 0.019068777402063024, '# genomes': 5449, 'Genome size': 373747, 'Longest contig': 7332, 'GCN0': ['PF01509', 'PF00162', 'PF00889', 'TIGR00615', 'PF03484', 'PF04983', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF04997', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'TIGR00344', 'PF00416', 'TIGR00459', 'TIGR00755', 'TIGR00392', 'PF04565', 'PF02367', 'PF01668', 'PF00181', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'TIGR02432', 'TIGR00460', 'PF00177', 'PF00828', 'PF00886', 'TIGR03263', 'PF00333', 'PF00410', 'PF12344', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'PF01409', 'TIGR03594', 'PF08529', 'PF02130', 'PF03947', 'PF04560', 'TIGR00922', 'TIGR02075', 'PF01000', 'TIGR00810', 'PF01632', 'TIGR03723', 'PF00203', 'PF01121', 'PF01746', 'PF01195', 'PF00572', 'PF03719', 'PF00861', 'PF00466', 'PF04998', 'PF06071', 'TIGR00855', 'TIGR00329', 'TIGR00084', 'TIGR00250', 'PF00276', 'PF13184', 'PF04561', 'PF00687', 'PF01649', 'PF06421', 'PF05697', 'PF00453', 'PF00318', 'PF02978', 'PF02912', 'PF00623', 'PF02033', 'PF00573'], 'GCN1': ['PF00298', 'PF01018', 'PF01016', 'PF00189', 'PF01795', 'PF01281', 'PF00831', 'PF00252', 'PF11987', 'PF00366', 'PF03946', 'TIGR01079', 'PF00238', 'PF00829', 'PF00237', 'TIGR00019', 'PF01250', 'PF08459', 'PF05491'], 'GCN2': [], 'marker lineage': 'k__Bacteria', 'GC': 0.6536159487567793, 'GCN4': [], '# scaffolds': 107, 'Completeness': 16.901776384535005, 'GCN3': [], 'GCN5+': [], '# contigs': 107, 'Translation table': 11, '# markers': 104, 'Coding density': 0.8976179073009282, 'Mean contig length': 3492.96261682243, '# marker sets': 58, 'N50 (contigs)': 3305, '1': 19, '0': 85, '3': 0, '2': 0, 'Longest scaffold': 7332, '4': 0, '5+': 0, 'Contamination': 0.0, '# predicted genes': 444, 'N50 (scaffolds)': 3305, '# ambiguous bases': 0, 'Mean scaffold length': 3492.96261682243},
-            'bin.006': {'GC std': 0.0180666565004557, '# genomes': 5449, 'Genome size': 520659, 'Longest contig': 25878, 'GCN0': ['PF00162', 'TIGR00615', 'PF00416', 'TIGR00459', 'TIGR00392', 'PF01668', 'TIGR02432', 'TIGR00460', 'PF00886', 'TIGR03263', 'PF01409', 'TIGR03594', 'PF08529', 'TIGR02075', 'TIGR03723', 'PF01121', 'PF01746', 'PF01195', 'PF00466', 'TIGR00855', 'TIGR00329', 'PF13184', 'PF00687', 'PF02978', 'PF02912'], 'GCN1': ['PF01509', 'PF00298', 'PF01018', 'PF00889', 'PF03484', 'PF04983', 'PF01016', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'PF00189', 'TIGR00344', 'PF01795', 'PF01281', 'PF00831', 'PF00252', 'TIGR00755', 'PF04565', 'PF02367', 'PF00181', 'PF11987', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'PF00366', 'PF00177', 'PF00828', 'PF03946', 'PF00333', 'PF00410', 'PF12344', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'PF02130', 'PF03947', 'PF04560', 'TIGR00922', 'PF01000', 'TIGR00810', 'TIGR01079', 'PF01632', 'PF00238', 'PF00203', 'PF00572', 'PF03719', 'PF00829', 'PF00861', 'PF00237', 'PF04998', 'PF06071', 'TIGR00084', 'TIGR00250', 'PF00276', 'PF04561', 'TIGR00019', 'PF01649', 'PF06421', 'PF05697', 'PF00453', 'PF01250', 'PF08459', 'PF00318', 'PF05491', 'PF00623', 'PF02033', 'PF00573'], 'GCN2': ['PF04997'], 'marker lineage': 'k__Bacteria', 'GC': 0.3391874528242093, 'GCN4': [], '# scaffolds': 75, 'Completeness': 66.32183908045978, 'GCN3': [], 'GCN5+': [], '# contigs': 75, 'Translation table': 11, '# markers': 104, 'Coding density': 0.8351224121738028, 'Mean contig length': 6942.12, '# marker sets': 58, 'N50 (contigs)': 7985, '1': 78, '0': 25, '3': 0, '2': 1, 'Longest scaffold': 25878, '4': 0, '5+': 0, 'Contamination': 0.15673981191222572, '# predicted genes': 614, 'N50 (scaffolds)': 7985, '# ambiguous bases': 0, 'Mean scaffold length': 6942.12},
+            'out_header.002': {'GC std': 0.022204954407497902, '# genomes': 5449, 'Genome size': 605546, 'Longest contig': 7264, 'GCN0': ['PF00162', 'PF00298', 'PF00889', 'TIGR00615', 'PF03484', 'PF04983', 'PF01016', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF04997', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'TIGR00344', 'PF01281', 'PF00416', 'PF00831', 'TIGR00459', 'TIGR00755', 'PF04565', 'PF02367', 'PF11987', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'PF00366', 'TIGR02432', 'TIGR00460', 'PF00177', 'PF00828', 'PF03946', 'PF00886', 'TIGR03263', 'PF00333', 'PF00410', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'TIGR03594', 'PF08529', 'PF02130', 'PF04560', 'TIGR00922', 'TIGR02075', 'PF01000', 'TIGR00810', 'TIGR01079', 'PF01632', 'TIGR03723', 'PF00238', 'PF01121', 'PF01746', 'PF01195', 'PF00572', 'PF03719', 'PF00829', 'PF00861', 'PF00466', 'PF04998', 'PF06071', 'TIGR00855', 'TIGR00329', 'TIGR00084', 'TIGR00250', 'PF13184', 'PF04561', 'TIGR00019', 'PF00687', 'PF05697', 'PF00453', 'PF01250', 'PF08459', 'PF00318', 'PF05491', 'PF02978', 'PF00623'], 'GCN1': ['PF01509', 'PF01018', 'PF00189', 'PF01795', 'PF00252', 'TIGR00392', 'PF01668', 'PF00181', 'PF12344', 'PF01409', 'PF03947', 'PF00203', 'PF00237', 'PF00276', 'PF01649', 'PF06421', 'PF02912', 'PF02033', 'PF00573'], 'GCN2': [], 'marker lineage': 'k__Bacteria', 'GC': 0.28188279668266325, 'GCN4': [], '# scaffolds': 183, 'Completeness': 18.495297805642632, 'GCN3': [], 'GCN5+': [], '# contigs': 183, 'Translation table': 11, '# markers': 104, 'Coding density': 0.9122114587496243, 'Mean contig length': 3308.9945355191257, '# marker sets': 58, 'N50 (contigs)': 3222, '1': 19, '0': 85, '3': 0, '2': 0, 'Longest scaffold': 7264, '4': 0, '5+': 0, 'Contamination': 0.0, '# predicted genes': 621, 'N50 (scaffolds)': 3222, '# ambiguous bases': 0, 'Mean scaffold length': 3308.9945355191257},
+            'out_header.009': {'GC std': 0.019068777402063024, '# genomes': 5449, 'Genome size': 373747, 'Longest contig': 7332, 'GCN0': ['PF01509', 'PF00162', 'PF00889', 'TIGR00615', 'PF03484', 'PF04983', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF04997', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'TIGR00344', 'PF00416', 'TIGR00459', 'TIGR00755', 'TIGR00392', 'PF04565', 'PF02367', 'PF01668', 'PF00181', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'TIGR02432', 'TIGR00460', 'PF00177', 'PF00828', 'PF00886', 'TIGR03263', 'PF00333', 'PF00410', 'PF12344', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'PF01409', 'TIGR03594', 'PF08529', 'PF02130', 'PF03947', 'PF04560', 'TIGR00922', 'TIGR02075', 'PF01000', 'TIGR00810', 'PF01632', 'TIGR03723', 'PF00203', 'PF01121', 'PF01746', 'PF01195', 'PF00572', 'PF03719', 'PF00861', 'PF00466', 'PF04998', 'PF06071', 'TIGR00855', 'TIGR00329', 'TIGR00084', 'TIGR00250', 'PF00276', 'PF13184', 'PF04561', 'PF00687', 'PF01649', 'PF06421', 'PF05697', 'PF00453', 'PF00318', 'PF02978', 'PF02912', 'PF00623', 'PF02033', 'PF00573'], 'GCN1': ['PF00298', 'PF01018', 'PF01016', 'PF00189', 'PF01795', 'PF01281', 'PF00831', 'PF00252', 'PF11987', 'PF00366', 'PF03946', 'TIGR01079', 'PF00238', 'PF00829', 'PF00237', 'TIGR00019', 'PF01250', 'PF08459', 'PF05491'], 'GCN2': [], 'marker lineage': 'k__Bacteria', 'GC': 0.6536159487567793, 'GCN4': [], '# scaffolds': 107, 'Completeness': 16.901776384535005, 'GCN3': [], 'GCN5+': [], '# contigs': 107, 'Translation table': 11, '# markers': 104, 'Coding density': 0.8976179073009282, 'Mean contig length': 3492.96261682243, '# marker sets': 58, 'N50 (contigs)': 3305, '1': 19, '0': 85, '3': 0, '2': 0, 'Longest scaffold': 7332, '4': 0, '5+': 0, 'Contamination': 0.0, '# predicted genes': 444, 'N50 (scaffolds)': 3305, '# ambiguous bases': 0, 'Mean scaffold length': 3492.96261682243},
+            'out_header.006': {'GC std': 0.0180666565004557, '# genomes': 5449, 'Genome size': 520659, 'Longest contig': 25878, 'GCN0': ['PF00162', 'TIGR00615', 'PF00416', 'TIGR00459', 'TIGR00392', 'PF01668', 'TIGR02432', 'TIGR00460', 'PF00886', 'TIGR03263', 'PF01409', 'TIGR03594', 'PF08529', 'TIGR02075', 'TIGR03723', 'PF01121', 'PF01746', 'PF01195', 'PF00466', 'TIGR00855', 'TIGR00329', 'PF13184', 'PF00687', 'PF02978', 'PF02912'], 'GCN1': ['PF01509', 'PF00298', 'PF01018', 'PF00889', 'PF03484', 'PF04983', 'PF01016', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'PF00189', 'TIGR00344', 'PF01795', 'PF01281', 'PF00831', 'PF00252', 'TIGR00755', 'PF04565', 'PF02367', 'PF00181', 'PF11987', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'PF00366', 'PF00177', 'PF00828', 'PF03946', 'PF00333', 'PF00410', 'PF12344', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'PF02130', 'PF03947', 'PF04560', 'TIGR00922', 'PF01000', 'TIGR00810', 'TIGR01079', 'PF01632', 'PF00238', 'PF00203', 'PF00572', 'PF03719', 'PF00829', 'PF00861', 'PF00237', 'PF04998', 'PF06071', 'TIGR00084', 'TIGR00250', 'PF00276', 'PF04561', 'TIGR00019', 'PF01649', 'PF06421', 'PF05697', 'PF00453', 'PF01250', 'PF08459', 'PF00318', 'PF05491', 'PF00623', 'PF02033', 'PF00573'], 'GCN2': ['PF04997'], 'marker lineage': 'k__Bacteria', 'GC': 0.3391874528242093, 'GCN4': [], '# scaffolds': 75, 'Completeness': 66.32183908045978, 'GCN3': [], 'GCN5+': [], '# contigs': 75, 'Translation table': 11, '# markers': 104, 'Coding density': 0.8351224121738028, 'Mean contig length': 6942.12, '# marker sets': 58, 'N50 (contigs)': 7985, '1': 78, '0': 25, '3': 0, '2': 1, 'Longest scaffold': 25878, '4': 0, '5+': 0, 'Contamination': 0.15673981191222572, '# predicted genes': 614, 'N50 (scaffolds)': 7985, '# ambiguous bases': 0, 'Mean scaffold length': 6942.12},
         }
 
 

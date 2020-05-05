@@ -136,15 +136,6 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         html_files = [
             {
-                # checkm table:
-                # 'template': {
-                #     'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
-                #     'template_data_json': {'params':params,}
-                # },
-                'name': 'checkm_results.html',
-                'description': 'Summarized report from CheckM',
-                'path': html_index_file,
-            }, {
                 'name': run_config['tab_text_file_name'],
                 'path': run_config['tab_text_file'],
             }, {
@@ -160,9 +151,9 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
             # bin_stats contains the FASTA file name without the extension
             for bin_ID in sorted(bin_stats.keys()):
+                clean_bin_ID = clean_up_bin_ID(bin_ID)
                 bin_stats[bin_ID]['Bin Name'] = bin_ID
 
-                clean_bin_ID = clean_up_bin_ID(bin_ID)
                 # create the dist plot page
                 plot_file = os.path.join(plots_dir, str(bin_ID) + self.PLOT_FILE_EXT)
                 bin_stats[bin_ID]['Has Plot File'] = False
@@ -191,6 +182,20 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                     'clean_bin_ID': clean_bin_ID,
                     'bin_stats': bin_stats[bin_ID]
                 })
+
+        # add in the checkm table:
+        html_files.insert(0,
+            'template': {
+                'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
+                'template_data_json': json.loads({
+                    'params':   params,
+                    'fields':   fields,
+                    'data':     bin_stats,
+                }),
+            },
+            'name': 'checkm_results.html',
+            'description': 'Summarized report from CheckM',
+        )
 
         return html_files
 
