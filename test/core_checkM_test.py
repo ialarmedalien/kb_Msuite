@@ -1295,7 +1295,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
     def mimic_tsv_output(self, cmu, tab_text_file):
 
         run_config = cmu.run_config()
-        results_filtered = 'results_filtered' in run_config
+        results_filtered = run_config['results_filtered']
         self.logger.debug({'results_filtered': results_filtered})
 
         with open(tab_text_file, 'w', newline='') as tab_text_fh:
@@ -1310,6 +1310,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
+        os.makedirs(run_config['base_dir'], exist_ok=True)
 
         with self.subTest('No output filters in place'):
             filename = os.path.join(run_config['base_dir'], 'tab_text_no_filter.tsv')

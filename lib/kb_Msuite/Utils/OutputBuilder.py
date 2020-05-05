@@ -134,7 +134,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
             if not os.path.exists(tmpl_file) or not os.path.isfile(tmpl_file):
                 copy_file_ignore_errors(tmpl, tmpl_src_dir, tmpl_dest_dir)
 
-        results_filtered = 'results_filtered' in run_config
+        results_filtered = run_config['results_filtered']
 
         self.logger.debug({'results_filtered': results_filtered})
 
