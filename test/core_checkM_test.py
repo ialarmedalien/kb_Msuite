@@ -209,7 +209,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         try:
             # self.prep_binned_contigs()
-            self.prep_saved_ref_data()
+            self.load_saved_ref_data()
             self.prep_genomes()
             # self.prep_report()
             self.data_loaded = True
