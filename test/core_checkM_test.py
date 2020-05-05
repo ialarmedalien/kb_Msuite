@@ -1009,7 +1009,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_01_data_staging_binned_contigs(self):
+    def test_01_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_data_staging_binned_contigs")
@@ -1032,7 +1032,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         # three binned contigs
         for number in ["1", "2", "3"]:
             self.assertTrue(os.path.isfile(os.path.join(
-                run_config['input_dir'], 'out_header.00' + number + '.' + run_config['fasta_ext']
+                run_config['input_dir'], 'bin.00' + number + '.' + run_config['fasta_ext']
             )))
 
         self.clean_up_cmu(cmu)
@@ -1339,34 +1339,65 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         # bin_stats = {}
 
-    def notest_05_outputbuilder_genome_assembly_set(self):
+    def test_05_outputbuilder_genome_assembly_set(self):
 
         self.require_data('genome_set_small_ref')
 
         cmu = CheckMUtil(self.cfg, self.ctx)
-        cmu.run_config()
+        run_config = cmu.run_config()
+
         bin_stats_file = os.path.join(
-            'data', 'results', 'assemblyset', 'output', 'storage', 'bin_stats_ext.tsv'
+            'data', 'results', 'assemblyset_bin_stats_ext.tsv'
         )
+
+        # create the output dirs
+        for dir in [run_config['plots_dir'], run_config['output_dir']]:
+            os.makedirs(dir, exist_ok=True)
+
+        png_file_ext = cmu.output_builder.PLOT_FILE_EXT
+        genomes = TEST_DATA['genome_list'][0:3]
+        for g in genomes:
+            png_file_path = os.path.join(run_config['plots_dir'], g['name'] + png_file_ext)
+            Path(png_file_path).touch(exist_ok=True)
+
         bin_stats = read_bin_stats_file(bin_stats_file)
         params = {}
+        html_files = cmu.outputbuilder.build_html_tsv_files(bin_stats, params)
 
-        output = cmu.outputbuilder.build_html_tsv_files(bin_stats, params)
-        # result = cmu.outputbuilder.build_report(params)
-        # self.assertEqual(set(result.keys()), set(['report_name', 'report_ref']))
+        # html_files[0] is the summary template
+        self.assertEqual(html_files[0]['name'], 'checkm_results.html')
+        self.assertTrue('template' in html_files[0])
 
-        # expected_results = {
-        #     'direct_html_link_index': 0,
-        #     'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
-        #     'html_links': [
-        #         'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-        #         'out_header.002.html', 'out_header.005.html', 'out_header.006.html',
-        #         'out_header.009.html', 'out_header.014.html', 'out_header.033.html',
-        #     ],
-        # }
-        # self.check_report(result, expected_results)
+        # html_files[1] is the TSV file
+        self.assertEqual(html_files[1], {
+            'name': run_config['tab_text_file_name'],
+            'path': run_config['tab_text_file'],
+        })
+        expected_content_file = os.path.join(
+            'data', 'expected', 'summary-assemblyset-allplots.tsv'
+        )
+        self.assertEqual(
+                open(html_files[1]['path'], 'r').read(),
+                open(expected_content_file, 'r').read()
+            )
 
-    def test_05_outputbuilder(self):
+        # html_files[2] is the html plots dir
+        self.assertEqual(html_files[2], {
+            'name': 'plots',
+            'path': os.path.join(run_config['html_dir'], 'plots')
+        })
+        # 3-5 are the dist files
+        genome_names = [g['name'] for g in genomes]
+        dist_file_names = [h['name'] for h in html_files[3:]]
+        self.assertEqual(
+            set(g['name'] for g in genomes),
+            set(h['name'] for h in html_files[3:]),
+        )
+        self.assertEqual(set(genome_names), set(dist_file_names))
+
+        self.clean_up_cmu(cmu)
+
+    def test_05_outputbuilder_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 05_outputbuilder")
@@ -1378,12 +1409,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         run_config = cmu.run_config()
 
         ids_in_bin_stats = ['002', '005', '006', '009', '014', '033']
-        dist_files = ['out_header.' + id + '.html' for id in ids_in_bin_stats]
+        dist_files = ['bin.' + id + '.html' for id in ids_in_bin_stats]
         # lots of output:
         with self.subTest('lots of checkM output'):
             shutil.rmtree(run_config['base_dir'], ignore_errors=True)
             os.makedirs(run_config['base_dir'], exist_ok=True)
-            for dir in ['bins', 'output', 'plots']:
+            for dir in ['output', 'plots']:
                 shutil.copytree(
                     os.path.join('data', 'many_results', dir),
                     os.path.join(run_config['base_dir'], dir)

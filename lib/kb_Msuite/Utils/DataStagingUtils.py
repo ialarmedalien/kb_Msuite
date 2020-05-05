@@ -16,6 +16,7 @@ class DataStagingUtils(Base, LogMixin):
         config = checkMUtil_obj.config
         self.scratch = os.path.abspath(config['scratch'])
         self.workspacehelper = self.checkMUtil.workspacehelper
+        self.MIN_FASTA_LEN = 1
 
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
@@ -41,11 +42,13 @@ class DataStagingUtils(Base, LogMixin):
 
             staged_input
             {"input_dir": '...'}
+
+        NOTE: this app assumes that all names are unique. It would be more reliable to use
+        references, instead of names
+
         '''
 
         run_config = self.run_config()
-
-        # 1) generate a folder in scratch to hold the input
         input_dir = run_config['input_dir']
         all_seq_fasta = run_config['all_seq_fasta']
         fasta_ext = run_config['fasta_ext']
@@ -99,8 +102,7 @@ class DataStagingUtils(Base, LogMixin):
                 'Error generating fasta file from an Assembly or ContigSet with AssemblyUtil'
             )
         # make sure fasta file isn't empty
-        min_fasta_len = 1
-        if not fasta_seq_len_at_least(filename, min_fasta_len):
+        if not fasta_seq_len_at_least(filename, self.MIN_FASTA_LEN):
             raise ValueError('Assembly or ContigSet empty: ' + str(filename))
 
         self.logger.debug('Saved assembly or contigset to ' + filename)
@@ -112,7 +114,6 @@ class DataStagingUtils(Base, LogMixin):
         Given an assemblyset, retrieve the sequence of each member and save it to input_dir
 
         '''
-
         # read assemblySet
         try:
             assembly_set_obj = self.client('SetAPI').get_assembly_set_v1({
@@ -137,6 +138,8 @@ class DataStagingUtils(Base, LogMixin):
 
     def process_binned_contigs(self, input_ref, input_dir, fasta_ext, obj_name, obj_type):
 
+        run_config = self.checkMUtil.run_config()
+        basename = run_config['bin_basename']
         # download the bins as fasta and set the input folder name
         file_result = self.client('MetagenomeUtils').binned_contigs_to_file({
             'input_ref': input_ref,
@@ -149,9 +152,19 @@ class DataStagingUtils(Base, LogMixin):
         for (dirpath, dirnames, filenames) in os.walk(input_dir):
             for fasta_file in filenames:
                 fasta_path = os.path.join(input_dir, fasta_file)
+                if fasta_file.startswith('out_header'):
+                    new_file_name = fasta_file.replace('out_header', basename)
+                    new_file_path = os.path.join(input_dir, new_file_name)
+
+                    if os.path.exists(new_file_path):
+                        # this should not happen as the directory was created by MG Utils
+                        self.logger.warning('File already exists with name ' + new_file_name)
+                    # rename the file and update the fasta_path variable
+                    os.rename(fasta_path, new_file_path)
+                    fasta_path = new_file_path
+
                 # make sure fasta file isn't empty
-                min_fasta_len = 1
-                if not fasta_seq_len_at_least(fasta_path, min_fasta_len):
+                if not fasta_seq_len_at_least(fasta_path, self.MIN_FASTA_LEN):
                     raise ValueError('Binned Assembly is empty for fasta_path: ' + str(fasta_path))
                 self.logger.info('Processed valid binned contig file ' + fasta_path)
             break

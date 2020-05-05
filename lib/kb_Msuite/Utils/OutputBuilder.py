@@ -155,7 +155,6 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
             # bin_stats contains the FASTA file name without the extension
             for bin_ID in sorted(bin_stats.keys()):
-                clean_bin_ID = clean_up_bin_ID(bin_ID)
                 bin_stats[bin_ID]['Bin Name'] = bin_ID
 
                 # create the dist plot page
@@ -183,7 +182,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                 self.logger.debug({
                     'event': 'tsv_row_data',
                     'bin_ID': bin_ID,
-                    'clean_bin_ID': clean_bin_ID,
+                    'clean_bin_ID': clean_up_bin_ID(bin_ID),
                     'bin_stats': bin_stats[bin_ID]
                 })
 

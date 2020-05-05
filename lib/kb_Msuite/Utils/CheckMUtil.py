@@ -72,7 +72,7 @@ class CheckMUtil(Base, LogMixin):
 
         tab_text_dir = os.path.join(base_dir, 'tab_text')
         run_config['tab_text_dir'] = tab_text_dir
-        run_config['bin_basename'] = 'Bin'
+        run_config['bin_basename'] = 'bin'
 
         run_config['template_src_dir'] = os.path.join(self.appdir, 'templates')
         run_config['template_dest_dir'] = os.path.join(base_dir, 'templates')
