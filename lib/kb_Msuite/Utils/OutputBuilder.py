@@ -184,7 +184,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                 })
 
         # add in the checkm table:
-        html_files.insert(0,
+        tmpl_data = {
             'template': {
                 'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
                 'template_data_json': json.loads({
@@ -195,7 +195,8 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
             },
             'name': 'checkm_results.html',
             'description': 'Summarized report from CheckM',
-        )
+        }
+        html_files.insert(0, tmpl_data)
 
         return html_files
 
