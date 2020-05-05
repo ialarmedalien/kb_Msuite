@@ -28,7 +28,7 @@ from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.ClientUtil import ClientUtil
 from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
-from kb_Msuite.Utils.Utils import LogMixin
+from kb_Msuite.Utils.Utils import LogMixin, TSVMixin
 
 from kb_Msuite.Utils.FileUtils import (
     clean_up_bin_ID,
@@ -117,7 +117,7 @@ TEST_DATA = {
 }
 
 
-class CoreCheckMTest(unittest.TestCase, LogMixin):
+class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
     @classmethod
     def setUpClass(cls):
@@ -1292,23 +1292,49 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
         self.check_filtered_bins(cmu, run_config, results, expected)
         self.clean_up_cmu(cmu)
 
-#     def test_05_write_tsv_output(self):
-#
-#         cmu = CheckMUtil(self.cfg, self.ctx)
-#         run_config = cmu.run_config()
-#         ob = cmu.outputbuilder
-#
-#         # set up some plots
-#
-#         demo_data = self.demo_bin_stats()
-#
-#
-#         with open(run_config['base_dir'], 'w', newline='') as tab_text_fh:
-#             tsv_writer = self.init_tsv_writer(tab_text_fh)
-#             self.write_tsv_headers(tsv_writer, results_filtered)
-#             self.write_tsv_row(tsv_writer, bid, bin_stats[bid], results_filtered)
-#
-#         self.assertIsInstance
+    def mimic_tsv_output(self, cmu, tab_text_file):
+
+        run_config = cmu.run_config()
+        results_filtered = 'results_filtered' in run_config
+        self.logger.debug({'results_filtered': results_filtered})
+
+        with open(tab_text_file, 'w', newline='') as tab_text_fh:
+            tsv_writer = cmu.outputbuilder.init_tsv_writer(tab_text_fh)
+            cmu.outputbuilder.write_tsv_headers(tsv_writer, results_filtered)
+            # for bin_stats in bin_stats_line:
+            #     cmu.outputbuilder.write_tsv_row(tsv_writer, bin_stats, results_filtered)
+
+        return True
+
+    def test_05_write_tsv_output(self):
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        run_config = cmu.run_config()
+
+        with self.subTest('No output filters in place'):
+            filename = os.path.join(run_config['base_dir'], 'tab_text_no_filter.tsv')
+            self.mimic_tsv_output(cmu, filename)
+            # now read in the file and check the data is correct
+            with open(filename, 'r') as tab_text_fh:
+                # read with the csv reader
+                tsv_reader = self.init_tsv_writer(tab_text_fh)
+                lines = []
+                for row in tsv_reader:
+                    lines.append(row)
+
+            self.logger.debug({'lines in unfiltered output': lines})
+
+        with self.subTest('Output filtered'):
+            run_config['results_filtered'] = True
+            filename = os.path.join(run_config['base_dir'], 'tab_text_with_filter.tsv')
+            self.mimic_tsv_output(cmu, filename)
+            with open(filename, 'r') as tab_text_fh:
+                tsv_reader = self.init_tsv_writer(tab_text_fh)
+                lines = []
+                for row in tsv_reader:
+                    lines.append(row)
+
+            self.logger.debug({'lines in filtered output': lines})
 
     # def test_05_outputbuilder_build_html_tsv_files(self):
         # bin_stats, params, removed_bins=None
@@ -1319,9 +1345,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
 
         self.require_data('genome_set_small_ref')
 
-        # cmu = CheckMUtil(self.cfg, self.ctx)
-        # # run_config = cmu.run_config()
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
+        bin_stats_file = os.path.join('data', 'results', 'assemblyset', 'output', 'storage',
+            'bin_stats_ext.tsv'
+        )
+        bin_stats = read_bin_stats_file(bin_stats_file)
+        params = {}
 
+        output = cmu.outputbuilder.build_html_tsv_files(bin_stats, params)
         # result = cmu.outputbuilder.build_report(params)
         # self.assertEqual(set(result.keys()), set(['report_name', 'report_ref']))
 
@@ -1577,7 +1609,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_end_to_end_assemblySet")
-    def test_checkM_end_to_end_assemblySet(self):
+    def notest_checkM_end_to_end_assemblySet(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_end_to_end_assemblySet")
         self.logger.info("=================================================================\n")
@@ -1642,7 +1674,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_end_to_end_genomeSet")
-    def test_checkM_end_to_end_genomeSet(self):
+    def notest_checkM_end_to_end_genomeSet(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_end_to_end_genomeSet")
         self.logger.info("=================================================================\n")

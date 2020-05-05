@@ -82,7 +82,8 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         )
 
         with open(summary_file, 'w', newline='') as summary_fh:
-            summary_writer = self._init_summary_writer(summary_fh)
+            summary_writer = self.init_write_summary_headers(summary_fh)
+#            summary_writer = self._init_summary_writer(summary_fh)
 
             # the fasta extension is stripped from the file in bin_stats
             for bin_ID in sorted(bin_stats_raw_data.keys()):
@@ -185,11 +186,11 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
             + " below threshold " + str(threshold)
         )
 
-    def _init_summary_writer(self, summary_fh):
+    def init_write_summary_headers(self, summary_fh):
 
         summary_writer = self.init_tsv_writer(summary_fh)
-        summary_writer.writerow(['Bin name', 'Completeness', 'Genome size', 'GC content'])
-
+        headers = ['Bin name', 'Completeness', 'Genome size', 'GC content']
+        summary_writer.writerow(headers)
         return summary_writer
 
     def extract_binned_contigs_data(self, binned_contig_obj):

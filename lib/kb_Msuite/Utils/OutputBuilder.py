@@ -136,6 +136,8 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         results_filtered = 'results_filtered' in run_config
 
+        self.logger.debug({'results_filtered': results_filtered})
+
         html_files = [
             {
                 'name': run_config['tab_text_file_name'],
@@ -164,7 +166,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                     html_dir_plot_file = os.path.join(
                         html_plots_dir, str(bin_ID) + self.PLOT_FILE_EXT
                     )
-                    # copy it to the html_plot
+                    # copy it to the html_plots directory
                     copy_file_new_name_ignore_errors(plot_file, html_dir_plot_file)
                     html_files.append({
                         'template': {
@@ -190,7 +192,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         tmpl_data = {
             'template': {
                 'template_file': os.path.join(tmpl_dest_dir, 'checkM_table.tt'),
-                'template_data_json': json.loads({
+                'template_data_json': json.dumps({
                     'params':   params,
                     'fields':   fields,
                     'data':     bin_stats,
@@ -216,8 +218,8 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
             {'id': '3'},
             {'id': '4'},
             {'id': '5+'},
-            {'id': 'Completeness',   'round': 2},
-            {'id': 'Contamination',  'round': 2},
+            {'id': 'Completeness'},  # 'round': 2},
+            {'id': 'Contamination'},  # 'round': 2},
             {'id': 'Has Plot File'},
         ]
 
