@@ -1324,8 +1324,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             # now read in the file and check the data is correct
             with open(filename, 'r') as tab_text_fh:
                 lines = tab_text_fh.read().rstrip()
-
-            self.logger.debug({'lines in unfiltered output': lines})
             self.assertRegex(lines, r'Has Plot File$')
 
         with self.subTest('Output filtered'):
@@ -1372,7 +1370,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         )
         result_lines = open(html_files[1]['path'], 'r').read().splitlines(keepends=False)
         expected_lines = open(expected_content_file, 'r').read().splitlines(keepends=False)
-        # self.assertEqual(result_lines, expected_lines)
+        self.assertEqual(result_lines, expected_lines)
 
         # html_files[2] is the html plots dir
         self.assertEqual(html_files[2], {
@@ -1387,7 +1385,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         # 3-5 are the dist files
         self.assertEqual(
-            set(a['name'] for a in assemblies),
+            set(a['name'] + '.html' for a in assemblies),
             set(h['name'] for h in html_files[3:]),
         )
 
