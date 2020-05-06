@@ -622,7 +622,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.clean_up_cmu(cmu)
 
 #   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
-    def notest_01_fileutils_clean_up_bin_id(self):
+    def test_01_fileutils_clean_up_bin_id(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_fileutils_clean_up_bin_id")
         self.logger.info("=================================================================\n")
@@ -642,7 +642,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             clean_ID = clean_up_bin_ID(bid[0], '.fake')
             self.assertEqual(clean_ID, bid[2])
 
-    def notest_00_workspace_helper(self):
+    def test_00_workspace_helper(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 00_workspace_helper")
@@ -722,7 +722,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_00_init_client(self):
+    def test_00_init_client(self):
 
         ''' check client initialisation '''
         self.logger.info("=================================================================")
@@ -791,7 +791,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def notest_01_fileutils_fasta_seq_len_at_least(self):
+    def test_01_fileutils_fasta_seq_len_at_least(self):
 
         assembly_dir = os.path.join('data', 'assemblies')
         empty_assembly_path = os.path.join(assembly_dir, 'empty_assembly.fasta')
@@ -822,7 +822,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         with self.assertRaisesRegexp(ValueError, 'Minimum length must be 1 or greater'):
             fasta_seq_len_at_least(empty_assembly_path, 0)
 
-    def notest_01_fileutils_set_fasta_file_extensions(self):
+    def test_01_fileutils_set_fasta_file_extensions(self):
 
         cmu = self.prep_checkMUtil()
         run_config = cmu.run_config()
@@ -882,7 +882,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_01_fileutils_read_bin_stats_file(self):
+    def test_01_fileutils_read_bin_stats_file(self):
 
         # non-existent file: return empty dict
         self.assertEqual({}, read_bin_stats_file('/path/to/pretend/file'))
@@ -906,7 +906,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         #     raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
         #                      'Exit Code: ' + str(exitCode))
 
-    def notest_02_data_staging(self):
+    def test_02_data_staging(self):
 
         # Standard Single Assembly
         # 'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
@@ -953,7 +953,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    def notest_02_data_staging_assembly(self):
+    def test_02_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assembly")
@@ -971,7 +971,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_data_staging_assembly_strange_fasta_ext(self):
+    def test_02_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assembly_strange_fasta_ext")
@@ -991,7 +991,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_data_staging_assemblyset(self):
+    def test_02_data_staging_assemblyset(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assemblyset")
@@ -1013,7 +1013,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_data_staging_binned_contigs(self):
+    def test_02_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_binned_contigs")
@@ -1041,7 +1041,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_data_staging_genome(self):
+    def test_02_data_staging_genome(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_genome")
@@ -1064,7 +1064,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_data_staging_genome_set(self):
+    def test_02_data_staging_genome_set(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_genome_set")
@@ -1089,7 +1089,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_03_filter_binned_contigs(self):
+    def test_03_filter_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs")
@@ -1152,7 +1152,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         return cmu
 
-    def notest_03_filter_binned_contigs_checkM_missing_IDs(self):
+    def test_03_filter_binned_contigs_checkM_missing_IDs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_checkM_missing_IDs")
@@ -1178,7 +1178,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_03_filter_binned_contigs_no_HQ(self):
+    def test_03_filter_binned_contigs_no_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_no_HQ")
@@ -1200,7 +1200,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_03_filter_binned_contigs_all_HQ(self):
+    def test_03_filter_binned_contigs_all_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_all_HQ")
@@ -1250,7 +1250,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             self.assertTrue(os.path.isfile(expected_path))
         #
 
-    def notest_03_filter_binned_contigs_some_HQ(self):
+    def test_03_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_some_HQ")
@@ -1274,7 +1274,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.check_filtered_bins(cmu, run_config, results, expected)
         self.clean_up_cmu(cmu)
 
-    def notest_03_filter_binned_contigs_some_others_HQ(self):
+    def test_03_filter_binned_contigs_some_others_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_some_others_HQ")
@@ -1510,7 +1510,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_end_to_end_single_assembly")
-    def notest_checkM_end_to_end_single_assembly(self):
+    def test_checkM_end_to_end_single_assembly(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_end_to_end_single_assembly")
