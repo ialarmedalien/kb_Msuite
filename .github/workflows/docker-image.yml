@@ -22,7 +22,7 @@ jobs:
         KBASE_TEST_TOKEN: ${{ secrets.KBASE_TEST_TOKEN }}
         KBASE_ENDPOINT: https://ci.kbase.us/services
         AUTH_SERVICE_URL: https://ci.kbase.us/services/auth/api/legacy/KBase/Sessions/Login
-        run: |
+      run: |
         docker pull ialarmedalien/kb-sdk
         mkdir -p bin
         docker run ialarmedalien/kb-sdk genscript > bin/kb-sdk
