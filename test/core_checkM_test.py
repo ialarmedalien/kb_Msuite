@@ -6,6 +6,7 @@ import time
 import shutil
 import csv
 import logging
+import sys
 
 from os import environ
 from configparser import ConfigParser
@@ -215,22 +216,23 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
     def prep_ref_data(self):
 
         try:
-            self.load_saved_ref_data()
-            # self.prep_binned_contigs()
-            # self.prep_genomes()
-            # self.prep_assemblies()
-            # self.prep_report()
-            self.data_loaded = True
+            self.data_loaded = self.load_saved_ref_data()
+            if not self.data_loaded:
+                self.prep_binned_contigs()
+                self.prep_genomes()
+                self.prep_assemblies()
+                self.prep_report()
+                self.data_loaded = True
         except Exception as e:
             self.logger.error('Error loading ref data!')
             self.logger.error(e)
-            import sys
             sys.exit('Ref data could not be prepared. Dying.')
             # exit the tests early
 
         return True
 
     def load_saved_ref_data(self):
+
         saved_refs = {
             'assembly_OK_ref': '49697/1/1',
             'assembly_dodgy_ref': '49697/2/1',
@@ -259,6 +261,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             # KBaseReport
             'report_ref': '49697/6/1',
         }
+
+        # attempt to fetch a ref from the workspace
+        try:
+            self.wsClient.get_object_info3({'objects': [{
+                'ref': saved_refs['report_ref']
+            }]})['infos'][0]
+        except Exception as e:
+            self.logger.error({'ws_fetch_error': e})
+            return False
 
         for key, value in saved_refs.items():
             setattr(self, key, value)

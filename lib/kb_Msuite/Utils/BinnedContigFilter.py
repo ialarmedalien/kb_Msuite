@@ -51,6 +51,8 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         if not fasta_files_by_bin_ID:
             return None
 
+        self.logger.debug({'fasta_files_by_bin_ID': fasta_files_by_bin_ID})
+
         # fetch the existing binned_contig object
         binned_contig_obj = self.workspacehelper.get_obj_from_workspace(params['input_ref'])
         bin_summary_info = self.extract_binned_contigs_data(binned_contig_obj)
@@ -83,14 +85,12 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
         with open(summary_file, 'w', newline='') as summary_fh:
             summary_writer = self.init_write_summary_headers(summary_fh)
-#            summary_writer = self._init_summary_writer(summary_fh)
 
             # the fasta extension is stripped from the file in bin_stats
             for bin_ID in sorted(bin_stats_raw_data.keys()):
 
                 # convert the raw data to JSON and reparse
                 bin_stats[bin_ID] = json.loads(
-                    # bin_stats[clean_bin_ID] = json.loads(
                     json.dumps(bin_stats_raw_data[bin_ID]),
                     parse_float=Decimal
                 )
@@ -198,8 +198,6 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         fasta_ext = run_config['fasta_ext']
         bin_summary_info = {}
 
-        self.logger.debug({'binned_contig_obj_keys': binned_contig_obj.keys()})
-
         # bin_item['bid'] is the full file name
         for bin_item in binned_contig_obj['bins']:
             bin_ID = clean_up_bin_ID(bin_item['bid'], fasta_ext)
@@ -212,6 +210,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
 
             self.logger.debug({
                 "bin_item[bid]": bin_item['bid'],
+                'bin_ID':        bin_ID,
                 'summary_info':  bin_summary_info[bin_ID],
             })
 
