@@ -1396,8 +1396,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
 
+        # 'bin.010' has no plot file
         ids_with_plots = ['002', '005', '006', '009', '014', '033']
-        ids_no_plots = ['010']
 
         dist_files = [run_config['bin_basename'] + '.' + id + '.html' for id in ids_with_plots]
         # lots of output:
@@ -1430,7 +1430,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
                     # if the bin has a plot file, 'Has Plot File' will be true.
-                    self.assertEqual(row['Has Plot File'], str(row['Bin Name'] + '.html' in dist_files))
+                    self.assertEqual(
+                        row['Has Plot File'],
+                        str(row['Bin Name'] + '.html' in dist_files)
+                    )
                     self.assertNotIn('QA Pass', row)
                     self.logger.debug({'row': row})
 
@@ -1476,9 +1479,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
                     # if the bin has a plot file, 'Has Plot File' will be true.
-                    self.assertEqual(row['Has Plot File'], str(row['Bin Name'] + '.html' in dist_files))
+                    self.assertEqual(
+                        row['Has Plot File'],
+                        str(row['Bin Name'] + '.html' in dist_files)
+                    )
                     # if the bin is in 'removed_bin_IDs', it will have failed QA
-                    self.assertEqual(row['QA Pass'], str(row['Bin Name'] not in filtered_obj_info['removed_bin_IDs'])
+                    self.assertEqual(
+                        row['QA Pass'],
+                        str(row['Bin Name'] not in filtered_obj_info['removed_bin_IDs'])
+                    )
                     self.logger.debug({'row': row})
 
         self.clean_up_cmu(cmu)
