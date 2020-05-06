@@ -1,4 +1,4 @@
-FROM ialarmedalien/kbase_checkM_base:latest
+FROM ialarmedalien/kbase_checkm_base:latest
 
 COPY ./ /kb/module
 
