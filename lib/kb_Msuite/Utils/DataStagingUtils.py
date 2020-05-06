@@ -44,17 +44,11 @@ class DataStagingUtils(Base, LogMixin):
             {"input_dir": '...'}
 
         NOTE: this app assumes that all names are unique. It would be more reliable to use
-        references, instead of names
+        references instead of names
 
         '''
 
         run_config = self.run_config()
-        input_dir = run_config['input_dir']
-        all_seq_fasta = run_config['all_seq_fasta']
-        fasta_ext = run_config['fasta_ext']
-
-        if not os.path.exists(input_dir):
-            os.makedirs(input_dir)
 
         obj_info = self.workspacehelper.get_ws_obj_info(input_ref)
         obj_name = self.workspacehelper.get_ws_obj_name(object_info=obj_info)
@@ -76,6 +70,13 @@ class DataStagingUtils(Base, LogMixin):
 
         if obj_type not in type_to_method:
             raise ValueError('Cannot stage fasta file input directory from type: ' + obj_type)
+
+        input_dir = run_config['input_dir']
+        all_seq_fasta = run_config['all_seq_fasta']
+        fasta_ext = run_config['fasta_ext']
+
+        if not os.path.exists(input_dir):
+            os.makedirs(input_dir)
 
         type_to_method[obj_type](input_ref, input_dir, fasta_ext, obj_name, obj_type)
 

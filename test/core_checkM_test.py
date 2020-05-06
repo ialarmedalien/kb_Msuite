@@ -5,6 +5,7 @@ import json  # noqa: F401
 import time
 import shutil
 import csv
+import logging
 
 from os import environ
 from configparser import ConfigParser
@@ -37,17 +38,6 @@ from kb_Msuite.Utils.FileUtils import (
     set_fasta_file_extensions,
     read_bin_stats_file
 )
-
-
-def print_method_name(method):
-    def wrapper(*args, **kwargs):
-        method_name = method.__name__
-        method_name.replace("test_", "")
-        self.logger.info("=================================================================")
-        self.logger.info("RUNNING " + method_name)
-        self.logger.info("=================================================================\n")
-        return method(*args, **kwargs)
-    return wrapper
 
 
 TEST_DATA = {
@@ -419,7 +409,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'workspace': self.refdata_ws_info[1],
             'objects': [{
                 'type': 'KBaseSearch.GenomeSet',
-                'data': genomeset['data'],
+                'data': {
+                    'description': 'genomeSet for testing',
+                    'elements': genomeset['items'],
+                },
                 'name': genomeset['name'],
                 'meta': {},
                 'provenance': [{
@@ -453,13 +446,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 # create a genomeSet from the first three genomes
                 'name': 'Small_GenomeSet',
                 'attr': 'genome_set_small_ref',
-                'data': {
-                    'description': 'genomeSet for testing',
-                    'elements': {
-                        genome['name']: {
-                            'ref': getattr(self, genome['attr'])
-                        } for genome in genome_list[0:3]
-                    },
+                'items': {
+                    genome['name']: {
+                        'ref': getattr(self, genome['attr'])
+                    } for genome in genome_list[0:3]
                 },
             },
         ]
@@ -934,7 +924,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         cmu = self.prep_checkMUtil()
 
         with self.subTest('erroneous report object staging'):
-            err_msg = 'Cannot stage fasta file input directory from type: '
+            err_msg = 'Cannot stage fasta file input directory from type: KBaseReport.Report'
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input(self.report_ref)
 
@@ -1512,21 +1502,49 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.check_report(report, expected_results)
         self.clean_up_cmu(cmu)
 
+    def test_checkM_end_to_end_errors(self):
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING checkM_end_to_end_errors")
+        self.logger.info("=================================================================\n")
+
+        # invalid object ref
+        params = {
+            'workspace_name': self.ws_info[1],
+            'reduced_tree': 1,
+            'input_ref': 'this_is_a_made_up_reference',
+        }
+        err_str = 'Cannot stage fasta file input directory from type: KBaseReport.Report'
+        with self.assertRaisesRegex(ValueError, err_str):
+            self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
+
+        # incorrect object type
+        params = {
+            'workspace_name': self.ws_info[1],
+            'reduced_tree': 1,
+            'input_ref': self.report_ref,
+        }
+        err_str = 'Cannot stage fasta file input directory from type: KBaseReport.Report'
+        with self.assertRaisesRegex(ValueError, err_str):
+            self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
+
+
     # Test 1: single assembly
     #
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_checkM_end_to_end_single_assembly")
-    def test_checkM_end_to_end_single_assembly(self):
+    def notest_checkM_end_to_end_single_assembly(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING checkM_end_to_end_single_assembly")
         self.logger.info("=================================================================\n")
 
-        self.require_data('assembly_OK_ref')
         # run checkM lineage_wf app on a single assembly
-        input_ref = self.assembly_mini_ref
+        assembly = TEST_DATA['assembly_list'][2]  # assembly B, 654KB
+        self.require_data(assembly['attr'])
+
+        input_ref = getattr(self, assembly['attr'])
         params = {
-            'dir_name': 'single_assembly',
+            'dir_name': assembly['attr'],
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 0,
@@ -1539,7 +1557,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': [
-                'checkm_results.html', 'CheckM_summary_table.tsv', 'plots', 'MiniAssembly.html'
+                'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
+                assembly['name'] + '.html'
             ],
         }
 
@@ -1554,11 +1573,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info("RUNNING checkM_end_to_end_single_problem_assembly")
         self.logger.info("=================================================================\n")
 
-        self.require_data('assembly_dodgy_ref')
-        # run checkM lineage_wf app on a single assembly
-        input_ref = self.assembly_dodgy_ref
+        # regression test for contig that breaks checkm v1.0.7 reduced_tree
+        # (works on v1.0.8)
+        # 'path': 'offending_contig_67815-67907.fa',
+        # 'name': 'Dodgy_Contig.Assembly',
+        # 'attr': 'assembly_dodgy_ref',
+        assembly = TEST_DATA['assembly_list'][4]
+        self.require_data(assembly['attr'])
+
+        input_ref = getattr(self, assembly['attr'])
         params = {
-            'dir_name': 'dodgy_assembly',
+            'dir_name': assembly['attr'],
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,  # this must be 1 to regression test with --reduced_tree
@@ -1572,7 +1597,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': [
                 'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                'something.html'
+                assembly['name'] + '.html'
             ],
         }
 
@@ -1587,14 +1612,15 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info("RUNNING checkM_end_to_end_binned_contigs")
         self.logger.info("=================================================================\n")
 
+        # run checkM lineage_wf app on BinnedContigs
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
+        binned_contigs = TEST_DATA['binned_contigs_list'][0]
+        self.require_data(binned_contigs['attr'])
 
-        self.require_data('binned_contigs_ref')
-        # run checkM lineage_wf app on BinnedContigs
-        input_ref = self.binned_contigs_mini_ref
+        input_ref = getattr(self, binned_contigs['attr'])
         params = {
-            'dir_name': 'binned_contigs',
+            'dir_name': binned_contigs['attr'],
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -1603,13 +1629,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'threads': 4
         }
 
+        bin_html_files = ['bin.' + n + '.html' for n in ['001', '002', '003']]
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': [
                 'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                '001.html', '002.html', '003.html'
-            ],
+            ] + bin_html_files,
         }
 
         self.run_and_check_report(params, expected_results)
@@ -1623,11 +1649,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info("RUNNING checkM_end_to_end_binned_contigs_EMPTY")
         self.logger.info("=================================================================\n")
 
-        self.require_data('binned_contigs_empty_ref')
         # run checkM lineage_wf app on EMPTY BinnedContigs
-        input_ref = self.binned_contigs_empty_ref
+        binned_contigs = TEST_DATA['binned_contigs_list'][1]
+        self.require_data(binned_contigs['attr'])
+
+        input_ref = getattr(self, binned_contigs['attr'])
         params = {
-            'dir_name': 'binned_contigs_empty',
+            'dir_name': binned_contigs['attr'],
             'workspace_name': self.ws_info[1],
             'reduced_tree': 1,
             'input_ref': input_ref
@@ -1645,11 +1673,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info("RUNNING checkM_end_to_end_assemblySet")
         self.logger.info("=================================================================\n")
 
-        self.require_data('assembly_set_small_ref')
         # run checkM lineage_wf app on an assembly set
-        input_ref = self.assembly_set_small_ref
+        self.require_data('assembly_set_small_ref')
+        assemblyset = TEST_DATA['assemblyset_list'][0]
+
+        input_ref = getattr(self, assemblyset['attr'])
         params = {
-            'dir_name': 'assembly_set_small',
+            'dir_name': assemblyset['attr'],
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -1658,7 +1688,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'threads': 4
         }
 
-        html_files = [a['name'] + '.html' for a in TEST_DATA['assembly_list'][0:3]]
+        # assemblyset['items'] looks like this:
+        # { 'ref': assembly['attr'], 'label': assembly['name'] }
+        html_files = [a['name'] + '.html' for a in assemblyset['items']]
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
@@ -1678,11 +1710,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info("RUNNING checkM_end_to_end_single_genome")
         self.logger.info("=================================================================\n")
 
-        self.require_data('genome_refs')
         # run checkM lineage_wf app on a single genome
-        input_ref = self.genome_refs[0]
+        genome = TEST_DATA['genome'][0]
+        self.require_data(genome['attr'])
+
+        input_ref = getattr(self, genome['attr'])
         params = {
-            'dir_name': 'single_genome',
+            'dir_name': genome['attr'],
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -1695,7 +1729,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': [
                 'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                'GCF_0000222851_ASM2228v1_genomicgbff.html'
+                genome['name'] + '.html'
             ],
         }
         # correct the file name!
@@ -1710,11 +1744,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info("RUNNING checkM_end_to_end_genomeSet")
         self.logger.info("=================================================================\n")
 
-        self.require_data('genome_set_small_ref')
         # run checkM lineage_wf app on a genome set
-        input_ref = self.genome_set_small_ref
+        self.require_data('genome_set_small_ref')
+        genomeset = TEST_DATA['genomeset_list'][0]
+
+        input_ref = getattr(self, genomeset['attr'])
         params = {
-            'dir_name': 'genome_set_small',
+            'dir_name': genomeset['attr'],
             'workspace_name': self.ws_info[1],
             'input_ref': input_ref,
             'reduced_tree': 1,
@@ -1723,7 +1759,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'threads': 4
         }
 
-        html_files = [a['name'] + '.html' for a in TEST_DATA['genome_list'][0:3]]
+        # genomeset['items'] is a dict in the form
+        # genome['name']: { 'ref': genome['attr'] }
+        html_files = [a + '.html' for a in genomeset['items'].keys()]
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
@@ -1743,12 +1781,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info("RUNNING checkM_lineage_wf_withFilter_binned_contigs")
         self.logger.info("=================================================================\n")
 
-        self.require_data('binned_contigs_ref')
-
+        # run checkM lineage_wf app on BinnedContigs, with filters!
         # Even with the reduced_tree option, this will take a long time and crash if your
         # machine has less than ~16gb memory
-        # run checkM lineage_wf app on BinnedContigs
-        input_ref = self.binned_contigs_mini_ref
+        binned_contigs = TEST_DATA['binned_contigs_list'][0]
+        self.require_data(binned_contigs['attr'])
+
+        input_ref = getattr(self, binned_contigs['attr'])
         params = {
             'dir_name': 'binned_contigs_filter',
             'workspace_name': self.ws_info[1],
@@ -1758,17 +1797,19 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'save_plots_dir': 1,
             'completeness_perc': 95.0,
             'contamination_perc': 1.5,
-            'output_filtered_binnedcontigs_obj_name': 'filter.BinnedContigs',
+            'output_filtered_binnedcontigs_obj_name': 'BinnedContigs_filtered',
             'threads': 4
         }
 
+        bin_html_files = ['bin.' + n + '.html' for n in ['001', '002', '003']]
         expected_results = {
             'direct_html_link_index': 0,
             'file_links': ['CheckM_summary_table.tsv', 'plots', 'full_output'],
             'html_links': [
                 'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
-                '001.html', '002.html', '003.html'
-            ],
+            ] + bin_html_files,
+            # newly created binned contigs object!
+
         }
 
         self.run_and_check_report(params, expected_results, True)
@@ -1833,6 +1874,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         os.remove(log_path)
         shutil.rmtree(input_dir)
         shutil.rmtree(output_dir)
+
+
+def print_method_name(method):
+    def wrapper(*args, **kwargs):
+        method_name = method.__name__
+        method_name.replace("test_", "")
+        logger = logging.getLogger('kb_Msuite.CoreCheckMTest')
+        logger.info("=================================================================")
+        logger.info("RUNNING " + method_name)
+        logger.info("=================================================================\n")
+        return method(*args, **kwargs)
+    return wrapper
 
 
 if __name__ == '__main__':

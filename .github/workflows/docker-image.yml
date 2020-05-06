@@ -13,7 +13,6 @@ jobs:
 
     - name: Add bin to $PATH
       run: |
-        env
         echo "::add-path::$GITHUB_WORKSPACE/bin"
 
     - name: pull and run docker image
@@ -29,20 +28,20 @@ jobs:
         chmod 755 bin/kb-sdk
         kb-sdk test
 
-  push_to_dockerhub:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+  # push_to_dockerhub:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Build & Push to Docker Hub
-        uses: opspresso/action-docker@master
-        with:
-          args: --docker
-        env:
-          USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          IMAGE_NAME: "ialarmedalien/kbase_checkm_base"
-          DOCKERFILE: "Dockerfile_checkM"
-          TAG_NAME: "fix_Dockerfile"
-          LATEST: "true"
+  #     - name: Build & Push to Docker Hub
+  #       uses: opspresso/action-docker@master
+  #       with:
+  #         args: --docker
+  #       env:
+  #         USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  #         PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  #         IMAGE_NAME: "ialarmedalien/kbase_checkm_base"
+  #         DOCKERFILE: "Dockerfile_checkM"
+  #         TAG_NAME: "fix_Dockerfile"
+  #         LATEST: "true"
