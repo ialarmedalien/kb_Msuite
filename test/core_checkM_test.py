@@ -1388,7 +1388,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
     def test_05_outputbuilder_binned_contigs(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 05_outputbuilder")
+        self.logger.info("RUNNING 05_outputbuilder_binned_contigs")
         self.logger.info("=================================================================\n")
 
         self.require_data('binned_contigs_ref')
@@ -1396,11 +1396,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
 
-        ids_in_bin_stats = ['002', '005', '006', '009', '014', '033']
-        dist_files = [run_config['bin_basename'] + '.' + id + '.html' for id in ids_in_bin_stats]
+        ids_with_plots = ['002', '005', '006', '009', '014', '033']
+        ids_no_plots = ['010']
+
+        dist_files = [run_config['bin_basename'] + '.' + id + '.html' for id in ids_with_plots]
         # lots of output:
-        with self.subTest('lots of checkM output'):
-            shutil.rmtree(run_config['base_dir'], ignore_errors=True)
+        with self.subTest('binned contig, no filtering'):
+            # shutil.rmtree(run_config['base_dir'], ignore_errors=True)
             os.makedirs(run_config['base_dir'], exist_ok=True)
             for dir in ['output', 'plots']:
                 shutil.copytree(
@@ -1427,17 +1429,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             with open(run_config['tab_text_file'], newline='') as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
+                    # if the bin has a plot file, 'Has Plot File' will be true.
+                    self.assertEqual(row['Has Plot File'], str(row['Bin Name'] + '.html' in dist_files))
+                    self.assertNotIn('QA Pass', row)
                     self.logger.debug({'row': row})
 
-        with self.subTest('lots of output, binned contig obj'):
+        with self.subTest('binned contig, filters, new object created'):
 
+            run_config['results_filtered'] = True
             for dir in ['html_dir', 'tab_text_dir', 'template_dest_dir']:
                 shutil.rmtree(run_config[dir], ignore_errors=True)
 
-            params = {
-                'workspace_name': self.ws_info[1],
-            }
-
+            params = {'workspace_name': self.ws_info[1]}
             filtered_obj_info = {
                 'filtered_obj_ref': self.binned_contigs_ref,
                 'filtered_obj_name': 'Nancy Drew',
@@ -1453,10 +1456,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 set(result.keys()),
                 set(['report_name', 'report_ref', 'binned_contig_obj_ref'])
             )
-
             self.assertEqual(result['binned_contig_obj_ref'], self.binned_contigs_ref)
             expected_results = {
                 'direct_html_link_index': 0,
+                # note: no plots dir
                 'file_links': ['CheckM_summary_table.tsv', 'full_output'],
                 'html_links': [
                     'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
@@ -1472,6 +1475,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             with open(run_config['tab_text_file'], newline='') as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
+                    # if the bin has a plot file, 'Has Plot File' will be true.
+                    self.assertEqual(row['Has Plot File'], str(row['Bin Name'] + '.html' in dist_files))
+                    # if the bin is in 'removed_bin_IDs', it will have failed QA
+                    self.assertEqual(row['QA Pass'], str(row['Bin Name'] not in filtered_obj_info['removed_bin_IDs'])
                     self.logger.debug({'row': row})
 
         self.clean_up_cmu(cmu)
