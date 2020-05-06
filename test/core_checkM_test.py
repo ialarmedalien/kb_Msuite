@@ -218,6 +218,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         try:
             self.data_loaded = self.load_saved_ref_data()
             if not self.data_loaded:
+                self.logger.info('Loading up ref data')
                 self.prep_binned_contigs()
                 self.prep_genomes()
                 self.prep_assemblies()
@@ -226,8 +227,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         except Exception as e:
             self.logger.error('Error loading ref data!')
             self.logger.error(e)
-            sys.exit('Ref data could not be prepared. Dying.')
             # exit the tests early
+
+        if not self.data_loaded:
+            sys.exit('Ref data could not be prepared. Dying.')
 
         return True
 
