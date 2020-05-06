@@ -1352,7 +1352,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 os.path.join(run_config['base_dir'], dir)
             )
 
-        assemblies = TEST_DATA['assemblies'][0:3]
+        assemblies = TEST_DATA['assembly_list'][0:3]
 
         bin_stats_data = read_bin_stats_file(run_config['bin_stats_ext_file'])
         params = {}
