@@ -15,9 +15,7 @@ if __name__ == "__main__":
     text = file.read()
     t = Template(text)
     config = ConfigParser()
-    if os.path.isfile(sys.argv[2]):
-        config.read(sys.argv[2])
-    elif "KBASE_ENDPOINT" in os.environ:
+    if "KBASE_ENDPOINT" in os.environ:
         kbase_endpoint = os.environ.get("KBASE_ENDPOINT")
         props = "[global]\n" + \
                 "kbase_endpoint = " + kbase_endpoint + "\n" + \
@@ -34,6 +32,8 @@ if __name__ == "__main__":
         props += "auth_service_url_allow_insecure = " + \
                  os.environ.get("AUTH_SERVICE_URL_ALLOW_INSECURE", "false") + "\n"
         config.readfp(StringIO.StringIO(props))
+    elif os.path.isfile(sys.argv[2]):
+        config.read(sys.argv[2])
     else:
         raise ValueError('Neither ' + sys.argv[2] + ' file nor KBASE_ENDPOINT env-variable found')
     props = dict(config.items("global"))
