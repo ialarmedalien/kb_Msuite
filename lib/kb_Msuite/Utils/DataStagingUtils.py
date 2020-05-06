@@ -6,7 +6,7 @@ from kb_Msuite.Utils.FileUtils import (
     fasta_seq_len_at_least,
     cat_fasta_files
 )
-from baseclient import ServerError
+from kb_Msuite.baseclient import ServerError
 
 
 class DataStagingUtils(Base, LogMixin):
