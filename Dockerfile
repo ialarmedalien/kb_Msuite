@@ -81,7 +81,8 @@ WORKDIR /kb/module
 RUN mkdir -p /kb/module/work/tmp/test_data \
     && chmod -R a+rw /kb/module \
     && make all \
-    && rm -f /data/__READY__
+    && rm -f /data/__READY__ \
+    && tree /kb/module/test_local
 
 COPY ./test/data/ ./kb/module/work/tmp/test_data
 
