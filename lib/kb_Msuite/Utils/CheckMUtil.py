@@ -140,7 +140,6 @@ class CheckMUtil(Base, LogMixin):
         if 'reduced_tree' in params:
             lineage_wf_options['reduced_tree'] = params['reduced_tree']
 
-        # dump out the current dir structure
         self.run_checkM('lineage_wf', lineage_wf_options)
 
         # check whether it was successful
@@ -166,7 +165,7 @@ class CheckMUtil(Base, LogMixin):
             'seq_file':    run_config['all_seq_fasta'],
             'tetra_file':  run_config['tetra_file'],
             'threads':     self.threads,
-            'quiet':       1
+            'quiet':       1,
         }
         self.run_checkM('tetra', tetra_options)
 
@@ -178,7 +177,7 @@ class CheckMUtil(Base, LogMixin):
             'plots_folder': run_config['plots_dir'],
             'tetra_file':   run_config['tetra_file'],
             'dist_value':   95,
-            'quiet':        1
+            'quiet':        1,
         }
         self.run_checkM('dist_plot', dist_plot_options)
 
@@ -197,24 +196,24 @@ class CheckMUtil(Base, LogMixin):
         '''
         command = self._build_command(subcommand, options)
         run_config = self.run_config()
+        log_dir = os.path.join(run_config['base_dir'], 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        log_output_filename = os.path.join(run_config['base_dir'], 'logs', subcommand + '.log')
 
-        log_output_filename = os.path.join(run_config['base_dir'], subcommand + '.log')
-
-        self.logger.debug('run_checkM: Running: ' + ' '.join(command) + '\n\n')
+        self.logger.debug('run_checkM: Running: ' + ' '.join(command))
         self.logger.debug('sending log output to ' + log_output_filename)
+
         with open(log_output_filename, 'w') as log_output_file:
 
             p = subprocess.Popen(
                 command, cwd=self.scratch, shell=False,
                 stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-    #         else:
-    #             p = subprocess.Popen(command, cwd=self.scratch, shell=False)
 
             exitCode = p.wait()
 
-        self.logger.info(
-            'Executed command: ' + ' '.join(command) + '\n' + 'Exit Code: ' + str(exitCode)
-        )
+        self.logger.info('Executed command: ' + ' '.join(command))
+        self.logger.info('Exit Code: ' + str(exitCode))
+
         if (exitCode != 0):
             self.logger.error('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
             with open(log_output_filename, 'r') as log_output_file:
@@ -258,7 +257,7 @@ class CheckMUtil(Base, LogMixin):
 
         if subcommand == 'lineage_wf':
             self._validate_options(options, checkBin=True, checkOut=True, subcommand='lineage_wf')
-            if 'reduced_tree' in options and str(options['reduced_tree']) == '1':
+            if 'reduced_tree' in options:
                 command.append('--reduced_tree')
             command.append(options['bin_folder'])
             command.append(options['out_folder'])
@@ -273,12 +272,12 @@ class CheckMUtil(Base, LogMixin):
         elif subcommand == 'dist_plot':
             self._validate_options(options, checkBin=True, checkOut=True, checkPlots=True,
                                    checkTetraFile=True, subcommand='dist_plot')
+            if 'dist_value' not in options:
+                raise ValueError('cannot run checkm dist_plot without dist_value option set')
             command.append(options['out_folder'])
             command.append(options['bin_folder'])
             command.append(options['plots_folder'])
             command.append(options['tetra_file'])
-            if 'dist_value' not in options:
-                raise ValueError('cannot run checkm dist_plot without dist_value option set')
             command.append(str(options['dist_value']))
 
         else:

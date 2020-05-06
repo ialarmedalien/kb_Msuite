@@ -27,8 +27,11 @@ elif [ "${1}" = "init" ] ; then
   mkdir -p /data/checkm_data
   cd /data/checkm_data
   echo "downloading: https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz"
-#  wget -q https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz
-  cp /kb/module/checkm_data_2015_01_16.tar.gz .
+  if [ -e /kb/module/checkm_data_2015_01_16.tar.gz ] ; then
+    cp /kb/module/checkm_data_2015_01_16.tar.gz .
+  else
+    wget -q https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz
+  fi
   tar -xzf checkm_data_2015_01_16.tar.gz
   rm -r checkm_data_2015_01_16.tar.gz
   echo /data/checkm_data | checkm data setRoot /data/checkm_data

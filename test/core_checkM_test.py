@@ -108,12 +108,15 @@ TEST_DATA = {
         {
             'path': 'binned_contigs',
             'name': 'Binned_Contigs',
+            'attr': 'binned_contigs_ref',
         }, {
             'path': 'binned_contigs_empty',
             'name': 'Binned_Contigs_Empty',
+            'attr': 'binned_contigs_empty_ref',
         }, {
             'path': 'binned_contigs_mini',
             'name': 'Mini_Binned_Contigs',
+            'attr': 'binned_contigs_mini_ref',
         },
     ],
 }
@@ -243,14 +246,12 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'assembly_dodgy_ref': '49697/2/1',
             'assembly_a_ref': '49697/15/1',
             'assembly_b_ref': '49697/16/1',
-            'assembly_empty_ref': '49697/23/1',  # NOT EMPTY!!
             'assembly_virus_ref': '49697/14/1',
             'assembly_mini_ref': '49697/12/1',
             # assembly set
             'assembly_set_ref': '49697/3/1',
             'assembly_set_smaller_ref': '49697/24/1',
             'assembly_set_small_ref': '49697/24/2',
-            'assembly_set_with_empty_ref': '49697/25/1',
             # binned contigs
             'binned_contigs_ref': '49697/4/1',
             'binned_contigs_empty_ref': '49697/5/1',
@@ -299,8 +300,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         })
         setattr(self, assembly['attr'], saved_assembly)
         self.logger.info({
-            getattr(self, assembly['attr']): saved_assembly,
-            assembly['attr']: saved_assembly,
+            'Saved Assembly': saved_assembly,
+            assembly['attr']: getattr(self, assembly['attr']),
         })
 
     def _prep_assemblyset(self, assemblyset):
@@ -322,10 +323,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             },
         })
         setattr(self, assemblyset['attr'], saved_assembly_set['set_ref'])
-        self.assembly_set_ref = saved_assembly_set['set_ref']
         self.logger.info({
-            assemblyset['attr']: getattr(self, assemblyset['attr']),
             'Saved AssemblySet': saved_assembly_set,
+            assemblyset['attr']: getattr(self, assemblyset['attr']),
         })
         TEST_DATA['assemblyset_list'].append(assemblyset)
 
@@ -334,17 +334,20 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         assembly_list = TEST_DATA['assembly_list']
 
-        # for assembly in assembly_list:
-        #     self._prep_assembly(assembly)
+        for assembly in assembly_list:
+            self._prep_assembly(assembly)
 
         assemblyset_list = [
             {
                 'name': 'Small_Assembly_Set',
                 'attr': 'assembly_set_small_ref',
-                'items': [{
-                    'ref': getattr(self, a['attr']),
-                    'label': a['name'],
-                } for a in assembly_list[0:3]],
+                'items': [
+                    {
+                        'ref':   getattr(self, a['attr']),
+                        'label': a['name'],
+                    }
+                    for a in assembly_list[0:3]
+                ],
             },
         ]
 
@@ -369,10 +372,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             'binned_contig_name': bc['name'],
         })
 
-        setattr(self, bc['path'] + '_ref', saved_object['binned_contig_obj_ref'])
+        setattr(self, bc['attr'], saved_object['binned_contig_obj_ref'])
         self.logger.info({
             'Saved BinnedContigs': saved_object,
-            bc['path'] + '_ref': getattr(self, bc['path'] + '_ref')
+            bc['attr']: getattr(self, bc['attr'])
         })
 
     def prep_binned_contigs(self):
@@ -405,7 +408,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         setattr(self, genome['attr'], genome_data['genome_ref'])
         self.logger.info({
             'Saved Genome': genome_data,
-            getattr(self, genome['attr']): genome_data['genome_ref'],
+            genome['attr']: getattr(self, genome['attr']),
         })
 
     def _prep_genomeset(self, genomeset):
@@ -414,26 +417,25 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         obj_info = self.wsClient.save_objects({
             'workspace': self.refdata_ws_info[1],
-            'objects': [
-                {
-                    'type': 'KBaseSearch.GenomeSet',
-                    'data': genomeset['data'],
-                    'name': genomeset['name'],
-                    'meta': {},
-                    'provenance': [
-                        {
-                            'service': 'kb_Msuite',
-                            'method': 'test_CheckM'
-                        }
-                    ]
+            'objects': [{
+                'type': 'KBaseSearch.GenomeSet',
+                'data': genomeset['data'],
+                'name': genomeset['name'],
+                'meta': {},
+                'provenance': [{
+                    'service': 'kb_Msuite',
+                    'method':  'test_CheckM'
                 }]
-            })[0]
-        reference = "/".join([
-            str(obj_info[WSID_I]), str(obj_info[OBJID_I]), str(obj_info[VERSION_I])
-        ])
-        setattr(self, genomeset['attr'], reference)
+            }]
+        })[0]
+        reference = "/".join([str(obj_info[prop]) for prop in [WSID_I, OBJID_I, VERSION_I]])
 
-        self.logger.info({genomeset['attr']: getattr(self, genomeset['attr'])})
+        setattr(self, genomeset['attr'], reference)
+        self.logger.info({
+            'Saved Genomeset': obj_info,
+            genomeset['attr']: getattr(self, genomeset['attr'])
+        })
+
         TEST_DATA['genomeset_list'].append(genomeset)
 
     def prep_genomes(self):
@@ -446,21 +448,24 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         # for genome in genome_list:
         #     self._prep_genome(genome)
 
-        # create a genomeSet
-        genome_set = {
-            'description': 'genomeSet for testing',
-            'elements': {},
-        }
-        for genome in genome_list[0:3]:
-            genome_set['elements'][genome['name']] = {
-                'ref': getattr(self, genome['attr'])
-            }
+        genomeset_list = [
+            {
+                # create a genomeSet from the first three genomes
+                'name': 'Small_GenomeSet',
+                'attr': 'genome_set_small_ref',
+                'data': {
+                    'description': 'genomeSet for testing',
+                    'elements': {
+                        genome['name']: {
+                            'ref': getattr(self, genome['attr'])
+                        } for genome in genome_list[0:3]
+                    },
+                },
+            },
+        ]
 
-        self._prep_genomeset({
-            'name': 'Small_GenomeSet',
-            'attr': 'genome_set_small_ref',
-            'data': genome_set,
-        })
+        for genomeset in genomeset_list:
+            self._prep_genomeset(genomeset)
 
         return True
 
@@ -510,6 +515,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info({'report_ref': self.report_ref})
 
         return True
+
+    def prep_checkMUtil(self):
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
+        return cmu
+
+    def clean_up_cmu(self, cmu):
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
     def run_and_check_report(self, params, expected=None, with_filters=False):
 
@@ -621,7 +636,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-#   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
     def test_01_fileutils_clean_up_bin_id(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_fileutils_clean_up_bin_id")
@@ -781,16 +795,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 cmu.client(client)
             self.assertFalse(hasattr(cmu.client_util, '_' + client))
 
-    def prep_checkMUtil(self):
-
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        cmu.run_config()
-        return cmu
-
-    def clean_up_cmu(self, cmu):
-
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
-
     def test_01_fileutils_fasta_seq_len_at_least(self):
 
         assembly_dir = os.path.join('data', 'assemblies')
@@ -941,6 +945,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             err_str = 'Binned Assembly is empty for fasta_path: '
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
+
+        cmu.datastagingutils.stage_input('here_is_a_made_up_ref')
 
         self.clean_up_cmu(cmu)
 
@@ -1132,9 +1138,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         run_config = cmu.run_config()
 
         # copy over a results file
-        # bin.001  'Completeness': 97.6,              'Contamination': 1.907,
-        # bin.002  'Completeness': 98.11542991755006, 'Contamination': 1.4134275618374559,
-        # bin.003  'Completeness': 96.34019795657727, 'Contamination': 1.7600574712643677,
+        # 001  'Completeness': 97.6,              'Contamination': 1.907,
+        # 002  'Completeness': 98.11542991755006, 'Contamination': 1.4134275618374559,
+        # 003  'Completeness': 96.34019795657727, 'Contamination': 1.7600574712643677,
         output_dir = run_config['output_dir']
         os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
         shutil.copy(
@@ -1402,7 +1408,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         dist_files = [run_config['bin_basename'] + '.' + id + '.html' for id in ids_with_plots]
         # lots of output:
         with self.subTest('binned contig, no filtering'):
-            # shutil.rmtree(run_config['base_dir'], ignore_errors=True)
             os.makedirs(run_config['base_dir'], exist_ok=True)
             for dir in ['output', 'plots']:
                 shutil.copytree(
@@ -1425,7 +1430,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 ] + dist_files,
             }
             self.check_report(result, expected_results)
-            # TODO: check the TSV file -- there should be one bin with a missing plot file
+            # check the TSV file: there should be no QA Pass col
             with open(run_config['tab_text_file'], newline='') as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
@@ -1442,17 +1447,18 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 shutil.rmtree(run_config[dir], ignore_errors=True)
 
             params = {'workspace_name': self.ws_info[1]}
+            removed_bin_IDs = ['bin.002', 'bin.005', 'bin.033']
             filtered_obj_info = {
                 'filtered_obj_ref': self.binned_contigs_ref,
                 'filtered_obj_name': 'Nancy Drew',
                 'removed_bin_IDs': {
-                    'bin.002': True,
-                    'bin.005': True,
-                    'bin.033': True
+                    bin_ID: True for bin_ID in removed_bin_IDs
                 },
             }
+            self.logger.debug({'filtered_obj_info': filtered_obj_info})
 
             result = cmu.outputbuilder.build_report(params, filtered_obj_info)
+
             self.assertEqual(
                 set(result.keys()),
                 set(['report_name', 'report_ref', 'binned_contig_obj_ref'])
@@ -1472,7 +1478,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             }
 
             self.check_report(result, expected_results)
-            # TODO: check the TSV file -- there should be one bin with a missing plot file
+            # there should be one bin with a missing plot file
             with open(run_config['tab_text_file'], newline='') as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
@@ -1481,7 +1487,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                     has_plot_file = 'True' if row['Bin Name'] + '.html' in dist_files else 'False'
                     self.assertEqual(row['Has Plot File'], has_plot_file)
                     # if the bin is in 'removed_bin_IDs', it will have failed QA
-                    qa_pass = 'False' if row['Bin Name'] in filtered_obj_info['removed_bin_IDs'] else 'True'
+                    qa_pass = 'False' if row['Bin Name'] in removed_bin_IDs else 'True'
                     self.assertEqual(row['QA Pass'], qa_pass)
 
         self.clean_up_cmu(cmu)
