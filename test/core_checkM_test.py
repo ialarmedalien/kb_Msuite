@@ -357,7 +357,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         binned_contigs_path = os.path.join(self.test_data_dir, bc['path'])
         if not os.path.exists(binned_contigs_path) or not os.path.exists(
-            os.path.join(binned_contigs_path, 'out_header.summary')
+            os.path.join(binned_contigs_path, 'bin.summary')
         ):
             shutil.rmtree(binned_contigs_path, ignore_errors=True)
             shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
@@ -1132,9 +1132,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         run_config = cmu.run_config()
 
         # copy over a results file
-        # out_header.001  'Completeness': 97.6,              'Contamination': 1.907,
-        # out_header.002  'Completeness': 98.11542991755006, 'Contamination': 1.4134275618374559,
-        # out_header.003  'Completeness': 96.34019795657727, 'Contamination': 1.7600574712643677,
+        # bin.001  'Completeness': 97.6,              'Contamination': 1.907,
+        # bin.002  'Completeness': 98.11542991755006, 'Contamination': 1.4134275618374559,
+        # bin.003  'Completeness': 96.34019795657727, 'Contamination': 1.7600574712643677,
         output_dir = run_config['output_dir']
         os.makedirs(os.path.join(output_dir, 'storage'), exist_ok=True)
         shutil.copy(
@@ -1146,7 +1146,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         for bid in [1, 2, 3]:
             bid_path = os.path.join(
                 run_config['input_dir'],
-                'out_header.00' + str(bid) + '.' + run_config['fasta_ext']
+                'bin.00' + str(bid) + '.' + run_config['fasta_ext']
             )
             Path(bid_path).touch(exist_ok=True)
 
@@ -1161,7 +1161,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         cmu = self.prep_filter_binned_contigs_dirs()
         run_config = cmu.run_config()
 
-        missing_ids = ['out_header.000', 'out_header.004']
+        missing_ids = ['bin.000', 'bin.004']
         for bid in missing_ids:
             bid_path = os.path.join(
                 run_config['input_dir'], bid + '.' + run_config['fasta_ext']
@@ -1268,8 +1268,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         })
         expected = {
             'filtered_obj_name': 'Epsilon',
-            'retained_bin_IDs': {'out_header.002': True},
-            'removed_bin_IDs':  {'out_header.001': True, 'out_header.003': True}
+            'retained_bin_IDs': {'bin.002': True},
+            'removed_bin_IDs':  {'bin.001': True, 'bin.003': True}
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
         self.clean_up_cmu(cmu)
@@ -1292,8 +1292,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         })
         expected = {
             'filtered_obj_name': 'Gamma',
-            'retained_bin_IDs': {'out_header.001': True, 'out_header.002': True},
-            'removed_bin_IDs':  {'out_header.003': True},
+            'retained_bin_IDs': {'bin.001': True, 'bin.002': True},
+            'removed_bin_IDs':  {'bin.003': True},
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
         self.clean_up_cmu(cmu)
@@ -1302,15 +1302,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         run_config = cmu.run_config()
         results_filtered = run_config['results_filtered']
-        self.logger.debug({'results_filtered': results_filtered})
-
         with open(tab_text_file, 'w', newline='') as tab_text_fh:
             tsv_writer = cmu.outputbuilder.init_tsv_writer(tab_text_fh)
             cmu.outputbuilder.write_tsv_headers(tsv_writer, results_filtered)
-            # for bin_stats in bin_stats_line:
-            #     cmu.outputbuilder.write_tsv_row(tsv_writer, bin_stats, results_filtered)
-
-        return True
 
     def test_05_write_tsv_headers(self):
 
@@ -1448,9 +1442,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 'filtered_obj_ref': self.binned_contigs_ref,
                 'filtered_obj_name': 'Nancy Drew',
                 'removed_bin_IDs': {
-                    'out_header.002': True,
-                    'out_header.005': True,
-                    'out_header.033': True
+                    'bin.002': True,
+                    'bin.005': True,
+                    'bin.033': True
                 },
             }
 
