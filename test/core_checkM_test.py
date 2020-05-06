@@ -1354,7 +1354,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         for dir in [run_config['plots_dir'], run_config['output_dir']]:
             os.makedirs(dir, exist_ok=True)
 
-        png_file_ext = cmu.output_builder.PLOT_FILE_EXT
+        png_file_ext = cmu.outputbuilder.PLOT_FILE_EXT
         genomes = TEST_DATA['genome_list'][0:3]
         for g in genomes:
             png_file_path = os.path.join(run_config['plots_dir'], g['name'] + png_file_ext)
