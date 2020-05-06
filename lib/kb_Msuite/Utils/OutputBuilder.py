@@ -154,7 +154,8 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
             # bin_stats contains the FASTA file name without the extension
             for bin_ID in sorted(bin_stats.keys()):
                 bin_stats[bin_ID]['Bin Name'] = bin_ID
-
+                if results_filtered:
+                    bin_stats[bin_ID]['QA Pass'] = False if bin_ID in removed_bins else True
                 # create the dist plot page
                 plot_file = os.path.join(plots_dir, str(bin_ID) + self.PLOT_FILE_EXT)
                 bin_stats[bin_ID]['Has Plot File'] = False
