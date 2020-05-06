@@ -574,23 +574,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.assertEqual(saved_names, set(expected[type]))
         return True
 
-    def check_validation_errors(self, params, error_list):
-
-        """
-        Check that the appropriate errors are thrown when validating extended report params
-        Args:
-          params - parameters to create_extended_report
-          error_list - set of text regexes to check against the error string
-        Returns True
-        """
-        err_str = 'KBaseReport parameter validation errors'
-        with self.assertRaisesRegex(TypeError, err_str) as cm:
-            self.getImpl().create_extended_report(self.getContext(), params)
-
-        error_message = str(cm.exception)
-        for e in error_list:
-            self.assertRegex(error_message, e)
-
     def test_00_module_init(self):
 
         self.logger.info("=================================================================")
@@ -936,7 +919,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
 
-        cmu.datastagingutils.stage_input('here_is_a_made_up_ref')
+        with self.subTest('invalid workspace ref'):
+            err_msg = 'Cannot retrieve object "here_is_a_made_up_ref". Dying.'
+            with self.assertRaisesRegex(ValueError, err_msg):
+                cmu.datastagingutils.stage_input('here_is_a_made_up_ref')
 
         self.clean_up_cmu(cmu)
 
@@ -1507,26 +1493,27 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.logger.info("RUNNING checkM_end_to_end_errors")
         self.logger.info("=================================================================\n")
 
-        # invalid object ref
-        params = {
-            'workspace_name': self.ws_info[1],
-            'reduced_tree': 1,
-            'input_ref': 'this_is_a_made_up_reference',
-        }
-        err_str = 'Cannot stage fasta file input directory from type: KBaseReport.Report'
-        with self.assertRaisesRegex(ValueError, err_str):
-            self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
+        with self.subTest('invalid workspace ref'):
+            # invalid ref
+            params = {
+                'workspace_name': self.ws_info[1],
+                'reduced_tree': 1,
+                'input_ref': 'here_is_a_made_up_ref',
+            }
+            err_msg = 'Cannot retrieve object "here_is_a_made_up_ref". Dying.'
+            with self.assertRaisesRegex(ValueError, err_msg):
+                self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
 
-        # incorrect object type
-        params = {
-            'workspace_name': self.ws_info[1],
-            'reduced_tree': 1,
-            'input_ref': self.report_ref,
-        }
-        err_str = 'Cannot stage fasta file input directory from type: KBaseReport.Report'
-        with self.assertRaisesRegex(ValueError, err_str):
-            self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
-
+        with self.subTest('incorrect object type'):
+            # incorrect object type
+            params = {
+                'workspace_name': self.ws_info[1],
+                'reduced_tree': 1,
+                'input_ref': self.report_ref,
+            }
+            err_str = 'Cannot stage fasta file input directory from type: KBaseReport.Report'
+            with self.assertRaisesRegex(ValueError, err_str):
+                self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
 
     # Test 1: single assembly
     #

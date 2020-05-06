@@ -6,6 +6,7 @@ from kb_Msuite.Utils.FileUtils import (
     fasta_seq_len_at_least,
     cat_fasta_files
 )
+from baseclient import ServerError
 
 
 class DataStagingUtils(Base, LogMixin):
@@ -50,7 +51,12 @@ class DataStagingUtils(Base, LogMixin):
 
         run_config = self.run_config()
 
-        obj_info = self.workspacehelper.get_ws_obj_info(input_ref)
+        try:
+            obj_info = self.workspacehelper.get_ws_obj_info(input_ref)
+        except ServerError as e:
+            self.logger.error({'server_error': e})
+            raise ValueError('Cannot retrieve object ' + input_ref + '. Dying.')
+
         obj_name = self.workspacehelper.get_ws_obj_name(object_info=obj_info)
         obj_type = self.workspacehelper.get_ws_obj_type(object_info=obj_info)
 
