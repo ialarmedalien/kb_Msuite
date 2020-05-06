@@ -119,7 +119,6 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
                     retained_bin_IDs[bin_ID] = True
 
                     # copy filtered file to filtered dir
-                    # clean_bin_ID = clean_up_bin_ID(bin_ID, run_config['fasta_ext'])
                     new_file_name = bin_ID + '.' + fasta_ext_bc
 
                     src_path = fasta_files_by_bin_ID[bin_ID]

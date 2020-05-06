@@ -3,7 +3,6 @@ import json
 
 from kb_Msuite.Utils.Utils import Base, LogMixin, TSVMixin
 from kb_Msuite.Utils.FileUtils import (
-    clean_up_bin_ID,
     copy_file_ignore_errors,
     copy_file_new_name_ignore_errors,
     read_bin_stats_file
@@ -182,7 +181,6 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
                 self.logger.debug({
                     'event': 'tsv_row_data',
                     'bin_ID': bin_ID,
-                    'clean_bin_ID': clean_up_bin_ID(bin_ID),
                     'bin_stats': bin_stats[bin_ID]
                 })
 

@@ -79,6 +79,7 @@ TEST_DATA = {
             'attr': 'assembly_mini_ref',
         },
     ],
+    'assemblyset_list': [],
     'genome_list': [
         {
             'path': 'GCF_002817975.1_ASM281797v1_genomic.gbff',
@@ -102,6 +103,7 @@ TEST_DATA = {
             'attr': 'genome_d_ref',
         },
     ],
+    'genomeset_list': [],
     'binned_contigs_list': [
         {
             'path': 'binned_contigs',
@@ -325,6 +327,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             assemblyset['attr']: getattr(self, assemblyset['attr']),
             'Saved AssemblySet': saved_assembly_set,
         })
+        TEST_DATA['assemblyset_list'].append(assemblyset)
 
     def prep_assemblies(self):
         ''' prepare the assemblies and assembly set '''
@@ -431,6 +434,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         setattr(self, genomeset['attr'], reference)
 
         self.logger.info({genomeset['attr']: getattr(self, genomeset['attr'])})
+        TEST_DATA['genomeset_list'].append(genomeset)
 
     def prep_genomes(self):
 
@@ -618,9 +622,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.clean_up_cmu(cmu)
 
 #   return re.sub('^[^\.]+\.', '', bin_id.replace('.' + fasta_ext, ''))
-    def test_00_fileutils_clean_up_bin_id(self):
+    def test_01_fileutils_clean_up_bin_id(self):
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 00_clean_bin_id")
+        self.logger.info("RUNNING 01_fileutils_clean_up_bin_id")
         self.logger.info("=================================================================\n")
 
         expected = [
@@ -787,7 +791,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
-    def test_fileutils_fasta_seq_len_at_least(self):
+    def test_01_fileutils_fasta_seq_len_at_least(self):
 
         assembly_dir = os.path.join('data', 'assemblies')
         empty_assembly_path = os.path.join(assembly_dir, 'empty_assembly.fasta')
@@ -818,7 +822,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         with self.assertRaisesRegexp(ValueError, 'Minimum length must be 1 or greater'):
             fasta_seq_len_at_least(empty_assembly_path, 0)
 
-    def test_fileutils_set_fasta_file_extensions(self):
+    def test_01_fileutils_set_fasta_file_extensions(self):
 
         cmu = self.prep_checkMUtil()
         run_config = cmu.run_config()
@@ -878,14 +882,14 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_fileutils_read_bin_stats_file(self):
+    def test_01_fileutils_read_bin_stats_file(self):
 
         # non-existent file: return empty dict
         self.assertEqual({}, read_bin_stats_file('/path/to/pretend/file'))
 
         # this could do with more testing...
 
-    def notest_fileutils_cat_fasta_files(self):
+    def notest_01_fileutils_cat_fasta_files(self):
         # folder, extension, output_fasta_file):
         '''
         Given a folder of fasta files with the specified extension, cat them together
@@ -902,7 +906,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         #     raise ValueError('Error running command: ' + ' '.join(cat_cmd) + '\n' +
         #                      'Exit Code: ' + str(exitCode))
 
-    def notest_01_data_staging(self):
+    def notest_02_data_staging(self):
 
         # Standard Single Assembly
         # 'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
@@ -918,7 +922,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         # - empty versions of each of these
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_data_staging")
+        self.logger.info("RUNNING 02_data_staging")
         self.logger.info("=================================================================\n")
 
         self.require_data('report_ref', 'binned_contigs_empty_ref')
@@ -949,10 +953,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    def notest_01_data_staging_assembly(self):
+    def notest_02_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_data_staging_assembly")
+        self.logger.info("RUNNING 02_data_staging_assembly")
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_mini_ref')
@@ -967,10 +971,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_01_data_staging_assembly_strange_fasta_ext(self):
+    def notest_02_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_data_staging_assembly_strange_fasta_ext")
+        self.logger.info("RUNNING 02_data_staging_assembly_strange_fasta_ext")
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_OK_ref')
@@ -987,10 +991,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_01_data_staging_assemblyset(self):
+    def notest_02_data_staging_assemblyset(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_data_staging_assemblyset")
+        self.logger.info("RUNNING 02_data_staging_assemblyset")
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_set_ref')
@@ -1009,10 +1013,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_01_data_staging_binned_contigs(self):
+    def notest_02_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_data_staging_binned_contigs")
+        self.logger.info("RUNNING 02_data_staging_binned_contigs")
         self.logger.info("=================================================================\n")
 
         self.require_data('binned_contigs_ref')
@@ -1037,10 +1041,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_01_data_staging_genome(self):
+    def notest_02_data_staging_genome(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_data_staging_genome")
+        self.logger.info("RUNNING 02_data_staging_genome")
         self.logger.info("=================================================================\n")
 
         self.require_data('genome_refs')
@@ -1060,10 +1064,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_01_data_staging_genome_set(self):
+    def notest_02_data_staging_genome_set(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_data_staging_genome_set")
+        self.logger.info("RUNNING 02_data_staging_genome_set")
         self.logger.info("=================================================================\n")
 
         self.require_data('genome_set_small_ref')
@@ -1085,10 +1089,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_filter_binned_contigs(self):
+    def notest_03_filter_binned_contigs(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs")
+        self.logger.info("RUNNING 03_filter_binned_contigs")
         self.logger.info("=================================================================\n")
 
         self.require_data('binned_contigs_ref', 'report_ref')
@@ -1148,10 +1152,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         return cmu
 
-    def notest_02_filter_binned_contigs_checkM_missing_IDs(self):
+    def notest_03_filter_binned_contigs_checkM_missing_IDs(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs_checkM_missing_IDs")
+        self.logger.info("RUNNING 03_filter_binned_contigs_checkM_missing_IDs")
         self.logger.info("=================================================================\n")
 
         cmu = self.prep_filter_binned_contigs_dirs()
@@ -1174,10 +1178,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_filter_binned_contigs_no_HQ(self):
+    def notest_03_filter_binned_contigs_no_HQ(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs_no_HQ")
+        self.logger.info("RUNNING 03_filter_binned_contigs_no_HQ")
         self.logger.info("=================================================================\n")
 
         cmu = self.prep_filter_binned_contigs_dirs()
@@ -1196,10 +1200,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def notest_02_filter_binned_contigs_all_HQ(self):
+    def notest_03_filter_binned_contigs_all_HQ(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs_all_HQ")
+        self.logger.info("RUNNING 03_filter_binned_contigs_all_HQ")
         self.logger.info("=================================================================\n")
 
         cmu = self.prep_filter_binned_contigs_dirs()
@@ -1246,10 +1250,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             self.assertTrue(os.path.isfile(expected_path))
         #
 
-    def notest_02_filter_binned_contigs_some_HQ(self):
+    def notest_03_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs_some_HQ")
+        self.logger.info("RUNNING 03_filter_binned_contigs_some_HQ")
         self.logger.info("=================================================================\n")
 
         cmu = self.prep_filter_binned_contigs_dirs()
@@ -1270,10 +1274,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         self.check_filtered_bins(cmu, run_config, results, expected)
         self.clean_up_cmu(cmu)
 
-    def notest_02_filter_binned_contigs_some_others_HQ(self):
+    def notest_03_filter_binned_contigs_some_others_HQ(self):
 
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 02_filter_binned_contigs_some_others_HQ")
+        self.logger.info("RUNNING 03_filter_binned_contigs_some_others_HQ")
         self.logger.info("=================================================================\n")
 
         cmu = self.prep_filter_binned_contigs_dirs()
@@ -1330,14 +1334,8 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             self.mimic_tsv_output(cmu, filename)
             with open(filename, 'r', newline='') as tab_text_fh:
                 lines = tab_text_fh.read().rstrip()
-
-            self.logger.debug({'lines in filtered output': lines})
+            # the last col will be 'QA Pass'
             self.assertRegex(lines, r'QA Pass$')
-
-    # def test_05_outputbuilder_build_html_tsv_files(self):
-        # bin_stats, params, removed_bins=None
-
-        # bin_stats = {}
 
     def test_05_outputbuilder_genome_assembly_set(self):
 
@@ -1376,10 +1374,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         expected_content_file = os.path.join(
             'data', 'expected', 'summary-assemblyset-allplots.tsv'
         )
-        self.assertEqual(
-                open(html_files[1]['path'], 'r').read(),
-                open(expected_content_file, 'r').read()
-            )
+        result_lines = open(html_files[1]['path'], 'r').read().splitlines(keepends=False)
+        expected_lines = open(expected_content_file, 'r').read().splitlines(keepends=False)
+        self.assertEqual(result_lines, expected_lines)
 
         # html_files[2] is the html plots dir
         self.assertEqual(html_files[2], {
@@ -1409,7 +1406,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         run_config = cmu.run_config()
 
         ids_in_bin_stats = ['002', '005', '006', '009', '014', '033']
-        dist_files = ['bin.' + id + '.html' for id in ids_in_bin_stats]
+        dist_files = [run_config['bin_basename'] + '.' + id + '.html' for id in ids_in_bin_stats]
         # lots of output:
         with self.subTest('lots of checkM output'):
             shutil.rmtree(run_config['base_dir'], ignore_errors=True)
@@ -1774,7 +1771,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
     # Uncomment to skip this test
     @unittest.skip("skipped test_checkM_local_function_wiring")
     # missing test data for this custom test
-    def notest_checkM_local_function_wiring(self):
+    def notest_04_checkM_local_function_wiring(self):
 
         # run checkM lineage_wf app on a single assembly
         tetra_file = os.path.join(self.scratch, 'tetra_test.tsv')
@@ -1802,9 +1799,9 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
     # Uncomment to skip this test
     # HIDE @unittest.skip("skipped test_local_method()")
-    def notest_03_local_method(self):
+    def notest_04_local_method(self):
         self.logger.info("=================================================================")
-        self.logger.info("RUNNING 03_local_method")
+        self.logger.info("RUNNING 04_local_method")
         self.logger.info("=================================================================\n")
 
         """
@@ -1829,13 +1826,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         os.remove(log_path)
         shutil.rmtree(input_dir)
         shutil.rmtree(output_dir)
-
-    def demo_bin_stats(self):
-        return {
-            'out_header.002': {'GC std': 0.022204954407497902, '# genomes': 5449, 'Genome size': 605546, 'Longest contig': 7264, 'GCN0': ['PF00162', 'PF00298', 'PF00889', 'TIGR00615', 'PF03484', 'PF04983', 'PF01016', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF04997', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'TIGR00344', 'PF01281', 'PF00416', 'PF00831', 'TIGR00459', 'TIGR00755', 'PF04565', 'PF02367', 'PF11987', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'PF00366', 'TIGR02432', 'TIGR00460', 'PF00177', 'PF00828', 'PF03946', 'PF00886', 'TIGR03263', 'PF00333', 'PF00410', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'TIGR03594', 'PF08529', 'PF02130', 'PF04560', 'TIGR00922', 'TIGR02075', 'PF01000', 'TIGR00810', 'TIGR01079', 'PF01632', 'TIGR03723', 'PF00238', 'PF01121', 'PF01746', 'PF01195', 'PF00572', 'PF03719', 'PF00829', 'PF00861', 'PF00466', 'PF04998', 'PF06071', 'TIGR00855', 'TIGR00329', 'TIGR00084', 'TIGR00250', 'PF13184', 'PF04561', 'TIGR00019', 'PF00687', 'PF05697', 'PF00453', 'PF01250', 'PF08459', 'PF00318', 'PF05491', 'PF02978', 'PF00623'], 'GCN1': ['PF01509', 'PF01018', 'PF00189', 'PF01795', 'PF00252', 'TIGR00392', 'PF01668', 'PF00181', 'PF12344', 'PF01409', 'PF03947', 'PF00203', 'PF00237', 'PF00276', 'PF01649', 'PF06421', 'PF02912', 'PF02033', 'PF00573'], 'GCN2': [], 'marker lineage': 'k__Bacteria', 'GC': 0.28188279668266325, 'GCN4': [], '# scaffolds': 183, 'Completeness': 18.495297805642632, 'GCN3': [], 'GCN5+': [], '# contigs': 183, 'Translation table': 11, '# markers': 104, 'Coding density': 0.9122114587496243, 'Mean contig length': 3308.9945355191257, '# marker sets': 58, 'N50 (contigs)': 3222, '1': 19, '0': 85, '3': 0, '2': 0, 'Longest scaffold': 7264, '4': 0, '5+': 0, 'Contamination': 0.0, '# predicted genes': 621, 'N50 (scaffolds)': 3222, '# ambiguous bases': 0, 'Mean scaffold length': 3308.9945355191257},
-            'out_header.009': {'GC std': 0.019068777402063024, '# genomes': 5449, 'Genome size': 373747, 'Longest contig': 7332, 'GCN0': ['PF01509', 'PF00162', 'PF00889', 'TIGR00615', 'PF03484', 'PF04983', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF04997', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'TIGR00344', 'PF00416', 'TIGR00459', 'TIGR00755', 'TIGR00392', 'PF04565', 'PF02367', 'PF01668', 'PF00181', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'TIGR02432', 'TIGR00460', 'PF00177', 'PF00828', 'PF00886', 'TIGR03263', 'PF00333', 'PF00410', 'PF12344', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'PF01409', 'TIGR03594', 'PF08529', 'PF02130', 'PF03947', 'PF04560', 'TIGR00922', 'TIGR02075', 'PF01000', 'TIGR00810', 'PF01632', 'TIGR03723', 'PF00203', 'PF01121', 'PF01746', 'PF01195', 'PF00572', 'PF03719', 'PF00861', 'PF00466', 'PF04998', 'PF06071', 'TIGR00855', 'TIGR00329', 'TIGR00084', 'TIGR00250', 'PF00276', 'PF13184', 'PF04561', 'PF00687', 'PF01649', 'PF06421', 'PF05697', 'PF00453', 'PF00318', 'PF02978', 'PF02912', 'PF00623', 'PF02033', 'PF00573'], 'GCN1': ['PF00298', 'PF01018', 'PF01016', 'PF00189', 'PF01795', 'PF01281', 'PF00831', 'PF00252', 'PF11987', 'PF00366', 'PF03946', 'TIGR01079', 'PF00238', 'PF00829', 'PF00237', 'TIGR00019', 'PF01250', 'PF08459', 'PF05491'], 'GCN2': [], 'marker lineage': 'k__Bacteria', 'GC': 0.6536159487567793, 'GCN4': [], '# scaffolds': 107, 'Completeness': 16.901776384535005, 'GCN3': [], 'GCN5+': [], '# contigs': 107, 'Translation table': 11, '# markers': 104, 'Coding density': 0.8976179073009282, 'Mean contig length': 3492.96261682243, '# marker sets': 58, 'N50 (contigs)': 3305, '1': 19, '0': 85, '3': 0, '2': 0, 'Longest scaffold': 7332, '4': 0, '5+': 0, 'Contamination': 0.0, '# predicted genes': 444, 'N50 (scaffolds)': 3305, '# ambiguous bases': 0, 'Mean scaffold length': 3492.96261682243},
-            'out_header.006': {'GC std': 0.0180666565004557, '# genomes': 5449, 'Genome size': 520659, 'Longest contig': 25878, 'GCN0': ['PF00162', 'TIGR00615', 'PF00416', 'TIGR00459', 'TIGR00392', 'PF01668', 'TIGR02432', 'TIGR00460', 'PF00886', 'TIGR03263', 'PF01409', 'TIGR03594', 'PF08529', 'TIGR02075', 'TIGR03723', 'PF01121', 'PF01746', 'PF01195', 'PF00466', 'TIGR00855', 'TIGR00329', 'PF13184', 'PF00687', 'PF02978', 'PF02912'], 'GCN1': ['PF01509', 'PF00298', 'PF01018', 'PF00889', 'PF03484', 'PF04983', 'PF01016', 'PF00562', 'PF00338', 'PF04563', 'PF01196', 'PF00281', 'PF00673', 'PF00380', 'PF01245', 'PF10385', 'PF00411', 'PF00189', 'TIGR00344', 'PF01795', 'PF01281', 'PF00831', 'PF00252', 'TIGR00755', 'PF04565', 'PF02367', 'PF00181', 'PF11987', 'PF00312', 'PF13603', 'PF03948', 'PF00347', 'PF05000', 'PF00297', 'PF00366', 'PF00177', 'PF00828', 'PF03946', 'PF00333', 'PF00410', 'PF12344', 'PF00164', 'TIGR00967', 'PF01193', 'PF01765', 'PF02130', 'PF03947', 'PF04560', 'TIGR00922', 'PF01000', 'TIGR00810', 'TIGR01079', 'PF01632', 'PF00238', 'PF00203', 'PF00572', 'PF03719', 'PF00829', 'PF00861', 'PF00237', 'PF04998', 'PF06071', 'TIGR00084', 'TIGR00250', 'PF00276', 'PF04561', 'TIGR00019', 'PF01649', 'PF06421', 'PF05697', 'PF00453', 'PF01250', 'PF08459', 'PF00318', 'PF05491', 'PF00623', 'PF02033', 'PF00573'], 'GCN2': ['PF04997'], 'marker lineage': 'k__Bacteria', 'GC': 0.3391874528242093, 'GCN4': [], '# scaffolds': 75, 'Completeness': 66.32183908045978, 'GCN3': [], 'GCN5+': [], '# contigs': 75, 'Translation table': 11, '# markers': 104, 'Coding density': 0.8351224121738028, 'Mean contig length': 6942.12, '# marker sets': 58, 'N50 (contigs)': 7985, '1': 78, '0': 25, '3': 0, '2': 1, 'Longest scaffold': 25878, '4': 0, '5+': 0, 'Contamination': 0.15673981191222572, '# predicted genes': 614, 'N50 (scaffolds)': 7985, '# ambiguous bases': 0, 'Mean scaffold length': 6942.12},
-        }
 
 
 if __name__ == '__main__':

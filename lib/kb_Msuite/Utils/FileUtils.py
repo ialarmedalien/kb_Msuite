@@ -56,7 +56,7 @@ def get_fasta_files(search_dir, extension):
             if filename.endswith('.' + fasta_ext):
                 bin_ID = clean_up_bin_ID(filename, fasta_ext)
                 fasta_files[bin_ID] = os.path.join(search_dir, filename)
-                # _logger('debug', "ACCEPTED: "+bin_ID+" FILE:"+filename)  # DEBUG
+                # _logger('debug', {'bin_ID': bin_ID, 'file': filename})
 
     return fasta_files
 
@@ -69,8 +69,8 @@ def fasta_seq_len_at_least(fasta_path, min_fasta_len=1):
         raise ValueError('Minimum length must be 1 or greater')
 
     seq_len = 0
-    with open(fasta_path, 'r') as fasta_handle:
-        for line in fasta_handle:
+    with open(fasta_path, 'r') as fasta_fh:
+        for line in fasta_fh:
             line = line.strip()
             if line.startswith('>'):
                 continue
@@ -80,8 +80,9 @@ def fasta_seq_len_at_least(fasta_path, min_fasta_len=1):
                 return True
 
     _logger(
-        'warning',
+        'debug',
         {
+            'file_path':  fasta_path,
             'min_length': min_fasta_len,
             'seq_len':    seq_len
         }
