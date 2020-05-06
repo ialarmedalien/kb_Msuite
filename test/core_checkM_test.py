@@ -1429,13 +1429,11 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             with open(run_config['tab_text_file'], newline='') as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
-                    # if the bin has a plot file, 'Has Plot File' will be true.
-                    self.assertEqual(
-                        row['Has Plot File'],
-                        str(row['Bin Name'] + '.html' in dist_files)
-                    )
-                    self.assertNotIn('QA Pass', row)
                     self.logger.debug({'row': row})
+                    # if the bin has a plot file, 'Has Plot File' will be true.
+                    has_plot_file = 'True' if row['Bin Name'] + '.html' in dist_files else 'False'
+                    self.assertEqual(row['Has Plot File'], has_plot_file)
+                    self.assertNotIn('QA Pass', row)
 
         with self.subTest('binned contig, filters, new object created'):
 
@@ -1478,17 +1476,13 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             with open(run_config['tab_text_file'], newline='') as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
                 for row in reader:
-                    # if the bin has a plot file, 'Has Plot File' will be true.
-                    self.assertEqual(
-                        row['Has Plot File'],
-                        str(row['Bin Name'] + '.html' in dist_files)
-                    )
-                    # if the bin is in 'removed_bin_IDs', it will have failed QA
-                    self.assertEqual(
-                        row['QA Pass'],
-                        str(row['Bin Name'] not in filtered_obj_info['removed_bin_IDs'])
-                    )
                     self.logger.debug({'row': row})
+                    # if the bin has a plot file, 'Has Plot File' will be true.
+                    has_plot_file = 'True' if row['Bin Name'] + '.html' in dist_files else 'False'
+                    self.assertEqual(row['Has Plot File'], has_plot_file)
+                    # if the bin is in 'removed_bin_IDs', it will have failed QA
+                    qa_pass = 'False' if row['Bin Name'] in filtered_obj_info['removed_bin_IDs'] else 'True'
+                    self.assertEqual(row['QA Pass'], qa_pass)
 
         self.clean_up_cmu(cmu)
 
