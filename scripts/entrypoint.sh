@@ -13,7 +13,6 @@ elif [ ! -z ${KBASE_TEST_TOKEN} ] ; then
   export KB_AUTH_TOKEN=${KBASE_TEST_TOKEN}
 fi
 
-
 if [ $# -eq 0 ] ; then
   sh ./scripts/start_server.sh
 elif [ "${1}" = "test" ] ; then
@@ -35,7 +34,6 @@ elif [ "${1}" = "init" ] ; then
   tar -xzf checkm_data_2015_01_16.tar.gz
   rm -r checkm_data_2015_01_16.tar.gz
   echo /data/checkm_data | checkm data setRoot /data/checkm_data
-#  echo y | checkm data update # ensure you have the latest (32) data files from the ACE server
   if [ -d "/data/checkm_data/genome_tree" ] ; then
     touch /data/__READY__
   else
