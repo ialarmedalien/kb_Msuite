@@ -13,31 +13,31 @@ from configparser import ConfigParser
 
 from pathlib import Path
 
-from installed_clients.WorkspaceClient import Workspace
 from installed_clients.AssemblyUtilClient import AssemblyUtil
-from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
-from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 from installed_clients.KBaseReportClient import KBaseReport
+from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
+from installed_clients.SetAPIServiceClient import SetAPI
+from installed_clients.WorkspaceClient import Workspace
 
 from kb_Msuite.kb_MsuiteImpl import kb_Msuite
 from kb_Msuite.kb_MsuiteServer import MethodContext
 from kb_Msuite.authclient import KBaseAuth as _KBaseAuth
 
+from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
 from kb_Msuite.Utils.CheckMUtil import CheckMUtil
+from kb_Msuite.Utils.ClientUtil import ClientUtil
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
-from kb_Msuite.Utils.ClientUtil import ClientUtil
-from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
-from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
 from kb_Msuite.Utils.Utils import LogMixin, TSVMixin
+from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 
 from kb_Msuite.Utils.FileUtils import (
     clean_up_bin_ID,
     fasta_seq_len_at_least,
     get_fasta_files,
-    set_fasta_file_extensions,
-    read_bin_stats_file
+    read_bin_stats_file,
+    set_fasta_file_extensions
 )
 
 
@@ -100,14 +100,17 @@ TEST_DATA = {
             'path': 'binned_contigs',
             'name': 'Binned_Contigs',
             'attr': 'binned_contigs_ref',
+            'assembly': 'assembly_OK_ref',
         }, {
             'path': 'binned_contigs_empty',
             'name': 'Binned_Contigs_Empty',
             'attr': 'binned_contigs_empty_ref',
+            'assembly': 'assembly_OK_ref',
         }, {
             'path': 'binned_contigs_mini',
             'name': 'Mini_Binned_Contigs',
             'attr': 'binned_contigs_mini_ref',
+            'assembly': 'assembly_mini_ref',
         },
     ],
 }
@@ -120,7 +123,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         test_time_stamp = int(time.time() * 1000)
-        environ['KB_TEST_ID'] = str(test_time_stamp)
 
         cls.cfg = {}
         config = ConfigParser()
@@ -178,15 +180,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         cls.data_loaded = False
 
-        # stage an input and output directory
-        """
-        cls.input_dir = os.path.join(cls.scratch, 'input_1')
-        cls.output_dir = os.path.join(cls.scratch, 'output_1')
-        cls.all_seq_fasta = os.path.join(cls.scratch, 'all_seq.fna')
-        shutil.copytree(os.path.join('data', 'example_out', 'input'), cls.input_dir)
-        shutil.copytree(os.path.join('data', 'example_out', 'output'), cls.output_dir)
-        shutil.copy(os.path.join('data', 'example_out', 'all_seq.fna'), cls.all_seq_fasta)
-        """
+        if (os.path.exists(os.path.join(cls.appdir, 'running_on_github.txt'))):
+            print("RUNNING ON GITHUB!")
+        else:
+            print("RUNNING ON GITHUB FILE NOT FOUND!")
 
     @classmethod
     def tearDownClass(cls):
@@ -372,7 +369,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         saved_object = self.mu.file_to_binned_contigs({
             'file_directory': binned_contigs_path,
             'workspace_name': self.refdata_ws_info[1],
-            'assembly_ref': self.assembly_OK_ref,
+            'assembly_ref': bc['assembly'],
             'binned_contig_name': bc['name'],
         })
 
@@ -531,7 +528,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
     def run_and_check_report(self, params, expected=None, with_filters=False):
+        '''
+        Run 'run_checkM_lineage_wf' with or without filters, and check the resultant KBaseReport
+        using check_report()
 
+        Args:
+
+          params        - dictionary of input params
+          expected      - dictionary representing the expected structure of the KBaseReport object
+          with_filters  - whether or not to use the 'withFilter' version of the workflow
+
+        '''
         if (with_filters):
             result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
         else:
@@ -540,6 +547,17 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         return self.check_report(result, expected)
 
     def check_report(self, result, expected):
+        '''
+        Test utility to check a KBaseReport object
+        Args:
+
+          result    - result returned by running KBaseReport.get_extended_report
+                      { 'report_name': blahblahblah, 'report_ref': reference }
+
+          expected  - dictionary representing the expected structure of the report
+                      any keys omitted from the dictionary are assumed to be the report default
+                      (None or an empty list)
+        '''
 
         self.assertIn('report_name', result)
         self.assertIn('report_ref', result)
@@ -568,6 +586,16 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
             with self.subTest('checking ' + key):
                 if key == 'file_links' or key == 'html_links':
                     self.check_report_links(rep, key, report_data)
+                elif key == 'objects_created' and expected['objects_created']:
+                    # 'objects_created': [{
+                    #   'description': 'HQ BinnedContigs filter.BinnedContigs',
+                    #   'ref': '50054/17/1'
+                    # }]
+                    self.assertTrue(len(rep['objects_created']) == 1)
+                    obj = rep['objects_created'][0]
+                    self.assertTrue(len(obj.keys()) == 2)
+                    self.assertEqual(obj['description'], 'HQ BinnedContigs filter.BinnedContigs')
+                    self.assertRegex(obj['ref'], r'\d+/\d+/\d+')
                 else:
                     self.assertEqual(rep[key], report_data[key])
 
@@ -577,7 +605,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         """
         Test utility: check the file upload results for an extended report
         Args:
-          report_obj    - result dictionary from running .create_extended_report
+          report_obj    - result dictionary from running KBaseReport.create_extended_report
           type          - one of "html_links" or "file_links"
           file_names    - names of the files for us to check against
         """
@@ -1810,6 +1838,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
             ] + bin_html_files,
             # newly created binned contigs object!
+            'objects_created': True,
 
         }
 
