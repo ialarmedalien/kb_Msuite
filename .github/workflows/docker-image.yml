@@ -30,6 +30,7 @@ jobs:
         docker run ialarmedalien/kb-sdk genscript > bin/kb-sdk
         chmod 755 bin/kb-sdk
         kb-sdk test
+        echo 'All done!'
 
   # push_to_dockerhub:
   #   runs-on: ubuntu-latest
