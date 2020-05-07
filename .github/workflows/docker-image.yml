@@ -19,6 +19,8 @@ jobs:
       shell: bash
       run: |
         touch running_on_github.txt
+        mkdir -p test_local
+        cp ci.test.cfg test_local/test.cfg
 
     - name: pull and run docker image
       shell: bash
