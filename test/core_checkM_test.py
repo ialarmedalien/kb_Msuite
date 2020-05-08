@@ -941,7 +941,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
     def check_cat_files(self, target_dir, ext, output_file, expected_lines):
 
         self.assertFalse(os.path.exists(output_file))
-        cat_fasta_files(target_dir, ext, output_file)
+        cat_fasta_files(target_dir, ext, output_file, target_dir)
         self.assertTrue(os.path.isfile(output_file))
 
         with open(output_file, 'r') as output_fh:
@@ -958,6 +958,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         return 'FILE: ' + filename + '\n' + random_text
 
     def test_01_fileutils_cat_fasta_files(self):
+
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_fileutils_cat_fasta_files")
+        self.logger.info("=================================================================\n")
 
         with tempfile.TemporaryDirectory() as tempdir:
             # set up a test directory with several files with different extensions
