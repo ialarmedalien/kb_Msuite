@@ -87,7 +87,7 @@ class DataStagingUtils(Base, LogMixin):
         type_to_method[obj_type](input_ref, input_dir, fasta_ext, obj_name, obj_type)
 
         # create summary fasta file with all bins
-        cat_fasta_files(input_dir, fasta_ext, all_seq_fasta, self.scratch)
+        cat_fasta_files(input_dir, fasta_ext, all_seq_fasta)
 
         return {
             'obj_name': obj_name,

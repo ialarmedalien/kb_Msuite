@@ -830,7 +830,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
                 cmu.client(client)
             self.assertFalse(hasattr(cmu.client_util, '_' + client))
 
-    def test_01_fileutils_clean_up_bin_id(self):
+    def notest_01_fileutils_clean_up_bin_id(self):
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_fileutils_clean_up_bin_id")
         self.logger.info("=================================================================\n")
@@ -850,7 +850,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
             clean_ID = clean_up_bin_ID(bid[0], '.fake')
             self.assertEqual(clean_ID, bid[2])
 
-    def test_01_fileutils_fasta_seq_len_at_least(self):
+    def notest_01_fileutils_fasta_seq_len_at_least(self):
 
         assembly_dir = os.path.join('data', 'assemblies')
         empty_assembly_path = os.path.join(assembly_dir, 'empty_assembly.fasta')
@@ -881,7 +881,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
         with self.assertRaisesRegexp(ValueError, 'Minimum length must be 1 or greater'):
             fasta_seq_len_at_least(empty_assembly_path, 0)
 
-    def test_01_fileutils_set_fasta_file_extensions(self):
+    def notest_01_fileutils_set_fasta_file_extensions(self):
 
         with tempfile.TemporaryDirectory() as test_dir:
 
@@ -936,7 +936,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
             self.assertFalse(os.path.exists(new_file))
             self.assertTrue(os.path.isfile(os.path.join(test_dir, 'file_007.007')))
 
-    def test_01_fileutils_read_bin_stats_file(self):
+    def notest_01_fileutils_read_bin_stats_file(self):
 
         # non-existent file: return empty dict
         self.assertEqual({}, read_bin_stats_file('/path/to/pretend/file'))
@@ -963,7 +963,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
         random_text = "".join([str(uuid4()) + '\n' for _ in repeat(None, randint(1, 6))])
         return 'FILE: ' + filename + '\n' + random_text
 
-    def test_01_fileutils_cat_fasta_files(self):
+    def notest_01_fileutils_cat_fasta_files(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 01_fileutils_cat_fasta_files")

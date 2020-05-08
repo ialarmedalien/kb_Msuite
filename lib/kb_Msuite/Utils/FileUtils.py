@@ -160,7 +160,6 @@ def copy_file_new_name_ignore_errors(source_path, destination_path):
 def read_bin_stats_file(stats_file):
 
     bin_stats = dict()
-
     if not os.path.isfile(stats_file):
         _logger('warning', 'No stats file found (looking at: ' + stats_file + ')')
         return bin_stats
