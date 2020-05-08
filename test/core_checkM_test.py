@@ -949,8 +949,10 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         # split on 'FILE: file_' to create an array of the different file contents
         sep = 'FILE: file_'
-        expected_lines = [sep + _ for _ in lines.split(sep) if _]
-        self.assertEqual(set(lines), set(expected_lines))
+        parsed_lines = [sep + _ for _ in lines.split(sep) if _]
+
+        self.logger.debug({'ext': ext, 'lines': lines, 'parsed_lines': parsed_lines, 'expected_lines': expected_lines})
+        self.assertEqual(set(parsed_lines), set(expected_lines))
 
     def make_file_contents(self, filename):
         # generate a random number of strings with which to populate the file
