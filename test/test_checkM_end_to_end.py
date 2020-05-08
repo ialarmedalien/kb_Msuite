@@ -2,7 +2,7 @@
 import os
 import shutil
 import logging
-from core_CheckM_test import CoreCheckMTestClient
+from CheckMTestBase import CoreCheckMTestClient
 
 
 class CheckMEndToEnd(CoreCheckMTestClient):

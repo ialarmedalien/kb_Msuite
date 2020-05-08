@@ -5,7 +5,7 @@ from random import randint
 from uuid import uuid4
 from itertools import repeat
 import tempfile
-from core_checkM_test import CheckMTestBase
+from CheckMTestBase import CheckMTestBase
 
 from kb_Msuite.Utils.FileUtils import (
     cat_fasta_files,

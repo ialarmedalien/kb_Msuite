@@ -1,6 +1,6 @@
 import os
 from kb_Msuite.Utils.CheckMUtil import CheckMUtil
-from core_CheckM_test import CoreCheckMTestClient
+from CheckMTestBase import CoreCheckMTestClient
 
 
 # requires TEST_DATA, require_data, prep_checkMUtil, clean_up_cmu
