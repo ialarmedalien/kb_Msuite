@@ -126,7 +126,7 @@ class CheckMTestBase(unittest.TestCase, LogMixin):
     pass
 
 
-class CoreCheckMTest(CheckMTestBase, TSVMixin):
+class CoreCheckMTestClient(CheckMTestBase):
 
     @classmethod
     def setUpClass(cls):
@@ -567,6 +567,12 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
 
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
+    def get_data(self):
+        return TEST_DATA
+
+
+class CheckMTests(CoreCheckMTestClient, TSVMixin):
+
     def run_and_check_report(self, params, expected=None, with_filters=False):
         '''
         Run 'run_checkM_lineage_wf' with or without filters, and check the resultant KBaseReport
@@ -993,7 +999,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
                 expected_lines = [files[f] for f in files.keys() if f.endswith(ext)]
                 self.check_cat_files(target_dir, ext, output_file, expected_lines)
 
-    def test_02_data_staging(self):
+    def notest_02_data_staging(self):
 
         # Standard Single Assembly
         # 'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
@@ -1045,7 +1051,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    def test_02_data_staging_assembly(self):
+    def notest_02_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assembly")
@@ -1063,7 +1069,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_02_data_staging_assembly_strange_fasta_ext(self):
+    def notest_02_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assembly_strange_fasta_ext")
@@ -1083,7 +1089,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_02_data_staging_assemblyset(self):
+    def notest_02_data_staging_assemblyset(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assemblyset")
@@ -1105,7 +1111,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_02_data_staging_binned_contigs(self):
+    def notest_02_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_binned_contigs")
@@ -1133,7 +1139,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_02_data_staging_genome(self):
+    def notest_02_data_staging_genome(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_genome")
@@ -1156,7 +1162,7 @@ class CoreCheckMTest(CheckMTestBase, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_02_data_staging_genome_set(self):
+    def notest_02_data_staging_genome_set(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_genome_set")
