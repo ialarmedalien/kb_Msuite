@@ -121,7 +121,12 @@ TEST_DATA = {
 }
 
 
-class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
+class CheckMTestBase(unittest.TestCase, LogMixin):
+
+    pass
+
+
+class CoreCheckMTest(CheckMTestBase, TSVMixin):
 
     @classmethod
     def setUpClass(cls):
@@ -686,26 +691,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
 
         self.clean_up_cmu(cmu)
 
-    def test_01_fileutils_clean_up_bin_id(self):
-        self.logger.info("=================================================================")
-        self.logger.info("RUNNING 01_fileutils_clean_up_bin_id")
-        self.logger.info("=================================================================\n")
-
-        expected = [
-            ['bin.056.fasta', 'bin.056', 'bin.056.fasta'],
-            ['out_header_05.fasta', 'out_header_05', 'out_header_05.fasta'],
-            ['assembly.fasta', 'assembly', 'assembly.fasta'],
-            ['../../this.is.fake', '../../this.is.fake', '../../this.is'],
-        ]
-
-        for bid in expected:
-            clean_ID = clean_up_bin_ID(bid[0], 'fasta')
-            self.assertEqual(clean_ID, bid[1])
-            clean_ID = clean_up_bin_ID(bid[0], '.fasta')
-            self.assertEqual(clean_ID, bid[1])
-            clean_ID = clean_up_bin_ID(bid[0], '.fake')
-            self.assertEqual(clean_ID, bid[2])
-
     def test_00_workspace_helper(self):
 
         self.logger.info("=================================================================")
@@ -845,6 +830,26 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
                 cmu.client(client)
             self.assertFalse(hasattr(cmu.client_util, '_' + client))
 
+    def test_01_fileutils_clean_up_bin_id(self):
+        self.logger.info("=================================================================")
+        self.logger.info("RUNNING 01_fileutils_clean_up_bin_id")
+        self.logger.info("=================================================================\n")
+
+        expected = [
+            ['bin.056.fasta', 'bin.056', 'bin.056.fasta'],
+            ['out_header_05.fasta', 'out_header_05', 'out_header_05.fasta'],
+            ['assembly.fasta', 'assembly', 'assembly.fasta'],
+            ['../../this.is.fake', '../../this.is.fake', '../../this.is'],
+        ]
+
+        for bid in expected:
+            clean_ID = clean_up_bin_ID(bid[0], 'fasta')
+            self.assertEqual(clean_ID, bid[1])
+            clean_ID = clean_up_bin_ID(bid[0], '.fasta')
+            self.assertEqual(clean_ID, bid[1])
+            clean_ID = clean_up_bin_ID(bid[0], '.fake')
+            self.assertEqual(clean_ID, bid[2])
+
     def test_01_fileutils_fasta_seq_len_at_least(self):
 
         assembly_dir = os.path.join('data', 'assemblies')
@@ -941,7 +946,7 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
     def check_cat_files(self, target_dir, ext, output_file, expected_lines):
 
         self.assertFalse(os.path.exists(output_file))
-        cat_fasta_files(target_dir, ext, output_file, target_dir)
+        cat_fasta_files(target_dir, ext, output_file)
         self.assertTrue(os.path.isfile(output_file))
 
         with open(output_file, 'r') as output_fh:
@@ -951,7 +956,6 @@ class CoreCheckMTest(unittest.TestCase, LogMixin, TSVMixin):
         sep = 'FILE: file_'
         parsed_lines = [sep + _ for _ in lines.split(sep) if _]
 
-        self.logger.debug({'ext': ext, 'lines': lines, 'parsed_lines': parsed_lines, 'expected_lines': expected_lines})
         self.assertEqual(set(parsed_lines), set(expected_lines))
 
     def make_file_contents(self, filename):

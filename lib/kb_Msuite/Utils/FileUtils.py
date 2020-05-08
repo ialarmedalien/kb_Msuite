@@ -114,7 +114,7 @@ def set_fasta_file_extensions(folder, extension):
             os.rename(old_file, new_file)
 
 
-def cat_fasta_files(folder, fasta_ext, output_fasta_file, cwd):
+def cat_fasta_files(folder, fasta_ext, output_fasta_file):
     '''
     Given a folder of fasta files with the specified extension, cat them together
     using 'cat' into the target new_fasta_file
@@ -123,7 +123,7 @@ def cat_fasta_files(folder, fasta_ext, output_fasta_file, cwd):
     files = glob.glob(os.path.join(folder, '*.' + extension))
     cat_cmd = ['cat'] + files
     fasta_fh = open(output_fasta_file, 'w')
-    p = subprocess.Popen(cat_cmd, cwd=cwd, stdout=fasta_fh, shell=False)
+    p = subprocess.Popen(cat_cmd, cwd=folder, stdout=fasta_fh, shell=False)
     exitCode = p.wait()
     fasta_fh.close()
 
