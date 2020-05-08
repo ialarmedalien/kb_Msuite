@@ -154,7 +154,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('genome_refs')
 
-        test_data = self.get_data(TEST_DATA)
+        test_data = self.get_data()
         test_genome = test_data['genome_list'][0]
 
         cmu = self.prep_checkMUtil()
@@ -181,7 +181,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu._set_run_config()
 
-        test_data = self.get_data(TEST_DATA)
+        test_data = self.get_data()
         genome_list = test_data['genome_list'][0:3]
 
         staged_input = cmu.datastagingutils.stage_input(self.genome_set_small_ref)
