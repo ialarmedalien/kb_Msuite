@@ -20,10 +20,13 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
 
         # [1, 'Super_Cool_Extended_Report', 'KBaseReport.Report-3.0', '2020-05-08T22:15:44+0000', 1,
         # '***', 50109, 'test_kb_Msuite_*', '72c0c1862c986bfd8e9dc44d003be88a', 226, None]
-        self.ws_obj_info = self.wsClient.get_object_info3(self.test_report_reference)
-
+        self.ws_obj_info = self.wsClient.get_object_info3({
+            'objects': [{'ref': self.test_report_reference}]
+        })
         # KBaseReport object
-        self.ws_obj = self.wsClient.get_objects2(self.test_report_reference)
+        self.ws_obj = self.wsClient.get_objects2({
+            'objects': [{'ref': self.test_report_reference}]
+        })
 
     def test_00_workspace_helper(self):
 
