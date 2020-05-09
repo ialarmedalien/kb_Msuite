@@ -21,7 +21,7 @@ class TestOutputBuilder(CoreCheckMTestClient, CheckReportMixin, TSVMixin):
 
     def test_05_write_tsv_headers(self):
 
-        cmu = self.CheckMUtil
+        cmu = self.checkMUtil
         run_config = cmu.run_config()
         os.makedirs(run_config['base_dir'], exist_ok=True)
 
@@ -44,7 +44,7 @@ class TestOutputBuilder(CoreCheckMTestClient, CheckReportMixin, TSVMixin):
 
     def test_05_outputbuilder_no_checkM_output(self):
 
-        cmu = self.CheckMUtil
+        cmu = self.checkMUtil
         run_config = cmu.run_config()
         # no checkM output: no report
         os.makedirs(run_config['output_dir'])
@@ -123,7 +123,7 @@ class TestOutputBuilder(CoreCheckMTestClient, CheckReportMixin, TSVMixin):
 
         self.require_data('binned_contigs_ref')
 
-        cmu = self.CheckMUtil
+        cmu = self.checkMUtil
         run_config = cmu.run_config()
 
         # 'bin.010' has no plot file

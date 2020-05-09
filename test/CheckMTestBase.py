@@ -4,6 +4,7 @@ import json
 import time
 import shutil
 import sys
+import logging
 from os import environ
 from configparser import ConfigParser
 
@@ -65,14 +66,14 @@ TEST_DATA = {
             'path': 'GCF_005237295.1_ASM523729v1_genomic.gbff',
             'name': 'Genome.B.1_6MB',
             'attr': 'genome_b_ref',
-        }, {
-            'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
-            'name': 'Genome.C.3_4MB',
-            'attr': 'genome_c_ref',
-        }, {
-            'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
-            'name': 'Genome.D.2_5MB',
-            'attr': 'genome_d_ref',
+        # }, {
+        #     'path': 'GCF_000022285.1_ASM2228v1_genomic.gbff',
+        #     'name': 'Genome.C.3_4MB',
+        #     'attr': 'genome_c_ref',
+        # }, {
+        #     'path': 'GCF_001439985.1_wTPRE_1.0_genomic.gbff',
+        #     'name': 'Genome.D.2_5MB',
+        #     'attr': 'genome_d_ref',
         },
     ],
     'genomeset_list': [],
@@ -87,11 +88,11 @@ TEST_DATA = {
             'name': 'Binned_Contigs_Empty',
             'attr': 'binned_contigs_empty_ref',
             'assembly': 'assembly_OK_ref',
-        }, {
-            'path': 'binned_contigs_mini',
-            'name': 'Mini_Binned_Contigs',
-            'attr': 'binned_contigs_mini_ref',
-            'assembly': 'assembly_mini_ref',
+        # }, {
+        #     'path': 'binned_contigs_mini',
+        #     'name': 'Mini_Binned_Contigs',
+        #     'attr': 'binned_contigs_mini_ref',
+        #     'assembly': 'assembly_mini_ref',
         },
     ],
     'report_list': [
@@ -280,10 +281,9 @@ class CoreCheckMTestClient(CheckMTestBase):
 
         cls.data_loaded = False
 
-        if (os.path.exists(os.path.join(cls.appdir, 'running_on_github.txt'))):
-            print("RUNNING ON GITHUB!")
-        else:
-            print("RUNNING ON GITHUB FILE NOT FOUND!")
+        cls.github_run = False
+        if os.path.exists(os.path.join(cls.appdir, 'running_on_github.txt')):
+            cls.github_run = True
 
     @classmethod
     def tearDownClass(cls):
@@ -311,19 +311,14 @@ class CoreCheckMTestClient(CheckMTestBase):
         return cmu
 
     def clean_up_cmu(self, cmu):
-
         shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
 
     def setUp(self):
-        self.logger.info('Running set up in CoreCheckMTestClient')
         self.checkMUtil = self.prep_checkMUtil()
 
     def tearDown(self):
-        self.logger.info('Running set up in CoreCheckMTestClient')
         self.clean_up_cmu(self.checkMUtil)
-        # TODO: delete the cmu attribute
         delattr(self, 'checkMUtil')
-        self.checkMUtil = None
 
     def get_data(self):
         return TEST_DATA
@@ -332,9 +327,9 @@ class CoreCheckMTestClient(CheckMTestBase):
         if self.data_loaded:
             return True
 
-        return self.prep_ref_data()
+        return self.prep_ref_data(args)
 
-    def prep_ref_data(self):
+    def prep_ref_data(self, *args):
 
         try:
             self.data_loaded = self.load_saved_ref_data()
@@ -692,6 +687,18 @@ class CoreCheckMTestClient(CheckMTestBase):
         self.logger.info({'report_ref': self.report_ref})
 
         return True
+
+
+def print_method_name(method):
+    def wrapper(*args, **kwargs):
+        method_name = method.__name__
+        method_name.replace("test_", "")
+        logger = logging.getLogger('kb_Msuite.CoreCheckMTest')
+        logger.info("=================================================================")
+        logger.info("RUNNING " + method_name)
+        logger.info("=================================================================\n")
+        return method(*args, **kwargs)
+    return wrapper
 
 
 if __name__ == '__main__':

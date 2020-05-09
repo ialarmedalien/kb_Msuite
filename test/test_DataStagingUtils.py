@@ -42,7 +42,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
                 cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
 
         with self.subTest('invalid workspace ref'):
-            err_msg = 'Cannot retrieve object "here_is_a_made_up_ref". Dying.'
+            err_msg = 'Unable to perform workspace command "get_object_info3": '
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input('here_is_a_made_up_ref')
 
@@ -79,7 +79,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('assembly_OK_ref')
 
-        cmu = self.CheckMUtil
+        cmu = self.checkMUtil
         cmu.fasta_extension = 'strange_fasta_extension'
         run_config = cmu._set_run_config()
         staged_input = cmu.datastagingutils.stage_input(self.assembly_OK_ref)
@@ -117,7 +117,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('binned_contigs_ref')
 
-        cmu = self.CheckMUtil
+        cmu = self.checkMUtil
         run_config = cmu.run_config()
         # test stage binned contigs
         staged_input = cmu.datastagingutils.stage_input(self.binned_contigs_ref)
@@ -156,8 +156,6 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         )
         self.check_data_staging_results(cmu.run_config(), [test_genome['name']])
 
-        self.clean_up_cmu(cmu)
-
     def test_02_data_staging_genome_set(self):
 
         self.logger.info("=================================================================")
@@ -166,7 +164,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('genome_set_small_ref')
 
-        cmu = self.CheckMUtil
+        cmu = self.checkMUtil
         run_config = cmu.run_config()
         genome_list = self.get_data()['genome_list'][0:3]
 
@@ -179,5 +177,3 @@ class TestDataStagingUtils(CoreCheckMTestClient):
             }
         )
         self.check_data_staging_results(run_config, [g['name'] for g in genome_list])
-
-        self.clean_up_cmu(cmu)

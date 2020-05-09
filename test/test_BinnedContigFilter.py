@@ -14,7 +14,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
     # def prep_filter_binned_contigs_dirs(self):
         self.require_data('binned_contigs_ref')
 
-        cmu = self.CheckMUtil
+        cmu = self.checkMUtil
         run_config = cmu.run_config()
 
         # copy over a results file
@@ -44,7 +44,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
         self.require_data('assembly_dodgy_ref', 'report_ref')
 
-        cmu = self.CheckMUtil
+        cmu = self.checkMUtil
         cmu.run_config()
 
         # wrong type
