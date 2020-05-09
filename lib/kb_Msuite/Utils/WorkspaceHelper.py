@@ -11,7 +11,7 @@ class WorkspaceHelper(Base, LogMixin):
 
         return self.client_util.client(client_name, *args)
 
-    def _run_workspace_command(self, command, *args):
+    def _run_workspace_command(self, command, args):
 
         ''' Thin wrapper with error handling around performing a workspace command '''
 
