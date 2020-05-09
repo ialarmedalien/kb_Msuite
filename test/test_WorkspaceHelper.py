@@ -34,6 +34,10 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
         self.logger.info("RUNNING 00_workspace_helper")
         self.logger.info("=================================================================\n")
 
+        ws_obj_info = self.wsClient.get_object_info3({
+            'objects': [{'ref': self.test_report_reference}]
+        })
+        self.assertTrue(ws_obj_info)
         # _run_workspace_command(self, command, args):
         self.assertTrue('Oh shit.')
         # TEST ME!

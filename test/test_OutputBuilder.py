@@ -196,8 +196,8 @@ class TestOutputBuilder(CoreCheckMTestClient, CheckReportMixin, TSVMixin):
                     'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
                 ] + dist_files,
                 'objects_created': [{
-                    'ref': filtered_obj_info['filtered_obj_ref'],
-                    'description':  'HQ BinnedContigs ' + filtered_obj_info['filtered_obj_name'],
+                    'ref':         filtered_obj_info['filtered_obj_ref'],
+                    'description': 'HQ BinnedContigs ' + filtered_obj_info['filtered_obj_name'],
                 }]
             }
 

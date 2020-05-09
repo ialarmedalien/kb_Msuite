@@ -316,8 +316,10 @@ class CheckMEndToEnd(CoreCheckMTestClient, CheckReportMixin):
                 'checkm_results.html', 'CheckM_summary_table.tsv', 'plots',
             ] + bin_html_files,
             # newly created binned contigs object!
-            'objects_created': True,
-
+            'objects_created': [{
+                'ref':         '__REF_UNKNOWN__',
+                'description': 'HQ BinnedContigs BinnedContigs_filtered',
+            }],
         }
         self.run_and_check_report(params, expected_results, True)
 

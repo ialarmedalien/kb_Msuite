@@ -20,6 +20,7 @@ class WorkspaceHelper(Base, LogMixin):
             self.logger.info({
                 'command': command,
                 'args': args,
+                'type(args)': type(args),
             })
             method = getattr(self.client('Workspace'), command)
             result = method(args)
@@ -27,6 +28,7 @@ class WorkspaceHelper(Base, LogMixin):
             self.logger.error({
                 'command': command,
                 'args': args,
+                'type(args)': type(args),
                 'error': e
             })
             err_str = 'Unable to perform workspace command "' + command + '": ' + str(e)
