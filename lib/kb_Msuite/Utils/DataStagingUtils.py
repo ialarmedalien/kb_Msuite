@@ -204,9 +204,7 @@ class DataStagingUtils(Base, LogMixin):
         # genome obj data
         for genome_ref in genome_set_refs:
 
-            objects = self.workspacehelper.get_objects_from_workspace({
-                'objects': [{'ref': genome_ref}]
-            })['data']
+            objects = self.workspacehelper.get_objects_from_workspace(genome_ref)['data']
             # self.logger.debug({'genome_object': objects})
             genome_obj = objects[0]['data']
             genome_obj_info = objects[0]['info']

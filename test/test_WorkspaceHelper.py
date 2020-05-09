@@ -53,11 +53,11 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
     def test_get_objects_from_workspace(self):
 
         cmu = self.checkMUtil
-        ws_objs = cmu.workspacehelper.get_obj_from_workspace(self.test_report_reference)
+        ws_objs = cmu.workspacehelper.get_objects_from_workspace(self.test_report_reference)
 
-        self.assertEqual(ws_objs, self.ws_obj['data'])
+        self.assertEqual(ws_objs, self.ws_obj)
         self.assertEqual(
-            ws_objs[0]['data'],
+            ws_objs['data'][0]['data'],
             cmu.workspacehelper.get_obj_from_workspace(self.test_report_reference)
         )
 
@@ -69,7 +69,7 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
         self.assertEqual(ws_obj['text_message'], self.report_params['message'])
         self.assertEqual(ws_obj, self.ws_obj['data'][0]['data'])
 
-        err_str = 'Unable to perform workspace command get_objects2: '
+        err_str = 'Unable to perform workspace command "get_objects2": '
         with self.assertRaisesRegex(ValueError, err_str):
             cmu.workspacehelper.get_obj_from_workspace('ROTFLMAO')
 
@@ -80,7 +80,7 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
         self.assertEqual(obj_info, self.ws_obj_info['infos'][0])
 
         # invalid ref
-        err_str = 'Unable to perform workspace command get_object_info3: '
+        err_str = 'Unable to perform workspace command "get_object_info3": '
         with self.assertRaisesRegex(ValueError, err_str):
             cmu.workspacehelper.get_ws_obj_name('the_best_object_ever')
 
@@ -139,6 +139,6 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
         self.assertEqual(obj_type, 'Report')
 
         obj_type = cmu.workspacehelper.get_ws_obj_type(
-            object_info=self.obj_info, remove_module=True
+            object_info=obj_info, remove_module=True
         )
         self.assertEqual(obj_type, 'Report')
