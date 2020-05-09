@@ -11,7 +11,7 @@ class WorkspaceHelper(Base, LogMixin):
 
         return self.client_util.client(client_name, *args)
 
-    def _run_workspace_command(self, command, args):
+    def _run_workspace_command(self, command, *args):
 
         ''' Thin wrapper with error handling around performing a workspace command '''
 
@@ -20,6 +20,11 @@ class WorkspaceHelper(Base, LogMixin):
             method = getattr(self.client('Workspace'), command)
             result = method(args)
         except Exception as e:
+            self.logger.error({
+                'command': command,
+                'args': args,
+                'error': e
+            })
             err_str = 'Unable to perform workspace command "' + command + '": ' + str(e)
             raise ValueError(err_str)
             # to get the full stack trace: traceback.format_exc()

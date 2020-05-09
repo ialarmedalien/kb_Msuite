@@ -185,6 +185,10 @@ class CheckReportMixin(unittest.TestCase):
                     self.assertTrue(len(obj.keys()) == 2)
 
                     eoc = expected['objects_created']
+                    self.logger.info({
+                        'expected_objects_created': eoc,
+                        'type': type(eoc)
+                    })
                     if type(eoc) == 'list' and len(eoc) == 1 and type(eoc[0]) == 'dict':
                         self.assertEqual(
                             obj['description'],

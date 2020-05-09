@@ -11,6 +11,8 @@ class CheckMEndToEnd(CoreCheckMTestClient, CheckReportMixin):
         self.logger.info("RUNNING checkM_end_to_end_errors")
         self.logger.info("=================================================================\n")
 
+        self.require_data('report_ref')
+
         with self.subTest('invalid workspace ref'):
             # invalid ref
             params = {
