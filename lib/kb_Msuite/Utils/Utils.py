@@ -1,6 +1,5 @@
 import csv
 import logging
-import re
 
 
 class LogMixin(object):
@@ -9,18 +8,6 @@ class LogMixin(object):
         # name = '.'.join([__name__, self.__class__.__name__])
         class_name = self.__class__.__name__
         return logging.getLogger('kb_Msuite.' + class_name)
-
-
-class Base(object):
-
-    def clean_bin_ID(self, bin_id, extension=None):
-
-        if extension:
-            bin_id = bin_id.replace('.' + extension, '')
-
-        return bin_id
-
-        return re.sub(r'^[^.]+.', '', bin_id)
 
 
 class TSVMixin(object):
@@ -33,3 +20,8 @@ class TSVMixin(object):
             quotechar="'",
             quoting=csv.QUOTE_MINIMAL
         )
+
+
+class Base(object):
+
+    pass

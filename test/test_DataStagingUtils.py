@@ -1,5 +1,4 @@
 import os
-from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 from CheckMTestBase import CoreCheckMTestClient
 
 
@@ -27,7 +26,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('report_ref', 'binned_contigs_empty_ref')
 
-        cmu = self.prep_checkMUtil()
+        cmu = self.checkMUtil
 
         with self.subTest('erroneous report object staging'):
             err_msg = 'Cannot stage fasta file input directory from type: KBaseReport.Report'
@@ -47,8 +46,6 @@ class TestDataStagingUtils(CoreCheckMTestClient):
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input('here_is_a_made_up_ref')
 
-        self.clean_up_cmu(cmu)
-
     def check_data_staging_results(self, run_config, filenames):
 
         self.assertTrue(os.path.isdir(run_config['input_dir']))
@@ -65,7 +62,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_mini_ref')
-        cmu = self.prep_checkMUtil()
+        cmu = self.checkMUtil
 
         staged_input = cmu.datastagingutils.stage_input(self.assembly_mini_ref)
         self.assertEqual(
@@ -73,8 +70,6 @@ class TestDataStagingUtils(CoreCheckMTestClient):
             {'obj_name': 'MiniAssembly', 'obj_type': 'KBaseGenomeAnnotations.Assembly'}
         )
         self.check_data_staging_results(cmu.run_config(), ['MiniAssembly'])
-
-        self.clean_up_cmu(cmu)
 
     def test_02_data_staging_assembly_strange_fasta_ext(self):
 
@@ -84,7 +79,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('assembly_OK_ref')
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu = self.CheckMUtil
         cmu.fasta_extension = 'strange_fasta_extension'
         run_config = cmu._set_run_config()
         staged_input = cmu.datastagingutils.stage_input(self.assembly_OK_ref)
@@ -94,8 +89,6 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         )
         self.check_data_staging_results(run_config, ['Test.Assembly'])
 
-        self.clean_up_cmu(cmu)
-
     def test_02_data_staging_assemblyset(self):
 
         self.logger.info("=================================================================")
@@ -103,7 +96,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         self.logger.info("=================================================================\n")
 
         self.require_data('assembly_set_ref')
-        cmu = self.prep_checkMUtil()
+        cmu = self.checkMUtil
         staged_input = cmu.datastagingutils.stage_input(self.assembly_set_ref)
         self.assertEqual(
             staged_input,
@@ -116,8 +109,6 @@ class TestDataStagingUtils(CoreCheckMTestClient):
             cmu.run_config(), ['Test.Assembly', 'Dodgy_Contig.Assembly']
         )
 
-        self.clean_up_cmu(cmu)
-
     def test_02_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
@@ -126,7 +117,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('binned_contigs_ref')
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu = self.CheckMUtil
         run_config = cmu.run_config()
         # test stage binned contigs
         staged_input = cmu.datastagingutils.stage_input(self.binned_contigs_ref)
@@ -144,8 +135,6 @@ class TestDataStagingUtils(CoreCheckMTestClient):
                 run_config['input_dir'], 'bin.00' + number + '.' + run_config['fasta_ext']
             )))
 
-        self.clean_up_cmu(cmu)
-
     def test_02_data_staging_genome(self):
 
         self.logger.info("=================================================================")
@@ -154,10 +143,9 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('genome_refs')
 
-        test_data = self.get_data()
-        test_genome = test_data['genome_list'][0]
+        cmu = self.checkMUtil
+        test_genome = self.get_data()['genome_list'][0]
 
-        cmu = self.prep_checkMUtil()
         staged_input = cmu.datastagingutils.stage_input(getattr(self, test_genome['attr']))
         self.assertEqual(
             staged_input,
@@ -178,11 +166,9 @@ class TestDataStagingUtils(CoreCheckMTestClient):
 
         self.require_data('genome_set_small_ref')
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu._set_run_config()
-
-        test_data = self.get_data()
-        genome_list = test_data['genome_list'][0:3]
+        cmu = self.CheckMUtil
+        run_config = cmu.run_config()
+        genome_list = self.get_data()['genome_list'][0:3]
 
         staged_input = cmu.datastagingutils.stage_input(self.genome_set_small_ref)
         self.assertEqual(

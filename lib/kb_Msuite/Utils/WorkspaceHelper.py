@@ -7,16 +7,38 @@ class WorkspaceHelper(Base, LogMixin):
         self.checkMUtil = checkMUtil_obj
         self.client_util = checkMUtil_obj.client_util
 
-    def client(self, client_name):
+    def client(self, client_name, *args):
 
-        return self.client_util.client(client_name)
+        return self.client_util.client(client_name, *args)
 
-    def run_config(self):
+    def _run_workspace_command(self, command, args):
 
-        return self.checkMUtil.run_config()
+        ''' Thin wrapper with error handling around performing a workspace command '''
+
+        try:
+            # get the workspace method and call it with the provided args
+            method = getattr(self.client('Workspace'), command)
+            result = method(args)
+        except Exception as e:
+            err_str = 'Unable to perform workspace command "' + command + '": ' + str(e)
+            raise ValueError(err_str)
+            # to get the full stack trace: traceback.format_exc()
+        return result
+
+    def get_objects_from_workspace(self, object_ref):
+        result = self._run_workspace_command('get_objects2', {
+            'objects': [{'ref': object_ref}]
+        })
+        return result
+
+    def get_obj_from_workspace(self, object_ref):
+        return self.get_objects_from_workspace(object_ref)['data'][0]['data']
 
     def get_ws_obj_info(self, ref):
-        return self.client('Workspace').get_object_info3({'objects': [{'ref': ref}]})['infos'][0]
+        result = self._run_workspace_command('get_object_info3', {
+            'objects': [{'ref': ref}]
+        })
+        return result['infos'][0]
 
     def get_object_property(self, object_info, prop):
         '''
@@ -64,15 +86,3 @@ class WorkspaceHelper(Base, LogMixin):
         if remove_module:
             obj_type = obj_type.split('.')[1]
         return obj_type
-
-    def get_obj_from_workspace(self, object_ref):
-        ''' Thin wrapper with error handling around getting a WS object '''
-        try:
-            workspace_object = self.client('Workspace').get_objects2({
-                'objects': [{'ref': object_ref}]
-            })['data'][0]['data']
-        except Exception as e:
-            err_str = 'Unable to fetch ' + str(object_ref) + ' object from workspace: ' + str(e)
-            raise ValueError(err_str)
-            # to get the full stack trace: traceback.format_exc()
-        return workspace_object

@@ -50,7 +50,7 @@ class ClientUtil:
 
         return Workspace(self.workspace_url)
 
-    def client(self, client):
+    def client(self, client, *args):
 
         client_mapping = {
             'AssemblyUtil':     self.init_AssemblyUtil,
@@ -64,14 +64,10 @@ class ClientUtil:
         if client not in client_mapping:
             raise ValueError(client + ' client does not exist')
 
-        # already initialised
-        if hasattr(self, '_' + client):
-            return getattr(self, '_' + client)
+        if not hasattr(self, '_' + client):
+            try:
+                setattr(self, '_' + client, client_mapping[client]())
+            except Exception as e:
+                raise ValueError('Error instantiating ' + client + ' client: ' + str(e))
 
-        try:
-            client_obj = client_mapping[client]()
-        except Exception as e:
-            raise ValueError('Error instantiating ' + client + ' client: ' + str(e))
-
-        setattr(self, '_' + client, client_obj)
-        return client_obj
+        return getattr(self, '_' + client)

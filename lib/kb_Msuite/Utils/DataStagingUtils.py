@@ -22,9 +22,9 @@ class DataStagingUtils(Base, LogMixin):
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
 
-    def client(self, client_name):
+    def client(self, client_name, *args):
 
-        return self.client_util.client(client_name)
+        return self.client_util.client(client_name, *args)
 
     def run_config(self):
 
@@ -159,6 +159,9 @@ class DataStagingUtils(Base, LogMixin):
         for (dirpath, dirnames, filenames) in os.walk(input_dir):
             for fasta_file in filenames:
                 fasta_path = os.path.join(input_dir, fasta_file)
+                # make sure fasta file isn't empty
+                if not fasta_seq_len_at_least(fasta_path, self.MIN_FASTA_LEN):
+                    raise ValueError('Binned Assembly is empty for fasta_path: ' + str(fasta_path))
                 if fasta_file.startswith('out_header'):
                     new_file_name = fasta_file.replace('out_header', basename)
                     new_file_path = os.path.join(input_dir, new_file_name)
@@ -170,9 +173,6 @@ class DataStagingUtils(Base, LogMixin):
                     os.rename(fasta_path, new_file_path)
                     fasta_path = new_file_path
 
-                # make sure fasta file isn't empty
-                if not fasta_seq_len_at_least(fasta_path, self.MIN_FASTA_LEN):
-                    raise ValueError('Binned Assembly is empty for fasta_path: ' + str(fasta_path))
                 self.logger.info('Processed valid binned contig file ' + fasta_path)
             break
 
@@ -204,7 +204,7 @@ class DataStagingUtils(Base, LogMixin):
         # genome obj data
         for genome_ref in genome_set_refs:
 
-            objects = self.client('Workspace').get_objects2({
+            objects = self.workspacehelper.get_objects_from_workspace({
                 'objects': [{'ref': genome_ref}]
             })['data']
             # self.logger.debug({'genome_object': objects})

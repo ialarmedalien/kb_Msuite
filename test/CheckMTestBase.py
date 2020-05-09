@@ -94,12 +94,127 @@ TEST_DATA = {
             'assembly': 'assembly_mini_ref',
         },
     ],
+    'report_list': [
+        {
+            'attr': 'report_ref',
+            'name': 'The_Best_Report_In_The_Known_World',
+            'data': {
+                'report_object_name': 'The_Best_Report_In_The_Known_World',
+                'message': 'This is the best report in the world',
+            }
+        }
+    ]
 }
 
 
 class CheckMTestBase(unittest.TestCase, LogMixin):
 
     pass
+
+
+class CheckReportMixin(unittest.TestCase):
+
+    def run_and_check_report(self, params, expected=None, with_filters=False):
+        '''
+        Run 'run_checkM_lineage_wf' with or without filters, and check the resultant KBaseReport
+        using check_report()
+
+        Args:
+
+          params        - dictionary of input params
+          expected      - dictionary representing the expected structure of the KBaseReport object
+          with_filters  - whether or not to use the 'withFilter' version of the workflow
+
+        '''
+        if (with_filters):
+            result = self.getImpl().run_checkM_lineage_wf_withFilter(self.getContext(), params)[0]
+        else:
+            result = self.getImpl().run_checkM_lineage_wf(self.getContext(), params)[0]
+
+        return self.check_report(result, expected)
+
+    def check_report(self, result, expected):
+        '''
+        Test utility to check a KBaseReport object
+        Args:
+
+          result    - result returned by running KBaseReport.get_extended_report
+                      { 'report_name': blahblahblah, 'report_ref': reference }
+
+          expected  - dictionary representing the expected structure of the report
+                      any keys omitted from the dictionary are assumed to be the report default
+                      (None or an empty list)
+        '''
+
+        self.assertIn('report_name', result)
+        self.assertIn('report_ref', result)
+
+        # make sure the report was created and includes the HTML report and download links
+        got_object = self.getWsClient().get_objects2({
+            'objects': [{'ref': result['report_ref']}]
+        })
+        rep = got_object['data'][0]['data']
+        self.logger.info({'report data': rep})
+
+        report_data = {
+            'text_message': None,
+            'file_links': [],
+            'html_links': [],
+            'warnings': [],
+            'direct_html': None,
+            'direct_html_link_index': None,
+            'objects_created': [],
+            'html_window_height': None,
+            'summary_window_height': None,
+        }
+        report_data.update(expected)
+
+        for key in expected.keys():
+            with self.subTest('checking ' + key):
+                if key == 'file_links' or key == 'html_links':
+                    self.check_report_links(rep, key, report_data)
+                elif key == 'objects_created' and expected['objects_created']:
+                    # check input type -- if it is a dict, it will be of the form
+                    # 'objects_created': [{
+                    #   'description': 'HQ BinnedContigs filter.BinnedContigs',
+                    #   'ref': '50054/17/1'
+                    # }]
+                    self.assertTrue(len(rep['objects_created']) == 1)
+                    obj = rep['objects_created'][0]
+                    self.assertTrue(len(obj.keys()) == 2)
+
+                    eoc = expected['objects_created']
+                    if type(eoc) == 'list' and len(eoc) == 1 and type(eoc[0]) == 'dict':
+                        self.assertEqual(
+                            obj['description'],
+                            eoc[0]['description']
+                        )
+                        self.assertRegex(obj['ref'], eoc[0]['ref'])
+                    else:
+                        self.assertEqual(
+                            obj['description'],
+                            'HQ BinnedContigs filter.BinnedContigs'
+                        )
+                        self.assertRegex(obj['ref'], r'\d+/\d+/\d+')
+                else:
+                    self.assertEqual(rep[key], report_data[key])
+
+        return True
+
+    def check_report_links(self, report_obj, type, expected):
+        """
+        Test utility: check the file upload results for an extended report
+        Args:
+          report_obj    - result dictionary from running KBaseReport.create_extended_report
+          type          - one of "html_links" or "file_links"
+          file_names    - names of the files for us to check against
+        """
+        file_links = report_obj[type]
+        self.assertEqual(len(file_links), len(expected[type]))
+        # Test that all the filenames listed in the report object map correctly
+        saved_names = set([str(f['name']) for f in file_links])
+        self.assertEqual(saved_names, set(expected[type]))
+        return True
 
 
 class CoreCheckMTestClient(CheckMTestBase):
@@ -143,7 +258,6 @@ class CoreCheckMTestClient(CheckMTestBase):
         os.makedirs(cls.test_data_dir, exist_ok=True)
 
         cls.suffix = test_time_stamp
-        cls.checkm_runner = CheckMUtil(cls.cfg, cls.ctx)
 
         cls.wsName = "test_kb_Msuite_" + str(cls.suffix)
         cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
@@ -189,6 +303,30 @@ class CoreCheckMTestClient(CheckMTestBase):
 
     def getConfig(self):
         return self.__class__.serviceImpl.config
+
+    def prep_checkMUtil(self):
+
+        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu.run_config()
+        return cmu
+
+    def clean_up_cmu(self, cmu):
+
+        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
+
+    def setUp(self):
+        self.logger.info('Running set up in CoreCheckMTestClient')
+        self.checkMUtil = self.prep_checkMUtil()
+
+    def tearDown(self):
+        self.logger.info('Running set up in CoreCheckMTestClient')
+        self.clean_up_cmu(self.checkMUtil)
+        # TODO: delete the cmu attribute
+        delattr(self, 'checkMUtil')
+        self.checkMUtil = None
+
+    def get_data(self):
+        return TEST_DATA
 
     def require_data(self, *args):
         if self.data_loaded:
@@ -286,9 +424,11 @@ class CoreCheckMTestClient(CheckMTestBase):
             shutil.copy(os.path.join("data", "assemblies", assembly['path']), assembly_file_path)
 
         saved_assembly = self.au.save_assembly_from_fasta({
-            'file': {'path': assembly_file_path},
-            'workspace_name': self.refdata_ws_info[1],
-            'assembly_name': assembly['name'],
+            'file': {
+                'path': assembly_file_path
+            },
+            'workspace_name':   self.refdata_ws_info[1],
+            'assembly_name':    assembly['name'],
         })
         setattr(self, assembly['attr'], saved_assembly)
         self.logger.info({
@@ -313,11 +453,11 @@ class CoreCheckMTestClient(CheckMTestBase):
             return
 
         saved_assembly_set = self.setAPI.save_assembly_set_v1({
-            'workspace_name': self.refdata_ws_info[1],
+            'workspace_name':     self.refdata_ws_info[1],
             'output_object_name': assemblyset['name'],
             'data': {
                 'description': 'test assembly set',
-                'items': assemblyset['items'],
+                'items':        assemblyset['items'],
             },
         })
         setattr(self, assemblyset['attr'], saved_assembly_set['set_ref'])
@@ -369,16 +509,16 @@ class CoreCheckMTestClient(CheckMTestBase):
             shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
 
         saved_object = self.mu.file_to_binned_contigs({
-            'file_directory': binned_contigs_path,
-            'workspace_name': self.refdata_ws_info[1],
-            'assembly_ref': bc['assembly'],
+            'file_directory':     binned_contigs_path,
+            'workspace_name':     self.refdata_ws_info[1],
+            'assembly_ref':       bc['assembly'],
             'binned_contig_name': bc['name'],
         })
 
         setattr(self, bc['attr'], saved_object['binned_contig_obj_ref'])
         self.logger.info({
             'Saved BinnedContigs': saved_object,
-            bc['attr']: getattr(self, bc['attr'])
+            bc['attr']:            getattr(self, bc['attr'])
         })
 
     def prep_binned_contigs(self):
@@ -408,9 +548,11 @@ class CoreCheckMTestClient(CheckMTestBase):
             shutil.copy(os.path.join("data", "genomes", genome['path']), genome_file_path)
 
         genome_data = self.gfu.genbank_to_genome({
-            'file': {'path': genome_file_path},
-            'workspace_name': self.refdata_ws_info[1],
-            'genome_name': genome['name'],
+            'file': {
+                'path': genome_file_path
+            },
+            'workspace_name':         self.refdata_ws_info[1],
+            'genome_name':            genome['name'],
             'generate_ids_if_needed': 1,
         })
         setattr(self, genome['attr'], genome_data['genome_ref'])
@@ -483,15 +625,33 @@ class CoreCheckMTestClient(CheckMTestBase):
 
         return True
 
+    def _prep_report(self, report):
+        if hasattr(self, report['attr']):
+            self.logger.info({
+                report['attr']: getattr(self, report['attr']),
+            })
+            return
+
+        report['data']['workspace_name'] = self.refdata_ws_info[1]
+        # create the kbasereport object
+        report_output = self.kr.create_extended_report(report['data'])
+
+        setattr(self, report['attr'], report_output['ref'])
+        self.logger.info({
+            'Saved Report': report_output,
+            report['attr']: getattr(self, report['attr']),
+        })
+
     def prep_report(self):
         ''' copy templates into the test data directory and create a KBaseReport ref '''
 
-        if hasattr(self, 'report_ref'):
-            return
+        for report in TEST_DATA['report_list']:
+            self._prep_report(report)
+
+        return
 
         # copy over the templates
         test_tmpl_dir = os.path.join(self.test_data_dir, 'templates')
-        shutil.rmtree(test_tmpl_dir, ignore_errors=True)
         os.makedirs(test_tmpl_dir, exist_ok=True)
 
         for tmpl in ['dist_html_page.tt', 'checkM_table.tt']:
@@ -533,15 +693,6 @@ class CoreCheckMTestClient(CheckMTestBase):
 
         return True
 
-    def prep_checkMUtil(self):
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        cmu.run_config()
-        return cmu
-
-    def clean_up_cmu(self, cmu):
-
-        shutil.rmtree(cmu.run_config()['base_dir'], ignore_errors=True)
-
-    def get_data(self):
-        return TEST_DATA
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

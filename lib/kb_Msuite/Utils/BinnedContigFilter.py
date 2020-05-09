@@ -21,9 +21,9 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         for attr in ['client_util', 'workspacehelper', 'datastagingutils', 'outputbuilder']:
             setattr(self, attr, getattr(self.checkMUtil, attr))
 
-    def client(self, client_name):
+    def client(self, client_name, *args):
 
-        return self.client_util.client(client_name)
+        return self.client_util.client(client_name, *args)
 
     def run_config(self):
 
