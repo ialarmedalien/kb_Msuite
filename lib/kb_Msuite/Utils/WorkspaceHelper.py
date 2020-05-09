@@ -17,6 +17,10 @@ class WorkspaceHelper(Base, LogMixin):
 
         try:
             # get the workspace method and call it with the provided args
+            self.logger.info({
+                'command': command,
+                'args': args,
+            })
             method = getattr(self.client('Workspace'), command)
             result = method(args)
         except Exception as e:

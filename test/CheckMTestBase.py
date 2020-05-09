@@ -185,17 +185,25 @@ class CheckReportMixin(unittest.TestCase):
                     self.assertTrue(len(obj.keys()) == 2)
 
                     eoc = expected['objects_created']
-                    self.logger.info({
-                        'expected_objects_created': eoc,
-                        'type': type(eoc)
-                    })
                     if type(eoc) == 'list' and len(eoc) == 1 and type(eoc[0]) == 'dict':
+                        self.logger.info({
+                            'msg': 'found a dict to check',
+                            'expected_objects_created': eoc,
+                            'got': obj,
+                            'type': type(eoc),
+                        })
                         self.assertEqual(
                             obj['description'],
                             eoc[0]['description']
                         )
                         self.assertRegex(obj['ref'], eoc[0]['ref'])
                     else:
+                        self.logger.info({
+                            'msg': 'not a dict',
+                            'expected_objects_created': eoc,
+                            'got': obj,
+                            'type': type(eoc),
+                        })
                         self.assertEqual(
                             obj['description'],
                             'HQ BinnedContigs filter.BinnedContigs'
