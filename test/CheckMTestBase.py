@@ -203,6 +203,8 @@ class CheckReportMixin(unittest.TestCase):
                             'expected_objects_created': eoc,
                             'got': obj,
                             'type': type(eoc),
+                            'len(eoc)': len(eoc),
+                            'type(eoc[0])': type(eoc[0]),
                         })
                         self.assertEqual(
                             obj['description'],
