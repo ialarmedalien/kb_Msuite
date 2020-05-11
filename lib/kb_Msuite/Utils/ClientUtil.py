@@ -82,25 +82,23 @@ class ClientUtil(LogMixin):
         if not hasattr(client_obj, command) or not callable(getattr(client_obj, command)):
             raise ValueError(client + ' cannot perform the command "' + command + '"')
 
-        method = getattr(client_obj, command)
-
         return self._exec_client_method(client, command, args[1:])
 
     def _exec_client_method(self, client, command, *args):
-
-        self.logger.debug({
-            'client': client,
-            'command': command,
-            'args': args,
-        })
 
         client_obj = getattr(self, '_' + client)
         method = getattr(client_obj, command)
 
         try:
             if args:
-                arg_list = list(args)
-                return method(arg_list)
+
+                self.logger.debug({
+                    'client': client,
+                    'command': command,
+                    'args': args,
+                    'type(args)': type(args),
+                })
+                return method(*args)
             return method()
         except ServerError as e:
             self.logger.error({
