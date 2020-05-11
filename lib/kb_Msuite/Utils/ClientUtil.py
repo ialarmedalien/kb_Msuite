@@ -7,6 +7,7 @@ from installed_clients.WorkspaceClient import Workspace
 from installed_clients.baseclient import ServerError
 from kb_Msuite.Utils.Utils import LogMixin
 
+
 class ClientUtil(LogMixin):
 
     def __init__(self, config):
@@ -83,9 +84,18 @@ class ClientUtil(LogMixin):
 
         method = getattr(client_obj, command)
 
-        return self._exec_client_method(method, client, command, args[1:])
+        return self._exec_client_method(client, command, args[1:])
 
-    def _exec_client_method(self, method, client, command, *args):
+    def _exec_client_method(self, client, command, *args):
+
+        self.logger.debug({
+            'client': client,
+            'command': command,
+            'args': args,
+        })
+
+        client_obj = getattr(self, '_' + client)
+        method = getattr(client_obj, command)
 
         try:
             if args:
