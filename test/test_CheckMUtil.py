@@ -50,8 +50,10 @@ class TestCheckMUtil(CoreCheckMTestClient):
     @mock.patch('kb_Msuite.Utils.CheckMUtil._exec_subprocess')
     def test_build_checkM_lineage_wf_plots(self, mock_exec):
 
-        cmu = self.checkMUtil
+        cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
+        self.assertTrue(hasattr(CheckMUtil, '_exec_subprocess'))
+
         mock_exec.return_value = 0
 
         with self.subTest(msg='tetra command'):
