@@ -108,7 +108,7 @@ class ClientUtil(LogMixin):
         except Exception as e:
             self.logger.error({
                 'command': command,
-                'args': args,
+                'args': params,
                 'error': e
             })
             err_str = 'Unable to perform ' + client + ' command "' + command + '": ' + str(e)

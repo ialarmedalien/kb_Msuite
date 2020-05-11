@@ -2,10 +2,10 @@ from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.WorkspaceClient import Workspace
-
 from kb_Msuite.Utils.ClientUtil import ClientUtil
 
 from CheckMTestBase import CoreCheckMTestClient
+from unittest import mock
 
 
 class TestClientUtil(CoreCheckMTestClient):
@@ -86,8 +86,13 @@ class TestClientUtil(CoreCheckMTestClient):
 
         # no args
         result = cmu.client('KBaseReport', 'status')
-        self.assertEqual(result[status], 'OK')
+        self.assertEqual(result['state'], 'OK')
 
-    # def test_client_with_command_and_args(self):
+#    def _exec_client_method(self, client, command, params):
+#     @mock.patch('ClientUtil.Workspace.status')
+#     def test_client_with_command_and_args(self, mock_status):
 
-    #     cmu = self.checkMUtil
+#             mock_status.return_value = {'state': 'OK'}
+#             mock_status.assert_called_with(command, log_output_file)
+#             self.assertTrue(os.path.isfile(log_output_file))
+#             shutil.rmtree(run_config['logs_dir'], ignore_errors=True)
