@@ -86,7 +86,7 @@ class TestClientUtil(CoreCheckMTestClient):
 
         # no args
         result = cmu.client('KBaseReport', 'status')
-        self.assertEqual(result, 'OK')
+        self.assertEqual(result[status], 'OK')
 
     # def test_client_with_command_and_args(self):
 

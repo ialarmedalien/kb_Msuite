@@ -93,14 +93,14 @@ class ClientUtil(LogMixin):
             self.logger.debug({
                 'client': client,
                 'command': command,
-                'args': params,
-                'type(args)': type(params),
+                'params': params,
+                'type(params)': type(params),
             })
             return method(*params)
         except ServerError as e:
             self.logger.error({
                 'command': command,
-                'args': args,
+                'params': params,
                 'error': e
             })
             err_str = 'Unable to perform ' + client + ' command "' + command + '": ' + str(e)

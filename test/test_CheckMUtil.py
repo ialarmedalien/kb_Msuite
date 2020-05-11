@@ -3,7 +3,6 @@ from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 from kb_Msuite.Utils.DataStagingUtils import DataStagingUtils
 from kb_Msuite.Utils.OutputBuilder import OutputBuilder
 from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
-
 from CheckMTestBase import CoreCheckMTestClient
 
 import os
@@ -53,7 +52,7 @@ class TestCheckMUtil(CoreCheckMTestClient):
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
-        # compute tetranucleotide frequencies based on the concatenated fasta file
+        mock_exec.return_value = 0
 
         with self.subTest(msg='tetra command'):
 
@@ -63,7 +62,6 @@ class TestCheckMUtil(CoreCheckMTestClient):
                 run_config['all_seq_fasta'],
                 run_config['tetra_file'],
             ]
-            mock_exec.return_value = 0
 
             tetra_options = {
                 'seq_file':    run_config['all_seq_fasta'],
@@ -98,10 +96,11 @@ class TestCheckMUtil(CoreCheckMTestClient):
             mock_exec.assert_called_with(command, log_output_file)
             self.assertTrue(os.path.isfile(log_output_file))
 
-    @mock.patch('kb_Msuite.Utils.CheckMUtil._exec_subprocess')
+
+    @mock.patch('CheckMUtil._exec_subprocess')
     def test_checkM_core(self, mock_exec):
 
-        cmu = self.checkMUtil
+        cmu = CheckMUtil(self.cfg, self.ctx)
         run_config = cmu.run_config()
 
         lineage_wf_options = {
@@ -125,14 +124,14 @@ class TestCheckMUtil(CoreCheckMTestClient):
             self.assertTrue(os.path.isfile(log_output_file))
             shutil.rmtree(run_config['logs_dir'], ignore_errors=True)
 
-        # add in the reduced_tree option
-        lineage_wf_options['reduced_tree'] = 1
-        command.insert(2, '--reduced_tree')
-
         with self.subTest('subprocess failed'):
+
+            # add in the reduced_tree option
+            lineage_wf_options['reduced_tree'] = 1
+            command.insert(2, '--reduced_tree')
+
             mock_exec.return_value = 666
             err_str = 'Stopped execution due to exit code 666'
-
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.run_checkM('lineage_wf', lineage_wf_options)
 
