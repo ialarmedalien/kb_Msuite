@@ -22,9 +22,9 @@ class DataStagingUtils(Base, LogMixin):
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
 
-    def client(self, client_name, *args):
+    def client(self, client_name, fn, args):
 
-        return self.client_util.client(client_name, *args)
+        return self.client_util.client(client_name, fn, args)
 
     def run_config(self):
 
@@ -102,7 +102,9 @@ class DataStagingUtils(Base, LogMixin):
 
         # create file data
         filename = os.path.join(input_dir, obj_name + '.' + fasta_ext)
-        self.client('AssemblyUtil').get_assembly_as_fasta({'ref': input_ref, 'filename': filename})
+        self.client('AssemblyUtil', 'get_assembly_as_fasta', {
+            'ref': input_ref, 'filename': filename
+        })
 
         if not os.path.isfile(filename):
             raise ValueError(
@@ -123,10 +125,10 @@ class DataStagingUtils(Base, LogMixin):
         '''
         # read assemblySet
         try:
-            assembly_set_obj = self.client('SetAPI').get_assembly_set_v1({
-                    'ref': input_ref,
-                    'include_item_info': 1,
-                })
+            assembly_set_obj = self.client('SetAPI', 'get_assembly_set_v1', {
+                'ref': input_ref,
+                'include_item_info': 1,
+            })
         except Exception as e:
             raise ValueError('Unable to get object from workspace: (' + input_ref + ')' + str(e))
 
@@ -148,7 +150,7 @@ class DataStagingUtils(Base, LogMixin):
         run_config = self.checkMUtil.run_config()
         basename = run_config['bin_basename']
         # download the bins as fasta and set the input folder name
-        file_result = self.client('MetagenomeUtils').binned_contigs_to_file({
+        file_result = self.client('MetagenomeUtils', 'binned_contigs_to_file', {
             'input_ref': input_ref,
             'save_to_shock': 0,
         })

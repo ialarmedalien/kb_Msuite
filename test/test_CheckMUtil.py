@@ -48,7 +48,7 @@ class TestCheckMUtil(CoreCheckMTestClient):
 
         self.clean_up_cmu(cmu)
 
-    @mock.patch('kb_Msuite.CheckMUtil._exec_subprocess')
+    @mock.patch('kb_Msuite.Utils.CheckMUtil._exec_subprocess')
     def test_build_checkM_lineage_wf_plots(self, mock_exec):
 
         cmu = self.checkMUtil
@@ -98,7 +98,7 @@ class TestCheckMUtil(CoreCheckMTestClient):
             mock_exec.assert_called_with(command, log_output_file)
             self.assertTrue(os.path.isfile(log_output_file))
 
-    @mock.patch('kb_Msuite.CheckMUtil._exec_subprocess')
+    @mock.patch('kb_Msuite.Utils.CheckMUtil._exec_subprocess')
     def test_checkM_core(self, mock_exec):
 
         cmu = self.checkMUtil

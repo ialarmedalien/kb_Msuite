@@ -22,9 +22,9 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         self.scratch = checkMUtil_obj.scratch
         self.PLOT_FILE_EXT = '.ref_dist_plots.png'
 
-    def client(self, client_name, *args):
+    def client(self, client_name, fn, args):
 
-        return self.client_util.client(client_name, *args)
+        return self.client_util.client(client_name, fn, args)
 
     def run_config(self):
 
@@ -98,9 +98,7 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
 
         report_params['file_links'] = output_packages
 
-        kr = self.client('KBaseReport')
-        report_output = kr.create_extended_report(report_params)
-
+        report_output = self.client('KBaseReport', 'create_extended_report', report_params)
         returnVal = {
             'report_name': report_output['name'],
             'report_ref':  report_output['ref'],

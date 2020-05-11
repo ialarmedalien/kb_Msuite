@@ -4,6 +4,7 @@ from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.WorkspaceClient import Workspace
+from installed_clients.baseclient import ServerError
 
 
 class ClientUtil:
@@ -50,7 +51,7 @@ class ClientUtil:
 
         return Workspace(self.workspace_url)
 
-    def client(self, client, *args):
+    def client(self, client, command=None, args=None):
 
         client_mapping = {
             'AssemblyUtil':     self.init_AssemblyUtil,
@@ -70,4 +71,28 @@ class ClientUtil:
             except Exception as e:
                 raise ValueError('Error instantiating ' + client + ' client: ' + str(e))
 
-        return getattr(self, '_' + client)
+        client_obj = getattr(self, '_' + client)
+
+        if not command:
+            return client_obj
+
+        if not hasattr(client_obj, command) or not callable(getattr(client_obj, command)):
+            raise ValueError(client + ' cannot perform the command "' + command + '"')
+
+        method = getattr(client_obj, command)
+        args_list = list(args)
+        try:
+            return method(args_list)
+        except ServerError as e:
+            err_str = 'Unable to perform ' + client + ' command "' + command + '": ' + str(e)
+            raise ValueError(err_str)
+        except Exception as e:
+            self.logger.error({
+                'command': command,
+                'args': args,
+                'type(args)': type(args),
+                'error': e
+            })
+            err_str = 'Unable to perform ' + client + ' command "' + command + '": ' + str(e)
+            raise ValueError(err_str)
+            # to get the full stack trace: traceback.format_exc()

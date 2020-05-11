@@ -21,9 +21,9 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
         for attr in ['client_util', 'workspacehelper', 'datastagingutils', 'outputbuilder']:
             setattr(self, attr, getattr(self.checkMUtil, attr))
 
-    def client(self, client_name, *args):
+    def client(self, client_name, fn, args):
 
-        return self.client_util.client(client_name, *args)
+        return self.client_util.client(client_name, fn, args)
 
     def run_config(self):
 
@@ -219,7 +219,7 @@ class BinnedContigFilter(Base, LogMixin, TSVMixin):
     def save_binned_contigs(self, params, assembly_ref):
 
         run_config = self.run_config()
-        binned_contigs_ref = self.client('MetagenomeUtils').file_to_binned_contigs({
+        binned_contigs_ref = self.client('MetagenomeUtils', 'file_to_binned_contigs', {
             'file_directory':     run_config['filtered_bins_dir'],
             'assembly_ref':       assembly_ref,
             'binned_contig_name': params['output_filtered_binnedcontigs_obj_name'],

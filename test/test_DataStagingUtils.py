@@ -2,7 +2,6 @@ import os
 from CheckMTestBase import CoreCheckMTestClient
 
 
-# requires TEST_DATA, require_data, prep_checkMUtil, clean_up_cmu
 class TestDataStagingUtils(CoreCheckMTestClient):
 
     def test_02_data_staging(self):

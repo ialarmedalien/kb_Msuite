@@ -1,5 +1,4 @@
 from kb_Msuite.Utils.Utils import Base, LogMixin
-from installed_clients.baseclient import ServerError
 
 
 class WorkspaceHelper(Base, LogMixin):
@@ -8,40 +7,12 @@ class WorkspaceHelper(Base, LogMixin):
         self.checkMUtil = checkMUtil_obj
         self.client_util = checkMUtil_obj.client_util
 
-    def client(self, client_name, *args):
+    def client(self, client_name, fn, args):
 
-        return self.client_util.client(client_name, *args)
-
-    def _run_workspace_command(self, command, args):
-
-        ''' Thin wrapper with error handling around performing a workspace command '''
-
-        try:
-            # get the workspace method and call it with the provided args
-            self.logger.info({
-                'command': command,
-                'args': args,
-                'type(args)': type(args),
-            })
-            method = getattr(self.client('Workspace'), command)
-            result = method(args)
-        except ServerError as e:
-            err_str = 'Unable to perform workspace command "' + command + '": ' + str(e)
-            raise ValueError(err_str)
-        except Exception as e:
-            self.logger.error({
-                'command': command,
-                'args': args,
-                'type(args)': type(args),
-                'error': e
-            })
-            err_str = 'Unable to perform workspace command "' + command + '": ' + str(e)
-            raise ValueError(err_str)
-            # to get the full stack trace: traceback.format_exc()
-        return result
+        return self.client_util.client(client_name, fn, args)
 
     def get_objects_from_workspace(self, object_ref):
-        result = self._run_workspace_command('get_objects2', {
+        result = self.client('Workspace', 'get_objects2', {
             'objects': [{'ref': object_ref}]
         })
         return result
@@ -50,7 +21,7 @@ class WorkspaceHelper(Base, LogMixin):
         return self.get_objects_from_workspace(object_ref)['data'][0]['data']
 
     def get_ws_obj_info(self, ref):
-        result = self._run_workspace_command('get_object_info3', {
+        result = self.client('Workspace', 'get_object_info3', {
             'objects': [{'ref': ref}]
         })
         return result['infos'][0]
