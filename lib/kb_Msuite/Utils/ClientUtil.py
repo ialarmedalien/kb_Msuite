@@ -78,11 +78,11 @@ class ClientUtil(LogMixin):
             return client_obj
 
         # we expect args to have the form <command> <command_params>
-        command = args[0]
+        command, *params = args
         if not hasattr(client_obj, command) or not callable(getattr(client_obj, command)):
             raise ValueError(client + ' cannot perform the command "' + command + '"')
 
-        return self._exec_client_method(client, command, args[1:])
+        return self._exec_client_method(client, command, params)
 
     def _exec_client_method(self, client, command, *args):
 
@@ -91,14 +91,15 @@ class ClientUtil(LogMixin):
 
         try:
             if args:
-
+                arg_list = args[0]
+                arg_dict = arg_list[0]
                 self.logger.debug({
                     'client': client,
                     'command': command,
                     'args': args,
                     'type(args)': type(args),
                 })
-                return method(*args)
+                return method(arg_dict)
             return method()
         except ServerError as e:
             self.logger.error({
