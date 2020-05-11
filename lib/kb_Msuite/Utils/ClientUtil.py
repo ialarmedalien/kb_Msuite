@@ -99,7 +99,7 @@ class ClientUtil(LogMixin):
                     'args': args,
                     'type(args)': type(args),
                 })
-                return method(arg_dict)
+                return method(*args)
             return method()
         except ServerError as e:
             self.logger.error({
