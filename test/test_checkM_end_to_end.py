@@ -20,7 +20,7 @@ class CheckMEndToEnd(CoreCheckMTestClient, CheckReportMixin):
                 'reduced_tree': 1,
                 'input_ref': 'here_is_a_made_up_ref',
             }
-            err_msg = 'Unable to perform workspace command "get_object_info3": '
+            err_msg = 'Unable to perform Workspace command "get_object_info3": '
             with self.assertRaisesRegex(ValueError, err_msg):
                 self.getImpl().run_checkM_lineage_wf(self.getContext(), params)
 

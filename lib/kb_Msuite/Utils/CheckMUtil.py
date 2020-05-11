@@ -39,9 +39,9 @@ class CheckMUtil(Base, LogMixin):
             format='%(name)s %(levelname)s %(message)s'
         )
 
-    def client(self, client_name, fn, args):
+    def client(self, client_name, *args):
 
-        return self.client_util.client(client_name, fn, args)
+        return self.client_util.client(client_name, *args)
 
     def run_config(self):
         if hasattr(self, '_run_config'):

@@ -41,7 +41,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
                 cmu.datastagingutils.stage_input(self.binned_contigs_empty_ref)
 
         with self.subTest('invalid workspace ref'):
-            err_msg = 'Unable to perform workspace command "get_object_info3": '
+            err_msg = 'Unable to perform Workspace command "get_object_info3": '
             with self.assertRaisesRegex(ValueError, err_msg):
                 cmu.datastagingutils.stage_input('here_is_a_made_up_ref')
 

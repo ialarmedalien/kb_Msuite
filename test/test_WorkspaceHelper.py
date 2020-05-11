@@ -28,28 +28,6 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
             'objects': [{'ref': self.test_report_reference}]
         })
 
-    def test_00_workspace_helper(self):
-
-        self.logger.info("=================================================================")
-        self.logger.info("RUNNING 00_workspace_helper")
-        self.logger.info("=================================================================\n")
-
-        ws_obj_info = self.wsClient.get_object_info3({
-            'objects': [{'ref': self.test_report_reference}]
-        })
-        self.assertTrue(ws_obj_info)
-        # _run_workspace_command(self, command, args):
-        self.assertTrue('Oh shit.')
-        # TEST ME!
-        # try:
-        #     # get the workspace method and call it with the provided args
-        #     method = getattr(self.client('Workspace'), command)
-        #     result = method(args)
-        # except Exception as e:
-        #     err_str = 'Unable to perform workspace command ' + command + ': ' + str(e)
-        #     raise ValueError(err_str)
-        #     # to get the full stack trace: traceback.format_exc()
-
     def test_get_objects_from_workspace(self):
 
         cmu = self.checkMUtil
@@ -69,7 +47,7 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
         self.assertEqual(ws_obj['text_message'], self.report_params['message'])
         self.assertEqual(ws_obj, self.ws_obj['data'][0]['data'])
 
-        err_str = 'Unable to perform workspace command "get_objects2": '
+        err_str = 'Unable to perform Workspace command "get_objects2": '
         with self.assertRaisesRegex(ValueError, err_str):
             cmu.workspacehelper.get_obj_from_workspace('ROTFLMAO')
 
@@ -80,7 +58,7 @@ class TestWorkspaceHelper(CoreCheckMTestClient):
         self.assertEqual(obj_info, self.ws_obj_info['infos'][0])
 
         # invalid ref
-        err_str = 'Unable to perform workspace command "get_object_info3": '
+        err_str = 'Unable to perform Workspace command "get_object_info3": '
         with self.assertRaisesRegex(ValueError, err_str):
             cmu.workspacehelper.get_ws_obj_name('the_best_object_ever')
 

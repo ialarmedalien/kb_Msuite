@@ -1,15 +1,15 @@
 from kb_Msuite.Utils.Utils import Base, LogMixin
 
 
-class WorkspaceHelper(Base, LogMixin):
+class WorkspaceHelper(LogMixin, Base):
 
     def __init__(self, checkMUtil_obj):
         self.checkMUtil = checkMUtil_obj
         self.client_util = checkMUtil_obj.client_util
 
-    def client(self, client_name, fn, args):
+    def client(self, client_name, *args):
 
-        return self.client_util.client(client_name, fn, args)
+        return self.client_util.client(client_name, *args)
 
     def get_objects_from_workspace(self, object_ref):
         result = self.client('Workspace', 'get_objects2', {

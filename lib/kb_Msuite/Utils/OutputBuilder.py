@@ -22,9 +22,9 @@ class OutputBuilder(Base, LogMixin, TSVMixin):
         self.scratch = checkMUtil_obj.scratch
         self.PLOT_FILE_EXT = '.ref_dist_plots.png'
 
-    def client(self, client_name, fn, args):
+    def client(self, client_name, *args):
 
-        return self.client_util.client(client_name, fn, args)
+        return self.client_util.client(client_name, *args)
 
     def run_config(self):
 

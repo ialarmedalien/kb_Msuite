@@ -70,3 +70,24 @@ class TestClientUtil(CoreCheckMTestClient):
             with self.assertRaisesRegex(ValueError, err_str):
                 cmu.client(client)
             self.assertFalse(hasattr(cmu.client_util, '_' + client))
+
+    def test_client_with_command(self):
+
+        cmu = self.checkMUtil
+
+        err_str = 'KBaseReport cannot perform the command "go_your_own_way"'
+        with self.assertRaisesRegex(ValueError, err_str):
+            cmu.client('KBaseReport', 'go_your_own_way')
+
+        # attribute, not callable
+        err_str = 'KBaseReport cannot perform the command "_service_ver"'
+        with self.assertRaisesRegex(ValueError, err_str):
+            cmu.client('KBaseReport', '_service_ver')
+
+        # no args
+        result = cmu.client('KBaseReport', 'status')
+        self.assertEqual(result, 'OK')
+
+    # def test_client_with_command_and_args(self):
+
+    #     cmu = self.checkMUtil

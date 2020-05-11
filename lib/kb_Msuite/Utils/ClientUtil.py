@@ -51,7 +51,7 @@ class ClientUtil:
 
         return Workspace(self.workspace_url)
 
-    def client(self, client, command=None, args=None):
+    def client(self, client, *args):
 
         client_mapping = {
             'AssemblyUtil':     self.init_AssemblyUtil,
@@ -73,17 +73,19 @@ class ClientUtil:
 
         client_obj = getattr(self, '_' + client)
 
-        if not command:
+        if not args:
             return client_obj
 
+        # we expect args to have the form <command> <command_params>
+        command = args[0]
         if not hasattr(client_obj, command) or not callable(getattr(client_obj, command)):
             raise ValueError(client + ' cannot perform the command "' + command + '"')
 
         method = getattr(client_obj, command)
 
-        return self._exec_client_method(method, client, command, args)
+        return self._exec_client_method(method, client, command, args[1:])
 
-    def _exec_client_method(self, method, client, command, args=None):
+    def _exec_client_method(self, method, client, command, *args):
 
         try:
             if args:
@@ -96,7 +98,6 @@ class ClientUtil:
             self.logger.error({
                 'command': command,
                 'args': args,
-                'type(args)': type(args),
                 'error': e
             })
             err_str = 'Unable to perform ' + client + ' command "' + command + '": ' + str(e)
