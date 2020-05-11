@@ -27,7 +27,7 @@ class WorkspaceHelper(Base, LogMixin):
             result = method(args)
         except ServerError as e:
             err_str = 'Unable to perform workspace command "' + command + '": ' + str(e)
-            raise ServerError(err_str)
+            raise ValueError(err_str)
         except Exception as e:
             self.logger.error({
                 'command': command,

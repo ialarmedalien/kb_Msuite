@@ -7,7 +7,7 @@ from kb_Msuite.Utils.WorkspaceHelper import WorkspaceHelper
 from CheckMTestBase import CoreCheckMTestClient
 
 import os
-import mock
+from unittest import mock
 import shutil
 
 
