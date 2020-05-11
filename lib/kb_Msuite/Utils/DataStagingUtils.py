@@ -187,7 +187,6 @@ class DataStagingUtils(Base, LogMixin):
         else:  # get genomeSet_refs from GenomeSet object
             genome_set_refs = []
             genomeSet_object = self.workspacehelper.get_obj_from_workspace(input_ref)
-            # self.logger.debug({'genomeset_object': genomeSet_object})
 
             # iterate through genomeSet members
             for genome_id in list(genomeSet_object['elements'].keys()):
@@ -203,9 +202,7 @@ class DataStagingUtils(Base, LogMixin):
 
         # genome obj data
         for genome_ref in genome_set_refs:
-
             objects = self.workspacehelper.get_objects_from_workspace(genome_ref)['data']
-            # self.logger.debug({'genome_object': objects})
             genome_obj = objects[0]['data']
             genome_obj_info = objects[0]['info']
             genome_name = self.workspacehelper.get_ws_obj_name(object_info=genome_obj_info)

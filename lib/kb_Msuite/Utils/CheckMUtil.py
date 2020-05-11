@@ -68,7 +68,7 @@ class CheckMUtil(Base, LogMixin):
         }
 
         # directories
-        for type in ['filtered_bins', 'output', 'plots', 'html']:
+        for type in ['filtered_bins', 'output', 'plots', 'html', 'logs']:
             run_config[type + '_dir'] = os.path.join(base_dir, type)
 
         tab_text_dir = os.path.join(base_dir, 'tab_text')
@@ -197,38 +197,54 @@ class CheckMUtil(Base, LogMixin):
         '''
         command = self._build_command(subcommand, options)
         run_config = self.run_config()
-        log_dir = os.path.join(run_config['base_dir'], 'logs')
+
+        log_dir = run_config['logs_dir']
         os.makedirs(log_dir, exist_ok=True)
-        log_output_filename = os.path.join(run_config['base_dir'], 'logs', subcommand + '.log')
+        log_output_filename = os.path.join(run_config['log_dir'], subcommand + '.log')
 
         self.logger.debug('run_checkM: Running: ' + ' '.join(command))
         self.logger.debug('sending log output to ' + log_output_filename)
 
-        with open(log_output_filename, 'w') as log_output_file:
+        exitCode = self._exec_subprocess(command, log_output_filename)
 
+        self.logger.info('Executed command: ' + " ".join(command))
+        self.logger.info('Exit code: ' + str(exitCode))
+
+        # function returned 0
+        if not exitCode:
+            return True
+
+        # non-zero exit code: emit the log file contents and throw an error
+        self.logger.error('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
+        with open(log_output_filename, 'r') as log_output_file:
+            for line in log_output_file:
+                self.logger.error(line)
+
+        raise ValueError('Stopped execution due to exit code ' + str(exitCode))
+
+    def _exec_subprocess(self, command, log_file):
+        ''' Execute a function in a subprocess, sending STDOUT to the log file specified
+        Args
+            command     list of strings to be joined to create the command
+            log_file    log file to write STDOUT to
+
+        Returns
+            exitCode    function exit code
+        '''
+        with open(log_file, 'w') as log_fh:
             p = subprocess.Popen(
                 command, cwd=self.scratch, shell=False,
-                stdout=log_output_file, stderr=subprocess.STDOUT, universal_newlines=True)
-
-            exitCode = p.wait()
-
-        self.logger.info('Executed command: ' + ' '.join(command))
-        self.logger.info('Exit Code: ' + str(exitCode))
-
-        if (exitCode != 0):
-            self.logger.error('Error running command: ' + ' '.join(command) + '\n' + 'Logs:\n')
-            with open(log_output_filename, 'r') as log_output_file:
-                for line in log_output_file:
-                    self.logger.error(line)
-
-            raise ValueError('Stopped execution due to exit code ' + str(exitCode))
+                stdout=log_fh, stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+        return p.wait()
 
     def _process_universal_options(self, command_list, options):
         if options.get('threads'):
             command_list.append('-t')
             command_list.append(str(options.get('threads')))
 
-        if options.get('quiet') and str(options.get('quiet')) == '1':
+        if options.get('quiet'):
             command_list.append('--quiet')
 
         return command_list
@@ -260,28 +276,23 @@ class CheckMUtil(Base, LogMixin):
             self._validate_options(options, checkBin=True, checkOut=True, subcommand='lineage_wf')
             if 'reduced_tree' in options:
                 command.append('--reduced_tree')
-            command.append(options['bin_folder'])
-            command.append(options['out_folder'])
+            return command + [options['bin_folder'], options['out_folder']]
 
-        elif subcommand == 'tetra':
+        if subcommand == 'tetra':
             self._validate_options(options, checkTetraFile=True, subcommand='tetra')
             if 'seq_file' not in options:
                 raise ValueError('cannot run checkm tetra without seq_file option set')
-            command.append(options['seq_file'])
-            command.append(options['tetra_file'])
+            return command + [options['seq_file'], options['tetra_file']]
 
-        elif subcommand == 'dist_plot':
+        if subcommand == 'dist_plot':
             self._validate_options(options, checkBin=True, checkOut=True, checkPlots=True,
                                    checkTetraFile=True, subcommand='dist_plot')
             if 'dist_value' not in options:
                 raise ValueError('cannot run checkm dist_plot without dist_value option set')
-            command.append(options['out_folder'])
-            command.append(options['bin_folder'])
-            command.append(options['plots_folder'])
-            command.append(options['tetra_file'])
-            command.append(str(options['dist_value']))
 
-        else:
-            raise ValueError('Invalid or unsupported checkM subcommand: ' + str(subcommand))
+            return command + [
+                options['out_folder'], options['bin_folder'], options['plots_folder'],
+                options['tetra_file'], str(options['dist_value'])
+            ]
 
-        return command
+        raise ValueError('Invalid or unsupported checkM subcommand: ' + str(subcommand))

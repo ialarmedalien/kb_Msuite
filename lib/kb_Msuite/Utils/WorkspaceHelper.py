@@ -1,4 +1,5 @@
 from kb_Msuite.Utils.Utils import Base, LogMixin
+from installed_clients.baseclient import ServerError
 
 
 class WorkspaceHelper(Base, LogMixin):
@@ -24,6 +25,9 @@ class WorkspaceHelper(Base, LogMixin):
             })
             method = getattr(self.client('Workspace'), command)
             result = method(args)
+        except ServerError as e:
+            err_str = 'Unable to perform workspace command "' + command + '": ' + str(e)
+            raise ServerError(err_str)
         except Exception as e:
             self.logger.error({
                 'command': command,

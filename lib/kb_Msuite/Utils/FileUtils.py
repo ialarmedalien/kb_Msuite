@@ -122,10 +122,9 @@ def cat_fasta_files(folder, fasta_ext, output_fasta_file):
     extension = _check_extension(fasta_ext)
     files = glob.glob(os.path.join(folder, '*.' + extension))
     cat_cmd = ['cat'] + files
-    fasta_fh = open(output_fasta_file, 'w')
-    p = subprocess.Popen(cat_cmd, cwd=folder, stdout=fasta_fh, shell=False)
-    exitCode = p.wait()
-    fasta_fh.close()
+    with open(output_fasta_file, 'w') as fasta_fh:
+        p = subprocess.Popen(cat_cmd, cwd=folder, shell=False, stdout=fasta_fh)
+        exitCode = p.wait()
 
     if exitCode != 0:
         raise ValueError(
