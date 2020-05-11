@@ -5,9 +5,9 @@ from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
 from installed_clients.SetAPIServiceClient import SetAPI
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.baseclient import ServerError
+from kb_Msuite.Utils.Utils import LogMixin
 
-
-class ClientUtil:
+class ClientUtil(LogMixin):
 
     def __init__(self, config):
         ''' requires config in the form
