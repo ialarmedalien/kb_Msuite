@@ -89,9 +89,15 @@ class ClientUtil:
 
         try:
             if args:
-                return method(args)
+                arg_list = list(args)
+                return method(arg_list)
             return method()
         except ServerError as e:
+            self.logger.error({
+                'command': command,
+                'args': args,
+                'error': e
+            })
             err_str = 'Unable to perform ' + client + ' command "' + command + '": ' + str(e)
             raise ValueError(err_str)
         except Exception as e:
