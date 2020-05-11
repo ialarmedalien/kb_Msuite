@@ -84,23 +84,19 @@ class ClientUtil(LogMixin):
 
         return self._exec_client_method(client, command, params)
 
-    def _exec_client_method(self, client, command, *args):
+    def _exec_client_method(self, client, command, params):
 
         client_obj = getattr(self, '_' + client)
         method = getattr(client_obj, command)
 
         try:
-            if args:
-                arg_list = args[0]
-                arg_dict = arg_list[0]
-                self.logger.debug({
-                    'client': client,
-                    'command': command,
-                    'args': args,
-                    'type(args)': type(args),
-                })
-                return method(*args)
-            return method()
+            self.logger.debug({
+                'client': client,
+                'command': command,
+                'args': params,
+                'type(args)': type(params),
+            })
+            return method(*params)
         except ServerError as e:
             self.logger.error({
                 'command': command,
