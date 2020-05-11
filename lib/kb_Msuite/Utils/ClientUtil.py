@@ -80,9 +80,15 @@ class ClientUtil:
             raise ValueError(client + ' cannot perform the command "' + command + '"')
 
         method = getattr(client_obj, command)
-        args_list = list(args)
+
+        return self._exec_client_method(method, client, command, args)
+
+    def _exec_client_method(self, method, client, command, args=None):
+
         try:
-            return method(args_list)
+            if args:
+                return method(args)
+            return method()
         except ServerError as e:
             err_str = 'Unable to perform ' + client + ' command "' + command + '": ' + str(e)
             raise ValueError(err_str)
