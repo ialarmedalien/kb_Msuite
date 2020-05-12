@@ -13,7 +13,7 @@ import shutil
 class PatchedCheckMUtil(CheckMUtil):
 
     def __init__(self, config, context, test_args):
-        super().__init()
+        super().__init__()
 
         for key, value in test_args.items():
             self.test_args[key] = value
