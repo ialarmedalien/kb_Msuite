@@ -11,7 +11,6 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
     def setUp(self):
         super().setUp()
-    # def prep_filter_binned_contigs_dirs(self):
         self.require_data('binned_contigs_ref')
 
         cmu = self.checkMUtil

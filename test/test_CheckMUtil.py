@@ -19,6 +19,7 @@ class PatchedCheckMUtil(CheckMUtil):
             self.test_args[key] = value
 
     def _exec_subprocess(self, command_args, log_file_args):
+        self.logger.info("starting _exec subprocess!")
         run_config = self.run_config()
         unittest = self.test_args['unittest_testcase']
         unittest.assertEquals(
@@ -29,6 +30,7 @@ class PatchedCheckMUtil(CheckMUtil):
             log_file_args,
             os.path.join(run_config['logs_dir'], 'lineage_wf.log')
         )
+        self.logger.info("Finishing _exec subprocess!")
         return self.test_args['return_value']
 
 
