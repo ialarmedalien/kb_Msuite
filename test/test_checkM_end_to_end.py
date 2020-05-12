@@ -4,7 +4,7 @@ import shutil
 from CheckMTestBase import CoreCheckMTestClient, CheckReportMixin
 
 
-class CheckMEndToEnd(CoreCheckMTestClient, CheckReportMixin):
+class TestCheckMEndToEnd(CoreCheckMTestClient, CheckReportMixin):
 
     def test_checkM_end_to_end_errors(self):
         self.logger.info("=================================================================")

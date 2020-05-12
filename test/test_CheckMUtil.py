@@ -10,6 +10,28 @@ from unittest import mock
 import shutil
 
 
+class PatchedCheckMUtil(CheckMUtil):
+
+    def __init__(self, config, context, test_args):
+        super().__init()
+
+        for key, value in test_args.items():
+            self.test_args[key] = value
+
+    def _exec_subprocess(self, command_args, log_file_args):
+        run_config = self.run_config()
+        unittest = self.test_args['unittest_testcase']
+        unittest.assertEquals(
+            command_args,
+            ['checkm', 'lineage_wf', run_config['input_dir'], run_config['output_dir']]
+        )
+        unittest.assertEquals(
+            log_file_args,
+            os.path.join(run_config['logs_dir'], 'lineage_wf.log')
+        )
+        return self.test_args['return_value']
+
+
 class TestCheckMUtil(CoreCheckMTestClient):
 
     def test_00_module_init(self):
@@ -48,8 +70,6 @@ class TestCheckMUtil(CoreCheckMTestClient):
         self.clean_up_cmu(cmu)
 
         self.assertTrue(hasattr(cmu, '_exec_subprocess'))
-
-    # from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 
     @mock.patch('kb_Msuite.Utils.CheckMUtil._exec_subprocess')
     def test_build_checkM_lineage_wf_plots(self, mock_exec):
@@ -102,43 +122,41 @@ class TestCheckMUtil(CoreCheckMTestClient):
             mock_exec.assert_called_with(command, log_output_file)
             self.assertTrue(os.path.isfile(log_output_file))
 
-    @mock.patch('CheckMUtil._exec_subprocess')
+    # @mock.patch('CheckMUtil._exec_subprocess')
     def test_checkM_core(self, mock_exec):
-
-        cmu = CheckMUtil(self.cfg, self.ctx)
-        run_config = cmu.run_config()
-
-        lineage_wf_options = {
-            'bin_folder':   run_config['input_dir'],
-            'out_folder':   run_config['output_dir'],
-            'threads':      cmu.threads,
-            'reduced_tree': 1,
-        }
-
-        command = [
-            'checkm', 'lineage_wf', run_config['input_dir'], run_config['output_dir']
-        ]
-        log_output_file = os.path.join(run_config['logs_dir'], 'lineage_wf.log')
 
         with self.subTest('subprocess successful'):
 
-            mock_exec.return_value = 0
+            cmu = PatchedCheckMUtil(self.cfg, self.ctx, {
+                'return_value': 0,
+                'unittest_testcase': self,
+            })
+            run_config = cmu.run_config()
+
+            lineage_wf_options = {
+                'bin_folder':   run_config['input_dir'],
+                'out_folder':   run_config['output_dir'],
+                'threads':      cmu.threads,
+                'reduced_tree': 1,
+            }
+
+            # mock_exec.return_value = 0
             cmu.run_checkM('lineage_wf', lineage_wf_options)
 
-            mock_exec.assert_called_with(command, log_output_file)
-            self.assertTrue(os.path.isfile(log_output_file))
-            shutil.rmtree(run_config['logs_dir'], ignore_errors=True)
+            # mock_exec.assert_called_with(command, log_output_file)
+            # self.assertTrue(os.path.isfile(log_output_file))
+            # shutil.rmtree(run_config['logs_dir'], ignore_errors=True)
 
-        with self.subTest('subprocess failed'):
+        # with self.subTest('subprocess failed'):
 
-            # add in the reduced_tree option
-            lineage_wf_options['reduced_tree'] = 1
-            command.insert(2, '--reduced_tree')
+        #     # add in the reduced_tree option
+        #     lineage_wf_options['reduced_tree'] = 1
+        #     command.insert(2, '--reduced_tree')
 
-            mock_exec.return_value = 666
-            err_str = 'Stopped execution due to exit code 666'
-            with self.assertRaisesRegex(ValueError, err_str):
-                cmu.run_checkM('lineage_wf', lineage_wf_options)
+        #     mock_exec.return_value = 666
+        #     err_str = 'Stopped execution due to exit code 666'
+        #     with self.assertRaisesRegex(ValueError, err_str):
+        #         cmu.run_checkM('lineage_wf', lineage_wf_options)
 
-            mock_exec.assert_called_with(command, log_output_file)
-            self.assertTrue(os.path.isfile(log_output_file))
+        #     mock_exec.assert_called_with(command, log_output_file)
+        #     self.assertTrue(os.path.isfile(log_output_file))
