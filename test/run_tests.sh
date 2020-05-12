@@ -3,7 +3,7 @@ echo "Running $0 with args $@"
 script_dir=$(dirname "$(readlink -f "$0")")
 export KB_DEPLOYMENT_CONFIG=$script_dir/../deploy.cfg
 export KB_AUTH_TOKEN=`cat /kb/module/work/token`
-export PYTHONPATH=$script_dir/../lib:$PATH:$PYTHONPATH
+export PYTHONPATH=$script_dir/../lib:$script_dir/../test:$PYTHONPATH
 cd $script_dir/..
 python -m compileall lib/ test/
 # cd $script_dir/../test
