@@ -19,7 +19,7 @@ class TestOutputBuilder(CoreCheckMTestClient, CheckReportMixin, TSVMixin):
             tsv_writer = cmu.outputbuilder.init_tsv_writer(tab_text_fh)
             cmu.outputbuilder.write_tsv_headers(tsv_writer, results_filtered)
 
-    def test_05_write_tsv_headers(self):
+    def notest_05_write_tsv_headers(self):
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
@@ -42,7 +42,7 @@ class TestOutputBuilder(CoreCheckMTestClient, CheckReportMixin, TSVMixin):
             # the last col will be 'QA Pass'
             self.assertRegex(lines, r'QA Pass$')
 
-    def test_05_outputbuilder_no_checkM_output(self):
+    def notest_05_outputbuilder_no_checkM_output(self):
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
@@ -61,7 +61,7 @@ class TestOutputBuilder(CoreCheckMTestClient, CheckReportMixin, TSVMixin):
         }
         self.check_report(report, expected_results)
 
-    def test_05_outputbuilder_genome_assembly_set(self):
+    def notest_05_outputbuilder_genome_assembly_set(self):
 
         self.require_data('assembly_set_small_ref')
 
@@ -115,7 +115,7 @@ class TestOutputBuilder(CoreCheckMTestClient, CheckReportMixin, TSVMixin):
             set(h['name'] for h in html_files[3:]),
         )
 
-    def test_05_outputbuilder_binned_contigs(self):
+    def notest_05_outputbuilder_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 05_outputbuilder_binned_contigs")

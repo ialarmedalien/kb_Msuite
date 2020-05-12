@@ -125,7 +125,7 @@ class TestCheckMUtil(CoreCheckMTestClient):
             self.assertTrue(os.path.isfile(log_output_file))
 
     # @mock.patch('CheckMUtil._exec_subprocess')
-    def test_checkM_core(self, mock_exec):
+    def test_checkM_core(self):
 
         with self.subTest('subprocess successful'):
 

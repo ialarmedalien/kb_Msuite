@@ -94,7 +94,7 @@ class TestClientUtil(CoreCheckMTestClient):
 
         cmu = self.checkMUtil
         mock_function.return_value = {'yeah': 'right'}
-        result = cmu.client('KBaseReport', 'get_object_info3', {
+        result = cmu.client('Workspace', 'get_object_info3', {
             'objects': [{'ref': 123456}]
         })
         self.assertEqual(result, {'yeah': 'right'})

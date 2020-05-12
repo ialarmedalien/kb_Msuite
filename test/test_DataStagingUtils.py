@@ -4,7 +4,7 @@ from CheckMTestBase import CoreCheckMTestClient
 
 class TestDataStagingUtils(CoreCheckMTestClient):
 
-    def test_02_data_staging(self):
+    def notest_02_data_staging(self):
 
         # Standard Single Assembly
         # 'KBaseGenomeAnnotations.Assembly': self.process_assembly_contigset,
@@ -54,7 +54,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
                 run_config['input_dir'], name + '.' + run_config['fasta_ext'])
             ))
 
-    def test_02_data_staging_assembly(self):
+    def notest_02_data_staging_assembly(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assembly")
@@ -70,7 +70,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         )
         self.check_data_staging_results(cmu.run_config(), ['MiniAssembly'])
 
-    def test_02_data_staging_assembly_strange_fasta_ext(self):
+    def notest_02_data_staging_assembly_strange_fasta_ext(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assembly_strange_fasta_ext")
@@ -88,7 +88,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         )
         self.check_data_staging_results(run_config, ['Test.Assembly'])
 
-    def test_02_data_staging_assemblyset(self):
+    def notest_02_data_staging_assemblyset(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_assemblyset")
@@ -108,7 +108,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
             cmu.run_config(), ['Test.Assembly', 'Dodgy_Contig.Assembly']
         )
 
-    def test_02_data_staging_binned_contigs(self):
+    def notest_02_data_staging_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_binned_contigs")
@@ -134,7 +134,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
                 run_config['input_dir'], 'bin.00' + number + '.' + run_config['fasta_ext']
             )))
 
-    def test_02_data_staging_genome(self):
+    def notest_02_data_staging_genome(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_genome")
@@ -155,7 +155,7 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         )
         self.check_data_staging_results(cmu.run_config(), [test_genome['name']])
 
-    def test_02_data_staging_genome_set(self):
+    def notest_02_data_staging_genome_set(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 02_data_staging_genome_set")

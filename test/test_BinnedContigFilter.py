@@ -35,7 +35,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             )
             Path(bid_path).touch(exist_ok=True)
 
-    def test_03_filter_binned_contigs(self):
+    def notest_03_filter_binned_contigs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs")
@@ -66,7 +66,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             'output_filtered_binnedcontigs_obj_name': 'Alpha',
         }))
 
-    def test_03_filter_binned_contigs_checkM_missing_IDs(self):
+    def notest_03_filter_binned_contigs_checkM_missing_IDs(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_checkM_missing_IDs")
@@ -90,7 +90,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
                 'output_filtered_binnedcontigs_obj_name': 'Beta',
             })
 
-    def test_03_filter_binned_contigs_no_HQ(self):
+    def notest_03_filter_binned_contigs_no_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_no_HQ")
@@ -110,7 +110,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         self.assertFalse(os.path.exists(run_config['summary_file_path']))
         self.assertTrue(hasattr(cmu, 'bin_stats_data'))
 
-    def test_03_filter_binned_contigs_all_HQ(self):
+    def notest_03_filter_binned_contigs_all_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_all_HQ")
@@ -158,7 +158,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             self.assertTrue(os.path.isfile(expected_path))
         #
 
-    def test_03_filter_binned_contigs_some_HQ(self):
+    def notest_03_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_some_HQ")
@@ -181,7 +181,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
 
-    def test_03_filter_binned_contigs_some_others_HQ(self):
+    def notest_03_filter_binned_contigs_some_others_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_some_others_HQ")
