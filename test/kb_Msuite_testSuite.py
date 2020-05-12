@@ -21,10 +21,6 @@ if __name__ == '__main__':
         TestWorkspaceHelper
     ]
 
-    suites = []
-    for test_class in test_classes:
-        suite = test_loader.loadTestsFromTestCase(test_class)
-        suites.append(suite)
-
+    suites = [test_loader.loadTestsFromTestCase(test_class) for test_class in test_classes]
     all_tests = unittest.TestSuite(suites)
     unittest.TextTestRunner(verbosity=2).run(all_tests)
