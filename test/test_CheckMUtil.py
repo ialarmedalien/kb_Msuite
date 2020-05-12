@@ -15,11 +15,12 @@ class PatchedCheckMUtil(CheckMUtil):
 
     def _exec_subprocess(self, command_args, log_file_args):
         self.logger.info("starting _exec subprocess!")
-        unittest = self['test_args']['unittest_testcase']
-        tests = self['test_args']['tests']
+        test_args = getattr(self, 'test_args')
+        unittest = test_args['unittest_testcase']
+        tests = test_args['tests']
         tests(unittest, self, command_args, log_file_args)
         self.logger.info("Finishing _exec subprocess!")
-        return self['test_args']['return_value']
+        return test_args['return_value']
 
 
 class TestCheckMUtil(CoreCheckMTestClient):
@@ -136,8 +137,8 @@ class TestCheckMUtil(CoreCheckMTestClient):
                 log_output_file = os.path.join(run_config['logs_dir'], 'dist_plot.log')
 
                 dist_plot_options = {
-                    'bin_folder':   run_config['input_dir'],
                     'out_folder':   run_config['output_dir'],
+                    'bin_folder':   run_config['input_dir'],
                     'plots_folder': run_config['plots_dir'],
                     'tetra_file':   run_config['tetra_file'],
                     'dist_value':   95,
@@ -150,7 +151,7 @@ class TestCheckMUtil(CoreCheckMTestClient):
                 ] + [str(dist_plot_options[_]) for _ in opts]
                 self.assertEquals(command_args, command)
                 self.assertEquals(log_file_args, log_output_file)
-                return 0
+                return
             # otherwise, we're testing the tetra command
             log_output_file = os.path.join(run_config['logs_dir'], 'tetra.log')
             command = [
@@ -162,10 +163,9 @@ class TestCheckMUtil(CoreCheckMTestClient):
             self.assertEquals(log_file_args, log_output_file)
             # set an attribute to demonstrate the tetra has been done
             setattr(cmu, 'tetra_tests_done', True)
-            return 0
 
         cmu = PatchedCheckMUtil(self.cfg, self.ctx, {
-            'return_value': 666,
+            'return_value': 0,
             'unittest_testcase': self,
             'tests': tests,
         })
