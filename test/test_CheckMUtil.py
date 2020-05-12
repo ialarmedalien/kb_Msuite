@@ -14,14 +14,12 @@ class PatchedCheckMUtil(CheckMUtil):
 
     def __init__(self, config, context, test_args):
         super().__init__(config, context)
-
-        for key, value in test_args.items():
-            self.test_args[key] = value
+        setattr(self, 'test_args', test_args)
 
     def _exec_subprocess(self, command_args, log_file_args):
         self.logger.info("starting _exec subprocess!")
         run_config = self.run_config()
-        unittest = self.test_args['unittest_testcase']
+        unittest = self['test_args']['unittest_testcase']
         unittest.assertEquals(
             command_args,
             ['checkm', 'lineage_wf', run_config['input_dir'], run_config['output_dir']]
@@ -31,7 +29,7 @@ class PatchedCheckMUtil(CheckMUtil):
             os.path.join(run_config['logs_dir'], 'lineage_wf.log')
         )
         self.logger.info("Finishing _exec subprocess!")
-        return self.test_args['return_value']
+        return self['test_args']['return_value']
 
 
 class TestCheckMUtil(CoreCheckMTestClient):
@@ -124,7 +122,6 @@ class TestCheckMUtil(CoreCheckMTestClient):
             mock_exec.assert_called_with(command, log_output_file)
             self.assertTrue(os.path.isfile(log_output_file))
 
-    # @mock.patch('CheckMUtil._exec_subprocess')
     def test_checkM_core(self):
 
         with self.subTest('subprocess successful'):

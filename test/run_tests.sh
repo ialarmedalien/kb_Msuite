@@ -9,5 +9,5 @@ python -m compileall lib/ test/
 # cd $script_dir/../test
 rm -rf tmp
 mkdir -p tmp
-coverage run -m unittest -v --locals discover
+coverage run -m unittest -v --locals test/kb_Msuite_testSuite.py
 #python -m nose --with-coverage --cover-package=kb_Msuite --cover-html --cover-html-dir=/kb/module/work/test_coverage --nocapture  --nologcapture .
