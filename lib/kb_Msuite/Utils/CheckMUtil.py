@@ -200,7 +200,7 @@ class CheckMUtil(LogMixin, Base):
 
         log_dir = run_config['logs_dir']
         os.makedirs(log_dir, exist_ok=True)
-        log_output_filename = os.path.join(run_config['log_dir'], subcommand + '.log')
+        log_output_filename = os.path.join(run_config['logs_dir'], subcommand + '.log')
 
         self.logger.debug('run_checkM: Running: ' + ' '.join(command))
         self.logger.debug('sending log output to ' + log_output_filename)
