@@ -88,7 +88,7 @@ class TestClientUtil(CoreCheckMTestClient):
         result = cmu.client('KBaseReport', 'status')
         self.assertEqual(result['state'], 'OK')
 
-    @mock.patch('kb_Msuite.Utils.ClientUtil.KBaseReport.status')
+    @mock.patch('kb_Msuite.Utils.ClientUtil.Workspace.status')
     def test_mock_client_with_command(self, mock_function):
 
         cmu = self.checkMUtil
