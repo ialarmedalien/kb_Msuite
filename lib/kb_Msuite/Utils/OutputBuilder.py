@@ -9,7 +9,7 @@ from kb_Msuite.Utils.FileUtils import (
 )
 
 
-class OutputBuilder(Base, LogMixin, TSVMixin):
+class OutputBuilder(LogMixin, TSVMixin, Base):
     '''
     Constructs the output HTML report and artifacts based on a CheckM lineage_wf
     run.  This includes running any necssary plotting utilities of CheckM.

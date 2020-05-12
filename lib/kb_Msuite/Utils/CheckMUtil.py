@@ -12,7 +12,7 @@ from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
 from kb_Msuite.Utils.Utils import Base, LogMixin
 
 
-class CheckMUtil(Base, LogMixin):
+class CheckMUtil(LogMixin, Base):
 
     def __init__(self, config, ctx):
         self.config = config

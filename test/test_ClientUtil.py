@@ -88,11 +88,16 @@ class TestClientUtil(CoreCheckMTestClient):
         result = cmu.client('KBaseReport', 'status')
         self.assertEqual(result['state'], 'OK')
 
-#    def _exec_client_method(self, client, command, params):
-#     @mock.patch('ClientUtil.Workspace.status')
-#     def test_client_with_command_and_args(self, mock_status):
+    # def _exec_client_method(self, client, command, params):
+    @mock.patch('ClientUtil.Workspace.get_object_info3')
+    def test_client_with_command_and_args(self, mock_function):
 
-#             mock_status.return_value = {'state': 'OK'}
-#             mock_status.assert_called_with(command, log_output_file)
-#             self.assertTrue(os.path.isfile(log_output_file))
-#             shutil.rmtree(run_config['logs_dir'], ignore_errors=True)
+        cmu = self.checkMUtil
+        mock_function.return_value = {'yeah': 'right'}
+        result = cmu.client('KBaseReport', 'get_object_info3', {
+            'objects': [{'ref': 123456}]
+        })
+        self.assertEqual(result, {'yeah': 'right'})
+        mock_function.assert_called_with({
+            'objects': [{'ref': 123456}]
+        })

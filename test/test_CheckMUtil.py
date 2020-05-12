@@ -47,6 +47,10 @@ class TestCheckMUtil(CoreCheckMTestClient):
 
         self.clean_up_cmu(cmu)
 
+        self.assertTrue(hasattr(cmu, '_exec_subprocess'))
+
+    # from kb_Msuite.Utils.CheckMUtil import CheckMUtil
+
     @mock.patch('kb_Msuite.Utils.CheckMUtil._exec_subprocess')
     def test_build_checkM_lineage_wf_plots(self, mock_exec):
 

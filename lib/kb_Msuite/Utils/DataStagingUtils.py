@@ -9,7 +9,7 @@ from kb_Msuite.Utils.FileUtils import (
 from kb_Msuite.baseclient import ServerError
 
 
-class DataStagingUtils(Base, LogMixin):
+class DataStagingUtils(LogMixin, Base):
 
     def __init__(self, checkMUtil_obj):
         self.checkMUtil = checkMUtil_obj

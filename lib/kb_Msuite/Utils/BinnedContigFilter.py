@@ -13,7 +13,7 @@ from kb_Msuite.Utils.FileUtils import (
 )
 
 
-class BinnedContigFilter(Base, LogMixin, TSVMixin):
+class BinnedContigFilter(LogMixin, TSVMixin, Base):
 
     def __init__(self, checkMUtil_obj):
         self.checkMUtil = checkMUtil_obj
