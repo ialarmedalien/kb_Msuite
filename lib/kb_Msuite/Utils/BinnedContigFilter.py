@@ -146,8 +146,8 @@ class BinnedContigFilter(LogMixin, TSVMixin, Base):
                 + ", ".join(sorted(missing_ids))
             )
 
-        setattr(self.checkMUtil, 'bin_stats_data', bin_stats)
-        # self.checkMUtil.bin_stats_data = bin_stats_data
+        # setattr(self.checkMUtil, 'bin_stats_data', bin_stats)
+        self.checkMUtil.bin_stats_data = bin_stats
 
         self.logger.debug({
             'retained_bin_IDs': retained_bin_IDs,
