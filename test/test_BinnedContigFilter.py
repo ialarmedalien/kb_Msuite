@@ -10,7 +10,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
     def setUp(self):
         super().setUp()
-        self.require_data('binned_contigs_ref')
+        self.require_data('binned_contigs_mini_ref')
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
@@ -55,13 +55,13 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
         # no output_filtered_binnedcontigs_obj_name
         self.assertIsNone(
-            cmu.binnedcontigfilter.filter_binned_contigs({'input_ref': self.binned_contigs_ref})
+            cmu.binnedcontigfilter.filter_binned_contigs({'input_ref': self.binned_contigs_mini_ref})
         )
 
         # empty input dir
         os.makedirs(cmu.run_config()['input_dir'], exist_ok=True)
         self.assertIsNone(cmu.binnedcontigfilter.filter_binned_contigs({
-            'input_ref': self.binned_contigs_ref,
+            'input_ref': self.binned_contigs_mini_ref,
             'output_filtered_binnedcontigs_obj_name': 'Alpha',
         }))
 
@@ -85,7 +85,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             ", ".join(missing_ids)
         with self.assertRaisesRegex(ValueError, err_str):
             cmu.binnedcontigfilter.filter_binned_contigs({
-                'input_ref': self.binned_contigs_ref,
+                'input_ref': self.binned_contigs_mini_ref,
                 'output_filtered_binnedcontigs_obj_name': 'Beta',
             })
 
@@ -99,7 +99,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         run_config = cmu.run_config()
         # no high quality bins
         self.assertIsNone(cmu.binnedcontigfilter.filter_binned_contigs({
-            'input_ref': self.binned_contigs_ref,
+            'input_ref': self.binned_contigs_mini_ref,
             'output_filtered_binnedcontigs_obj_name': 'Gamma',
             'completeness_perc': 99.0,
             'contamination_perc': 1.0,
@@ -119,7 +119,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         run_config = cmu.run_config()
         # set filters so all will pass => returns none
         self.assertIsNone(cmu.binnedcontigfilter.filter_binned_contigs({
-            'input_ref': self.binned_contigs_ref,
+            'input_ref': self.binned_contigs_mini_ref,
             'output_filtered_binnedcontigs_obj_name': 'Theta',
             'completeness_perc': 95.0,
             'contamination_perc': 2.0,
@@ -166,7 +166,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
-        binned_contig_spec = self.get_data()['binned_contigs_list'][0]
+        binned_contig_spec = self.get_data()['binned_contigs_list'][2]
         assembly_ref = binned_contig_spec['assembly']
         setattr(cmu.binnedcontigfilter, 'assembly_ref', getattr(self, assembly_ref))
         setattr(cmu.binnedcontigfilter, 'unittest', self)
@@ -190,7 +190,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
         # 002 will pass
         results = cmu.binnedcontigfilter.filter_binned_contigs({
-            'input_ref': self.binned_contigs_ref,
+            'input_ref': self.binned_contigs_mini_ref,
             'output_filtered_binnedcontigs_obj_name': 'Epsilon',
             'completeness_perc': 95.0,  # all pass
             'contamination_perc': 1.5,  # 002 passes
@@ -212,7 +212,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
-        binned_contig_spec = self.get_data()['binned_contigs_list'][0]
+        binned_contig_spec = self.get_data()['binned_contigs_list'][2]
         assembly_ref = binned_contig_spec['assembly']
         setattr(cmu.binnedcontigfilter, 'assembly_ref', getattr(self, assembly_ref))
         setattr(cmu.binnedcontigfilter, 'unittest', self)
@@ -231,7 +231,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
         # 001 and 002 will pass
         results = cmu.binnedcontigfilter.filter_binned_contigs({
-            'input_ref': self.binned_contigs_ref,
+            'input_ref': self.binned_contigs_mini_ref,
             'output_filtered_binnedcontigs_obj_name': 'Gamma',
             'completeness_perc': 97.0,  # 001 and 002 pass
             'contamination_perc': 2.5,  # all pass

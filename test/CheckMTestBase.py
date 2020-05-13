@@ -46,10 +46,10 @@ TEST_DATA = {
             'path': 'offending_contig_67815-67907.fa',
             'name': 'Dodgy_Contig.Assembly',
             'attr': 'assembly_dodgy_ref',
-        # }, {
-        #     'path': 'mini_assembly.fasta',
-        #     'name': 'MiniAssembly',
-        #     'attr': 'assembly_mini_ref',
+        }, {
+            'path': 'mini_assembly.fasta',
+            'name': 'MiniAssembly',
+            'attr': 'assembly_mini_ref',
         },
     ],
     'assemblyset_list': [],
@@ -88,11 +88,11 @@ TEST_DATA = {
             'name': 'Binned_Contigs_Empty',
             'attr': 'binned_contigs_empty_ref',
             'assembly': 'assembly_OK_ref',
-        # }, {
-        #     'path': 'binned_contigs_mini',
-        #     'name': 'Mini_Binned_Contigs',
-        #     'attr': 'binned_contigs_mini_ref',
-        #     'assembly': 'assembly_mini_ref',
+        }, {
+            'path': 'binned_contigs_mini',
+            'name': 'Mini_Binned_Contigs',
+            'attr': 'binned_contigs_mini_ref',
+            'assembly': 'assembly_mini_ref',
         },
     ],
     'report_list': [
@@ -496,14 +496,6 @@ class CoreCheckMTestClient(CheckMTestBase):
         ):
             shutil.rmtree(binned_contigs_path, ignore_errors=True)
             shutil.copytree(os.path.join("data", bc['path']), binned_contigs_path)
-
-        # rename any 'out_header.*' files to 'bin.*'
-        for f in os.listdir(binned_contigs_path):
-            if f.startswith('out_header'):
-                os.rename(
-                    os.path.join(binned_contigs_path, f),
-                    os.path.join(binned_contigs_path, f.replace('out_header', 'bin'))
-                )
 
         saved_object = self.mu.file_to_binned_contigs({
             'file_directory':     binned_contigs_path,
