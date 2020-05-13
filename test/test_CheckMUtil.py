@@ -87,8 +87,6 @@ class TestCheckMUtil(CoreCheckMTestClient):
             lineage_wf_options = {
                 'bin_folder':   run_config['input_dir'],
                 'out_folder':   run_config['output_dir'],
-                'threads':      cmu.threads,
-                'reduced_tree': 1,
             }
 
             return_value = cmu.run_checkM('lineage_wf', lineage_wf_options)
@@ -101,7 +99,7 @@ class TestCheckMUtil(CoreCheckMTestClient):
                 self.assertEquals(
                     command_args,
                     [
-                        'checkm', 'lineage_wf', '--reduced_tree',
+                        'checkm', 'lineage_wf', '-t', cmu.threads, '--reduced_tree',
                         run_config['input_dir'], run_config['output_dir']
                     ]
                 )
@@ -170,50 +168,3 @@ class TestCheckMUtil(CoreCheckMTestClient):
             'tests': tests,
         })
         cmu.build_checkM_lineage_wf_plots()
-
-        # cmu = CheckMUtil(self.cfg, self.ctx)
-        # self.assertTrue(hasattr(CheckMUtil, '_exec_subprocess'))
-
-        # mock_exec.return_value = 0
-
-        # with self.subTest(msg='tetra command'):
-
-        #     log_output_file = os.path.join(run_config['logs_dir'], 'tetra.log')
-        #     command = [
-        #         'checkm', 'tetra', '-t', cmu.threads, '--quiet',
-        #         run_config['all_seq_fasta'],
-        #         run_config['tetra_file'],
-        #     ]
-
-        #     tetra_options = {
-        #         'seq_file':    run_config['all_seq_fasta'],
-        #         'tetra_file':  run_config['tetra_file'],
-        #         'threads':     self.threads,
-        #         'quiet':       1,
-        #     }
-        #     self.run_checkM('tetra', tetra_options)
-
-        #     mock_exec.assert_called_with(command, log_output_file)
-        #     self.assertTrue(os.path.isfile(log_output_file))
-        #     shutil.rmtree(run_config['logs_dir'], ignore_errors=True)
-
-        # with self.subTest(msg='dist_plot command'):
-        #     # plot distributions for each bin
-        #     dist_plot_options = {
-        #         'bin_folder':   run_config['input_dir'],
-        #         'out_folder':   run_config['output_dir'],
-        #         'plots_folder': run_config['plots_dir'],
-        #         'tetra_file':   run_config['tetra_file'],
-        #         'dist_value':   95,
-        #         'quiet':        1,
-        #     }
-
-        #     log_output_file = os.path.join(run_config['logs_dir'], 'dist_plot.log')
-        #     opts = ['out_folder', 'bin_folder', 'plots_folder', 'tetra_file', 'dist_value']
-        #     command = [
-        #         'checkm', 'dist_plot', '--quiet'
-        #     ] + [str(dist_plot_options[_]) for _ in opts]
-
-        #     self.run_checkM('dist_plot', dist_plot_options)
-        #     mock_exec.assert_called_with(command, log_output_file)
-        #     self.assertTrue(os.path.isfile(log_output_file))

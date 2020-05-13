@@ -1,8 +1,6 @@
 import os
 import shutil
 from pathlib import Path
-
-
 from kb_Msuite.Utils.Utils import TSVMixin
 from CheckMTestBase import CoreCheckMTestClient
 
@@ -158,7 +156,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             self.assertTrue(os.path.isfile(expected_path))
         #
 
-    def notest_03_filter_binned_contigs_some_HQ(self):
+    def test_03_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_some_HQ")
@@ -166,6 +164,14 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
+        binned_contig_spec = self.get_data()['binned_contigs_list'][0]
+
+        def binned_contig_test(cmu_obj, params, assembly_ref):
+            self.assertEquals(assembly_ref, binned_contig_spec['assembly_ref'])
+            return {'obj_name': 'Epsilon', 'obj_ref': '123456'}
+
+        cmu.binnedcontigfilter.save_binned_contigs = binned_contig_test
+
         # 002 will pass
         results = cmu.binnedcontigfilter.filter_binned_contigs({
             'input_ref': self.binned_contigs_ref,
@@ -181,7 +187,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
 
-    def notest_03_filter_binned_contigs_some_others_HQ(self):
+    def test_03_filter_binned_contigs_some_others_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_some_others_HQ")
@@ -189,6 +195,14 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
+        binned_contig_spec = self.get_data()['binned_contigs_list'][0]
+
+        def binned_contig_test(cmu_obj, params, assembly_ref):
+            self.assertEquals(assembly_ref, binned_contig_spec['assembly_ref'])
+            return {'obj_name': 'Gamma', 'obj_ref': '123456'}
+
+        cmu.binnedcontigfilter.save_binned_contigs = binned_contig_test
+
         # 001 and 002 will pass
         results = cmu.binnedcontigfilter.filter_binned_contigs({
             'input_ref': self.binned_contigs_ref,
