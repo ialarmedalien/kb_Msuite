@@ -68,11 +68,11 @@ class TestCheckMUtil(CoreCheckMTestClient):
 
             def tests(self, cmu, command_args, log_file_args):
                 run_config = cmu.run_config()
-                self.assertEquals(
+                self.assertEqual(
                     command_args,
                     ['checkm', 'lineage_wf', run_config['input_dir'], run_config['output_dir']]
                 )
-                self.assertEquals(
+                self.assertEqual(
                     log_file_args,
                     os.path.join(run_config['logs_dir'], 'lineage_wf.log')
                 )
@@ -90,20 +90,20 @@ class TestCheckMUtil(CoreCheckMTestClient):
             }
 
             return_value = cmu.run_checkM('lineage_wf', lineage_wf_options)
-            self.assertEquals(return_value, True)
+            self.assertEqual(return_value, True)
 
         with self.subTest('subprocess failed'):
 
             def tests(self, cmu, command_args, log_file_args):
                 run_config = cmu.run_config()
-                self.assertEquals(
+                self.assertEqual(
                     command_args,
                     [
                         'checkm', 'lineage_wf', '-t', cmu.threads, '--reduced_tree',
                         run_config['input_dir'], run_config['output_dir']
                     ]
                 )
-                self.assertEquals(
+                self.assertEqual(
                     log_file_args,
                     os.path.join(run_config['logs_dir'], 'lineage_wf.log')
                 )
@@ -152,8 +152,8 @@ class TestCheckMUtil(CoreCheckMTestClient):
                 command = [
                     'checkm', 'dist_plot', '--quiet'
                 ] + [str(dist_plot_options[_]) for _ in opts]
-                self.assertEquals(command_args, command)
-                self.assertEquals(log_file_args, log_output_file)
+                self.assertEqual(command_args, command)
+                self.assertEqual(log_file_args, log_output_file)
                 return
             # otherwise, we're testing the tetra command
             log_output_file = os.path.join(run_config['logs_dir'], 'tetra.log')
@@ -162,8 +162,8 @@ class TestCheckMUtil(CoreCheckMTestClient):
                 run_config['all_seq_fasta'],
                 run_config['tetra_file'],
             ]
-            self.assertEquals(command_args, command)
-            self.assertEquals(log_file_args, log_output_file)
+            self.assertEqual(command_args, command)
+            self.assertEqual(log_file_args, log_output_file)
             # set an attribute to demonstrate the tetra has been done
             setattr(cmu, 'tetra_tests_done', True)
 

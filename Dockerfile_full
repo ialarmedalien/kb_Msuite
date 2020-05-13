@@ -55,14 +55,7 @@ ENV PATH "$PATH:/kb/deployment/bin/pplacer"
 
 # This will install CheckM and all other required Python libraries.
 RUN \
-    pip3 install numpy \
-    && pip3 install matplotlib==3.1.0 \
-    && pip3 install pysam \
-    && pip3 install scipy \
-    && pip3 install dendropy \
-    && pip3 install coverage \
-    && pip3 install checkm-genome \
-    && cp -R /miniconda/bin/checkm /kb/deployment/bin/CheckMBin \
+    pip install numpy matplotlib==3.1.0 pysam scipy dendropy coverage checkm-genome \
     && mkdir -p /data/checkm_data \
     && mv /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG /miniconda/lib/python3.6/site-packages/checkm/DATA_CONFIG.orig \
     && touch /data/DATA_CONFIG \
@@ -76,9 +69,7 @@ COPY ./ /kb/module
 
 WORKDIR /kb/module
 
-RUN mkdir -p /kb/module/work/tmp/test_data \
-    && cp -r /kb/module/test/data/* /kb/module/work/tmp/test_data/ \
-    && chmod -R a+rw /kb/module \
+RUN chmod -R a+rw /kb/module \
     && make all \
     && rm -f /data/__READY__
 
