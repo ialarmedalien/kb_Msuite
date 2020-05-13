@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 from kb_Msuite.Utils.Utils import TSVMixin
 from CheckMTestBase import CoreCheckMTestClient
+from kb_Msuite.Utils.BinnedContigFilter import BinnedContigFilter
 
 
 class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
@@ -196,15 +197,20 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         cmu = self.checkMUtil
         run_config = cmu.run_config()
         binned_contig_spec = self.get_data()['binned_contigs_list'][0]
+        setattr(cmu.binnedcontigfilter, 'binned_contig_spec', binned_contig_spec)
+        setattr(cmu.binnedcontigfilter, 'unittest', self)
 
-        def binned_contig_test(cmu_obj, *args):
-            cmu_obj.logger.debug('starting binned contig test!')
-            cmu_obj.logger.debug({'args': args})
-            params, assembly_ref = args
-            self.assertEquals(assembly_ref, binned_contig_spec['assembly_ref'])
+        def binned_contig_test(self_obj, params, assembly_ref):
+            self_obj.logger.debug('starting binned contig test!')
+            self_obj.unittest.assertEquals(
+                assembly_ref,
+                self_obj.binned_contig_spec['assembly_ref']
+            )
             return {'obj_name': 'Gamma', 'obj_ref': '123456'}
 
-        cmu.binnedcontigfilter.save_binned_contigs = binned_contig_test
+        cmu.binnedcontigfilter.save_binned_contigs = binned_contig_test.__get__(
+            cmu.binnedcontigfilter, BinnedContigFilter
+        )
 
         # 001 and 002 will pass
         results = cmu.binnedcontigfilter.filter_binned_contigs({
