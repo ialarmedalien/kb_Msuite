@@ -178,7 +178,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             })
             self_obj.unittest.assertEquals(
                 assembly_ref,
-                self_obj.binned_contig_spec['assembly_ref']
+                self_obj.binned_contig_spec['assembly']
             )
             return {'obj_name': 'Epsilon', 'obj_ref': '123456'}
 
@@ -217,7 +217,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             self_obj.logger.debug('starting binned contig test!')
             self_obj.unittest.assertEquals(
                 assembly_ref,
-                self_obj.binned_contig_spec['assembly_ref']
+                self_obj.binned_contig_spec['assembly']
             )
             return {'obj_name': 'Gamma', 'obj_ref': '123456'}
 
