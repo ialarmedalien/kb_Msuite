@@ -131,10 +131,6 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
     def check_filtered_bins(self, cmu, run_config, results, expected):
 
-        # for key, value in expected.items():
-        #     self.assertEqual(results[key], value)
-
-        # self.assertTrue('filtered_obj_ref' in results)
         self.assertEquals(results, expected)
 
         # summary file has been created
@@ -143,6 +139,10 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         expected_content_file = os.path.join(
             'data', 'expected', expected['filtered_obj_name'] + '.summary'
         )
+
+        lines = open(run_config['summary_file_path'], 'r').read()
+        self.logger.debug({'summary file contents': lines})
+
         # check that the summary file is as expected
         self.assertEqual(
                 open(run_config['summary_file_path'], 'r').read(),
@@ -176,7 +176,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
                 'msg': 'starting binned contig test!',
                 'params': params,
                 'assembly_ref': assembly_ref,
-                'binned_contig_spec': getattr(self_obj, 'binned_contig_spec'),
+                'self.assembly_ref': getattr(self_obj, 'assembly_ref'),
             })
             self_obj.unittest.assertEquals(
                 assembly_ref,
