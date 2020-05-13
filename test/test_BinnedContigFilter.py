@@ -131,10 +131,11 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
 
     def check_filtered_bins(self, cmu, run_config, results, expected):
 
-        for key, value in expected.items():
-            self.assertEqual(results[key], value)
+        # for key, value in expected.items():
+        #     self.assertEqual(results[key], value)
 
-        self.assertTrue('filtered_obj_ref' in results)
+        # self.assertTrue('filtered_obj_ref' in results)
+        self.assertEquals(results, expected)
 
         # summary file has been created
         self.assertTrue(os.path.exists(run_config['summary_file_path']))
@@ -166,7 +167,8 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         cmu = self.checkMUtil
         run_config = cmu.run_config()
         binned_contig_spec = self.get_data()['binned_contigs_list'][0]
-        setattr(cmu.binnedcontigfilter, 'binned_contig_spec', binned_contig_spec)
+        assembly_ref = binned_contig_spec['assembly']
+        setattr(cmu.binnedcontigfilter, 'assembly_ref', getattr(self, assembly_ref))
         setattr(cmu.binnedcontigfilter, 'unittest', self)
 
         def binned_contig_test(self_obj, params, assembly_ref):
@@ -178,7 +180,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             })
             self_obj.unittest.assertEquals(
                 assembly_ref,
-                self_obj.binned_contig_spec['assembly']
+                self_obj.assembly_ref
             )
             return {'obj_name': 'Epsilon', 'obj_ref': '123456'}
 
@@ -195,6 +197,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             'workspace_name': self.wsName,
         })
         expected = {
+            'filtered_obj_ref': '123456',
             'filtered_obj_name': 'Epsilon',
             'retained_bin_IDs': {'bin.002': True},
             'removed_bin_IDs':  {'bin.001': True, 'bin.003': True}
@@ -210,16 +213,17 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         cmu = self.checkMUtil
         run_config = cmu.run_config()
         binned_contig_spec = self.get_data()['binned_contigs_list'][0]
-        setattr(cmu.binnedcontigfilter, 'binned_contig_spec', binned_contig_spec)
+        assembly_ref = binned_contig_spec['assembly']
+        setattr(cmu.binnedcontigfilter, 'assembly_ref', getattr(self, assembly_ref))
         setattr(cmu.binnedcontigfilter, 'unittest', self)
 
         def binned_contig_test(self_obj, params, assembly_ref):
             self_obj.logger.debug('starting binned contig test!')
             self_obj.unittest.assertEquals(
                 assembly_ref,
-                self_obj.binned_contig_spec['assembly']
+                self_obj.assembly_ref
             )
-            return {'obj_name': 'Gamma', 'obj_ref': '123456'}
+            return {'obj_name': 'Gamma', 'obj_ref': '654321'}
 
         cmu.binnedcontigfilter.save_binned_contigs = binned_contig_test.__get__(
             cmu.binnedcontigfilter, BinnedContigFilter
@@ -234,6 +238,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             'workspace_name': self.wsName,
         })
         expected = {
+            'filtered_obj_ref': '654321',
             'filtered_obj_name': 'Gamma',
             'retained_bin_IDs': {'bin.001': True, 'bin.002': True},
             'removed_bin_IDs':  {'bin.003': True},
