@@ -107,6 +107,11 @@ class TestCheckMUtil(CoreCheckMTestClient):
                     log_file_args,
                     os.path.join(run_config['logs_dir'], 'lineage_wf.log')
                 )
+                # ensure the log file exists to pull any error messages from
+                # ideally we would check that this content got logged
+                with open(log_file_args, 'w') as log_fh:
+                    log_fh.write('Something went horribly wrong\n')
+                return
 
             # add in the reduced_tree option
             cmu = PatchedCheckMUtil(self.cfg, self.ctx, {
