@@ -326,7 +326,7 @@ class CoreCheckMTestClient(CheckMTestBase):
     def prep_ref_data(self, *args):
 
         try:
-            self.data_loaded = self.load_saved_ref_data()
+            # self.data_loaded = self.load_saved_ref_data()
             if not self.data_loaded:
                 self.logger.info('Loading up ref data')
                 self.prep_binned_contigs()
