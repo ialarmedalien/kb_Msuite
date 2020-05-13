@@ -90,7 +90,7 @@ class TestCheckMUtil(CoreCheckMTestClient):
             }
 
             return_value = cmu.run_checkM('lineage_wf', lineage_wf_options)
-            self.assertEquals(return_value, 0)
+            self.assertEquals(return_value, True)
 
         with self.subTest('subprocess failed'):
 

@@ -197,7 +197,10 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         run_config = cmu.run_config()
         binned_contig_spec = self.get_data()['binned_contigs_list'][0]
 
-        def binned_contig_test(cmu_obj, params, assembly_ref):
+        def binned_contig_test(cmu_obj, *args):
+            cmu_obj.logger.debug('starting binned contig test!')
+            cmu_obj.logger.debug({'args': args})
+            params, assembly_ref = args
             self.assertEquals(assembly_ref, binned_contig_spec['assembly_ref'])
             return {'obj_name': 'Gamma', 'obj_ref': '123456'}
 
