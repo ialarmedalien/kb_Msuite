@@ -40,7 +40,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         self.logger.info("RUNNING 03_filter_binned_contigs")
         self.logger.info("=================================================================\n")
 
-        self.require_data('assembly_dodgy_ref', 'report_ref')
+        self.require_data('assembly_dodgy_ref', 'report_ref', 'binned_contigs_mini_ref')
 
         cmu = self.checkMUtil
         cmu.run_config()

@@ -7,8 +7,6 @@ WORKDIR /kb/module
 RUN chmod -R a+rw /kb/module \
     && make all \
     && rm -f /data/__READY__
-    # && mkdir -p /kb/module/work/tmp/test_data \
-    # && cp -r /kb/module/test/data/* /kb/module/work/tmp/test_data/ \
 
 ENTRYPOINT [ "./scripts/entrypoint.sh" ]
 

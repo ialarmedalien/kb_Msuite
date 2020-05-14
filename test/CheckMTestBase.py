@@ -276,9 +276,9 @@ class CoreCheckMTestClient(CheckMTestBase):
             # self.data_loaded = self.load_saved_ref_data()
             if not self.data_loaded:
                 self.logger.info('Loading up ref data')
+                self.prep_assemblies()
                 self.prep_binned_contigs()
                 self.prep_genomes()
-                self.prep_assemblies()
                 self.prep_report()
                 self.data_loaded = True
         except Exception as e:
@@ -540,8 +540,8 @@ class CoreCheckMTestClient(CheckMTestBase):
         genome_list = TEST_DATA['genome_list']
 
         # upload a few genomes
-        # for genome in genome_list:
-        #     self._prep_genome(genome)
+        for genome in genome_list:
+            self._prep_genome(genome)
 
         genomeset_list = [
             {
