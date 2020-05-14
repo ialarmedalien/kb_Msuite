@@ -640,7 +640,3 @@ def print_method_name(method):
         logger.info("=================================================================\n")
         return method(*args, **kwargs)
     return wrapper
-
-
-if __name__ == '__main__':
-    unittest.main(verbosity=2)

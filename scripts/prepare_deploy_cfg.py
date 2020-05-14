@@ -16,8 +16,6 @@ if __name__ == "__main__":
     t = Template(text)
     config = ConfigParser()
 
-    print({'environment variables': os.environ})
-
     if "KBASE_ENDPOINT" in os.environ:
         kbase_endpoint = os.environ.get("KBASE_ENDPOINT")
         props = "[global]\n" + \
