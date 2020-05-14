@@ -13,6 +13,8 @@ from test_WorkspaceHelper import TestWorkspaceHelper
 
 if __name__ == '__main__':
 
+    print "RUNNING MAIN!!!"
+
     # init logger
     logging.basicConfig(
         level=logging.DEBUG,

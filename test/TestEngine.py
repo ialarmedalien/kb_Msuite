@@ -101,10 +101,10 @@ class TestEngine(LogMixin):
                 self.logger.info('file: ' + file)
         else:
             # copy test data to /tmp
-            os.makedirs(self.test_data_dir, exist_ok=True)
+            os.makedirs(os.path.join(self.appdir, 'work', 'tmp'), exist_ok=True)
             shutil.copytree(
                 os.path.join(self.appdir, 'test', 'data'),
-                os.path.join(self.appdir, 'work', 'tmp', 'test_data')
+                os.path.join(self.test_data_dir)
             )
 
         for file in os.listdir(self.test_data_dir):
