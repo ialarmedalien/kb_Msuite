@@ -447,7 +447,7 @@ class CoreCheckMTestClient(CheckMTestBase):
         saved_object = self.mu.file_to_binned_contigs({
             'file_directory':     binned_contigs_path,
             'workspace_name':     self.refdata_ws_info[1],
-            'assembly_ref':       bc['assembly'],
+            'assembly_ref':       getattr(self, bc['assembly']),
             'binned_contig_name': bc['name'],
         })
 
