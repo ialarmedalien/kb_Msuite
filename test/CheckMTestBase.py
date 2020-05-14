@@ -26,10 +26,10 @@ TEST_DATA = {
             'attr': 'assembly_b_ref',
             'name': 'Assembly.B.654KB',
             'path': 'GCF_005237295.1_ASM523729v1_genomic.fna',
-        # }, {
-        #     'path': 'assembly.fasta',
-        #     'name': 'Test.Assembly',
-        #     'attr': 'assembly_OK_ref',
+        }, {
+            'path': 'assembly.fasta',
+            'name': 'Test.Assembly',
+            'attr': 'assembly_OK_ref',
         }, {
             # contig that breaks checkm v1.0.7 reduced_tree (works on v1.0.8)
             'path': 'offending_contig_67815-67907.fa',
