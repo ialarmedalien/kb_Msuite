@@ -65,6 +65,7 @@ class TestEngine(LogMixin):
         self.callback_url = os.environ['SDK_CALLBACK_URL']
         self.scratch = self.cfg['scratch']
         self.appdir = self.cfg['appdir']
+        self.test_data_dir = os.path.join(self.appdir, 'work', 'tmp', 'test_data')
         self.suffix = test_time_stamp
 
         self.wsURL = self.cfg['workspace-url']
@@ -95,17 +96,19 @@ class TestEngine(LogMixin):
         if os.path.exists(os.path.join(self.appdir, 'running_on_github.txt')):
             self.github_run = True
 
-        # copy test data to /tmp
-        os.makedirs('/kb/module/work/tmp/test_data', exist_ok=True)
-        shutil.copytree(
-            os.path.join('/kb', 'module', 'test', 'data'),
-            os.path.join('/kb', 'module', 'work', 'tmp', 'test_data')
-        )
-        for file in os.listdir(os.path.join('/kb', 'module', 'work', 'tmp', 'test_data')):
-            self.logger.info('file: ' + file)
+        if os.path.exists(self.test_data_dir):
+            for file in os.listdir(self.test_data_dir):
+                self.logger.info('file: ' + file)
+        else:
+            # copy test data to /tmp
+            os.makedirs(self.test_data_dir, exist_ok=True)
+            shutil.copytree(
+                os.path.join(self.appdir, 'test', 'data'),
+                os.path.join(self.appdir, 'work', 'tmp', 'test_data')
+            )
 
-        self.test_data_dir = os.path.join(self.scratch, 'test_data')
-        os.makedirs(self.test_data_dir, exist_ok=True)
+        for file in os.listdir(self.test_data_dir):
+            self.logger.info('file: ' + file)
 
         self.logger.info('Finished env set up')
 
