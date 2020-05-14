@@ -1,26 +1,14 @@
 import unittest
 import os
 import json
-import time
 import shutil
 import sys
 import logging
-from os import environ
-from configparser import ConfigParser
-
-from installed_clients.AssemblyUtilClient import AssemblyUtil
-from installed_clients.GenomeFileUtilClient import GenomeFileUtil
-from installed_clients.KBaseReportClient import KBaseReport
-from installed_clients.MetagenomeUtilsClient import MetagenomeUtils
-from installed_clients.SetAPIServiceClient import SetAPI
-from installed_clients.WorkspaceClient import Workspace
 
 from kb_Msuite.kb_MsuiteImpl import kb_Msuite
-from kb_Msuite.kb_MsuiteServer import MethodContext
-from kb_Msuite.authclient import KBaseAuth as _KBaseAuth
-
 from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 from kb_Msuite.Utils.Utils import LogMixin
+from TestEngine import TestEngine
 
 
 TEST_DATA = {
@@ -113,68 +101,22 @@ class CheckMTestBase(LogMixin, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(CheckMTestBase, cls).setUpClass()
-        token = environ.get('KB_AUTH_TOKEN', None)
-        config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
-        test_time_stamp = int(time.time() * 1000)
-
-        cls.cfg = {}
-        config = ConfigParser()
-        config.read(config_file)
-        for nameval in config.items('kb_Msuite'):
-            cls.cfg[nameval[0]] = nameval[1]
-        # Getting username from Auth profile for token
-        authServiceUrl = cls.cfg['auth-service-url']
-        auth_client = _KBaseAuth(authServiceUrl)
-        user_id = auth_client.get_user(token)
-        # WARNING: don't call any logging methods on the context object,
-        # it'll result in a NoneType error
-        cls.ctx = MethodContext(None)
-        cls.ctx.update({
-            'token': token,
-            'user_id': user_id,
-            'provenance': [{
-                'service': 'kb_Msuite',
-                'method': 'please_never_use_it_in_production',
-                'method_params': []
-            }],
-            'authenticated': 1
-        })
-        cls.wsURL = cls.cfg['workspace-url']
-        cls.wsClient = Workspace(cls.wsURL)
-        cls.serviceImpl = kb_Msuite(cls.cfg)
-        cls.callback_url = os.environ['SDK_CALLBACK_URL']
-        cls.scratch = cls.cfg['scratch']
-        cls.appdir = cls.cfg['appdir']
-
-        cls.test_data_dir = os.path.join(cls.scratch, 'test_data')
-        os.makedirs(cls.test_data_dir, exist_ok=True)
-
-        cls.suffix = test_time_stamp
-
-        cls.wsName = "test_kb_Msuite_" + str(cls.suffix)
-        cls.ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
-
-        # refdata WS
-        cls.refdata_wsName = 'test_kb_Msuite_refdata_1588183380977'
-        cls.refdata_ws_info = [
-            49697,
-            'test_kb_Msuite_refdata_1588183380977',
-            'ialarmedalien',
-            '2020-04-29T18:03:01+0000',
-            0, 'a', 'n', 'unlocked', {}
+        te = TestEngine.get_instance()
+        cls.te = te
+        # copy over the attributes
+        attrs = [
+            'cfg', 'ctx',
+            'wsClient', 'wsName', 'ws_info',
+            'au', 'gfu', 'mu', 'setAPI', 'kr',
+            'refdata_wsName', 'refdata_ws_info',
+            'appdir', 'scratch', 'test_data_dir', 'suffix',
+            'data_loaded', 'github_run'
         ]
 
-        cls.au = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
-        cls.gfu = GenomeFileUtil(os.environ['SDK_CALLBACK_URL'], service_ver='dev')
-        cls.mu = MetagenomeUtils(os.environ['SDK_CALLBACK_URL'])
-        cls.setAPI = SetAPI(url=cls.cfg['srv-wiz-url'], token=cls.ctx['token'])
-        cls.kr = KBaseReport(os.environ['SDK_CALLBACK_URL'])
+        for attr in attrs:
+            setattr(cls, attr, getattr(te, attr))
 
-        cls.data_loaded = False
-
-        cls.github_run = False
-        if os.path.exists(os.path.join(cls.appdir, 'running_on_github.txt')):
-            cls.github_run = True
+        cls.serviceImpl = kb_Msuite(cls.cfg)
 
     @classmethod
     def tearDownClass(cls):
@@ -222,7 +164,7 @@ class CheckReportMixin(unittest.TestCase):
         self.assertIn('report_ref', result)
 
         # make sure the report was created and includes the HTML report and download links
-        got_object = self.getWsClient().get_objects2({
+        got_object = self.wsClient().get_objects2({
             'objects': [{'ref': result['report_ref']}]
         })
         rep = got_object['data'][0]['data']
@@ -301,7 +243,7 @@ class CoreCheckMTestClient(CheckMTestBase):
 
     def prep_checkMUtil(self):
 
-        cmu = CheckMUtil(self.cfg, self.ctx)
+        cmu = CheckMUtil(self.getConfig(), self.getContext())
         cmu.run_config()
         return cmu
 

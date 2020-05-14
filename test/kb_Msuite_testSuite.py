@@ -1,8 +1,6 @@
 import unittest
 
-import os
-import shutil
-
+from TestEngine import TestEngine
 from test_BinnedContigFilter import TestBinnedContigFilter
 from test_checkM_end_to_end import TestCheckMEndToEnd
 from test_CheckMUtil import TestCheckMUtil
@@ -25,14 +23,8 @@ if __name__ == '__main__':
         TestWorkspaceHelper
     ]
 
-    # copy test data to /tmp
-    os.makedirs('/kb/module/work/tmp/test_data', exist_ok=True)
-    shutil.copytree(
-        os.path.join('/kb', 'module', 'test', 'data'),
-        os.path.join('/kb', 'module', 'work', 'tmp', 'test_data')
-    )
-    for file in os.listdir(os.path.join('/kb', 'module', 'work', 'tmp', 'test_data')):
-        print('file: ' + file)
+    te = TestEngine()
+    te.set_up_test_env()
 
     suites = [test_loader.loadTestsFromTestCase(test_class) for test_class in test_classes]
     all_tests = unittest.TestSuite(suites)
