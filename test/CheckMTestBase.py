@@ -112,6 +112,7 @@ class CheckMTestBase(LogMixin, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super(CheckMTestBase, cls).setUpClass()
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         test_time_stamp = int(time.time() * 1000)
