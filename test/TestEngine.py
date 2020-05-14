@@ -71,6 +71,7 @@ class TestEngine(LogMixin):
         self.wsClient = Workspace(self.wsURL)
         self.wsName = "test_kb_Msuite_" + str(self.suffix)
         self.ws_info = self.wsClient.create_workspace({'workspace': self.wsName})
+        self.logger.info('set up new workspace: ' + self.wsName)
 
         # refdata WS
         self.refdata_wsName = 'test_kb_Msuite_refdata_1588183380977'
@@ -105,5 +106,7 @@ class TestEngine(LogMixin):
 
         self.test_data_dir = os.path.join(self.scratch, 'test_data')
         os.makedirs(self.test_data_dir, exist_ok=True)
+
+        self.logger.info('Finished env set up')
 
         self.env_set_up = True

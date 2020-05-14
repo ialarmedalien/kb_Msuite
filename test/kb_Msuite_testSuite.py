@@ -1,5 +1,5 @@
 import unittest
-
+import logging
 from TestEngine import TestEngine
 from test_BinnedContigFilter import TestBinnedContigFilter
 from test_checkM_end_to_end import TestCheckMEndToEnd
@@ -11,6 +11,17 @@ from test_OutputBuilder import TestOutputBuilder
 from test_WorkspaceHelper import TestWorkspaceHelper
 
 if __name__ == '__main__':
+
+    # init logger
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(name)s %(levelname)s %(message)s'
+    )
+
+    te = TestEngine()
+    te.set_up_test_env()
+    te.logger.info('test env status: ' + te.env_set_up)
+
     test_loader = unittest.TestLoader()
     test_classes = [
         TestBinnedContigFilter,
@@ -22,9 +33,6 @@ if __name__ == '__main__':
         TestOutputBuilder,
         TestWorkspaceHelper
     ]
-
-    te = TestEngine()
-    te.set_up_test_env()
 
     suites = [test_loader.loadTestsFromTestCase(test_class) for test_class in test_classes]
     all_tests = unittest.TestSuite(suites)

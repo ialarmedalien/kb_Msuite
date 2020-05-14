@@ -5,10 +5,11 @@ import shutil
 import sys
 import logging
 
+from TestEngine import TestEngine
+
 from kb_Msuite.kb_MsuiteImpl import kb_Msuite
 from kb_Msuite.Utils.CheckMUtil import CheckMUtil
 from kb_Msuite.Utils.Utils import LogMixin
-from TestEngine import TestEngine
 
 
 TEST_DATA = {
@@ -102,6 +103,9 @@ class CheckMTestBase(LogMixin, unittest.TestCase):
     def setUpClass(cls):
         super(CheckMTestBase, cls).setUpClass()
         te = TestEngine.get_instance()
+        if not te.env_set_up:
+            te.set_up_test_env()
+
         cls.te = te
         # copy over the attributes
         attrs = [
