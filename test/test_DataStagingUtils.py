@@ -114,12 +114,12 @@ class TestDataStagingUtils(CoreCheckMTestClient):
         self.logger.info("RUNNING 02_data_staging_binned_contigs")
         self.logger.info("=================================================================\n")
 
-        self.require_data('binned_contigs_ref')
+        self.require_data('binned_contigs_mini_ref')
 
         cmu = self.checkMUtil
         run_config = cmu.run_config()
         # test stage binned contigs
-        staged_input = cmu.datastagingutils.stage_input(self.binned_contigs_ref)
+        staged_input = cmu.datastagingutils.stage_input(self.binned_contigs_mini_ref)
         # expect to get back {'obj_name': name, 'obj_type': type}
         self.assertEqual(staged_input, {
             'obj_name': 'Binned_Contigs',

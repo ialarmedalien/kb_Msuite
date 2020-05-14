@@ -198,6 +198,8 @@ class BinnedContigFilter(LogMixin, TSVMixin, Base):
         fasta_ext = run_config['fasta_ext']
         bin_summary_info = {}
 
+        self.logger.debug({'binned_contig_obj[bins]': binned_contig_obj['bins']})
+
         # bin_item['bid'] is the full file name
         for bin_item in binned_contig_obj['bins']:
             bin_ID = clean_up_bin_ID(bin_item['bid'], fasta_ext)

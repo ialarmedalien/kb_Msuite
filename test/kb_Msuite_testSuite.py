@@ -27,14 +27,14 @@ if __name__ == '__main__':
 
     test_loader = unittest.TestLoader()
     test_classes = [
+        TestFileUtils,
+        TestClientUtil,
+        TestWorkspaceHelper,
+        TestCheckMUtil,
+        TestDataStagingUtils,
         TestBinnedContigFilter,
         TestCheckMEndToEnd,
-        TestCheckMUtil,
-        TestClientUtil,
-        TestDataStagingUtils,
-        TestFileUtils,
         TestOutputBuilder,
-        TestWorkspaceHelper
     ]
 
     suites = [test_loader.loadTestsFromTestCase(test_class) for test_class in test_classes]
