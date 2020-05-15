@@ -160,7 +160,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
             self.assertTrue(os.path.isfile(expected_path))
         #
 
-    def test_03_filter_binned_contigs_some_HQ(self):
+    def notest_03_filter_binned_contigs_some_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_some_HQ")
@@ -206,7 +206,7 @@ class TestBinnedContigFilter(CoreCheckMTestClient, TSVMixin):
         }
         self.check_filtered_bins(cmu, run_config, results, expected)
 
-    def test_03_filter_binned_contigs_some_others_HQ(self):
+    def notest_03_filter_binned_contigs_some_others_HQ(self):
 
         self.logger.info("=================================================================")
         self.logger.info("RUNNING 03_filter_binned_contigs_some_others_HQ")
